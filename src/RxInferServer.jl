@@ -1,5 +1,8 @@
 module RxInferServer
 
-# Write your package code here.
+using RxInfer
+
+include("model.jl")
+include("serve.jl")
 
 end

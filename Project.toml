@@ -3,11 +3,25 @@ uuid = "e92bdd6b-15d6-410c-ab97-e133e2594943"
 authors = ["Wouter Nuijten <wouternuijten@gmail.com> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+RxInfer = "86711068-29c9-4ff7-b620-ae75d7495b3d"
+
 [compat]
+HTTP = "1.10"
+JSON3 = "1.14"
+RxInfer = "3.10"
 julia = "1.10"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+Hwloc = "0e44f5e4-bd66-52a0-8798-143a42290a1d"
+ReTestItems = "817f1d60-ba6b-4fd5-9520-3cf149f6a823"
+StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test", "Aqua", "ReTestItems", "HTTP", "Hwloc", "Distributions", "StableRNGs"]

@@ -11,14 +11,16 @@ A wrapper for RxInfer models that can be deployed as a service.
 - `model`: The RxInfer model specification (a `GraphPPL.ModelGenerator`)
 - `constraints`: The constraint specification for the model
 - `init`: The initialization specification for the model
+- `meta`: The meta specification for the model
 """
-struct DeployableRxInferModel{M,C,I}
+struct DeployableRxInferModel{M,C,I,ME}
     model::M
     constraints::C
     init::I
+    meta::ME
 
-    function DeployableRxInferModel(model, constraints, init)
-        new{typeof(model),typeof(constraints),typeof(init)}(model, constraints, init)
+    function DeployableRxInferModel(model, constraints=nothing, init=nothing, meta=nothing)
+        new{typeof(model),typeof(constraints),typeof(init),typeof(meta)}(model, constraints, init, meta)
     end
 end
 
@@ -41,7 +43,8 @@ function (model::DeployableRxInferModel)(data::NamedTuple, output; kwargs...)
         model=model.model,
         data=data,
         constraints=model.constraints,
-        initialization=model.init;
+        initialization=model.init,
+        meta=model.meta;
         kwargs...  # Forward any additional kwargs to infer
     )
 

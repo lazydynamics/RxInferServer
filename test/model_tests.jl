@@ -195,3 +195,73 @@ end
     @test haskey(result_with_history["posteriors"], :μ)
     @test length(result_with_history["posteriors"][:μ]) == 10  # One for each iteration
 end
+
+@testitem "DeployableRxInferModel - Meta Specifications" begin
+    using RxInfer
+    using RxInferServer
+    using StableRNGs
+    using Distributions
+
+    # Define a model with meta specifications
+    @model function meta_model(y)
+        θ ~ Beta(2.0, 2.0)
+        for i in eachindex(y)
+            y[i] ~ Bernoulli(θ)
+        end
+    end
+
+    # Generate synthetic data
+    rng = StableRNG(42)
+    n = 100
+    θ_real = 0.7
+    dataset = float.(rand(rng, Bernoulli(θ_real), n))
+
+    # Define constraints, initialization, and meta
+    constraints = @constraints begin
+        q(θ, y) = q(θ)q(y)
+    end
+
+    init = @initialization begin
+        q(θ) = Beta(1.0, 1.0)
+    end
+
+    struct CustomMeta end
+
+    # Define stupid rule
+    @rule Bernoulli(:p, Marginalisation) (q_out::PointMass, meta::CustomMeta) = Beta(1.0, 1.0)
+
+    meta = @meta begin
+        Bernoulli(θ, y) -> CustomMeta()
+    end
+
+    # Create deployable model with meta
+    deployable = DeployableRxInferModel(
+        meta_model(),
+        constraints,
+        init,
+        meta
+    )
+
+    # Test that inference works with meta specifications
+    result = deployable((y=dataset,), [:θ])
+    @test haskey(result, "posteriors")
+    @test haskey(result["posteriors"], :θ)
+    post = result["posteriors"][:θ]
+    @test !(mean(post) ≈ θ_real)
+
+    # Create deployable without meta
+    deployable_no_meta = DeployableRxInferModel(
+        meta_model(),
+        constraints,
+        init
+    )
+
+    # Compare convergence with different meta settings
+    result_correct = deployable_no_meta((y=dataset,), [:θ], iterations=5)
+    result_wrong = deployable((y=dataset,), [:θ], iterations=5)
+
+    error_correct = abs(mean(last(result_correct["posteriors"][:θ])) - θ_real)
+    error_wrong = abs(mean(last(result_wrong["posteriors"][:θ])) - θ_real)
+
+    @test error_correct < error_wrong
+end

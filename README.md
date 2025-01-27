@@ -16,6 +16,7 @@ Pkg.add("RxInferServer")
 - Configurable inference parameters (iterations, free energy computation)
 - Flexible data input and output formats
 - Support for model history and posterior distribution tracking
+- Customizable inference behavior through meta specifications
 
 ## Basic Usage
 
@@ -52,7 +53,7 @@ add_model(
     coin_model(a=4.0, b=8.0),
     [:θ],
     constraints=constraints,
-    initialization=init
+    initialization=init,
 )
 
 start(server)
@@ -117,6 +118,30 @@ add_model(server, "/coin-quick", coin_model(a=4.0, b=8.0), [:θ],
 # Add same model with more iterations for better accuracy
 add_model(server, "/coin-accurate", coin_model(a=4.0, b=8.0), [:θ], 
          constraints=constraints, init=init)
+```
+
+### Meta Specifications
+
+Meta specifications allow you to fine-tune the inference behavior:
+
+```julia
+struct FastMeta end
+struct StableMeta end
+# Define different meta specifications for different inference behaviors
+meta_fast = @meta begin
+    Bernoulli(θ, y) -> FastMeta()
+end
+
+meta_stable = @meta begin
+    Bernoulli(θ, y) -> StableMeta()
+end
+
+# Add endpoints with different meta specifications
+add_model(server, "/coin-fast", coin_model(a=4.0, b=8.0), [:θ],
+         constraints=constraints, init=init, meta=meta_fast)
+
+add_model(server, "/coin-stable", coin_model(a=4.0, b=8.0), [:θ],
+         constraints=constraints, init=init, meta=meta_stable)
 ```
 
 ### Missing Data Handling

@@ -265,3 +265,58 @@ end
 
     @test error_correct < error_wrong
 end
+@testitem "DeployableRxInferModel - Coin Toss" begin
+    using RxInfer
+    using RxInferServer
+    using StableRNGs
+    using Distributions
+
+    # Define a simple coin toss model
+    @model function coin_model(y, a, b)
+        θ ~ Beta(a, b)
+        for i in eachindex(y)
+            y[i] ~ Bernoulli(θ)
+        end
+    end
+
+    # Generate some synthetic data
+    rng = StableRNG(42)
+    n = 100
+    θ_real = 0.75
+    dataset = float.(rand(rng, Bernoulli(θ_real), n))
+
+    # Define constraints and initialization
+    constraints = @constraints begin
+        q(θ, y) = q(θ)q(y)
+    end
+
+    init = @initialization begin
+        q(θ) = Beta(1.0, 1.0)
+    end
+
+    # Create deployable model
+    deployable = DeployableRxInferModel(
+        coin_model(a=4.0, b=8.0),
+        constraints,
+        init
+    )
+
+    # Test NamedTuple interface
+    result_dict = deployable(data=(y=dataset,), output=[:θ], factorize=(y=true,))
+    @test haskey(result_dict, "posteriors")
+    @test haskey(result_dict["posteriors"], :θ)
+
+    post = result_dict["posteriors"][:θ]
+
+    @test mean(post) ≈ θ_real atol = 0.1
+
+    # Test kwargs interface
+    result_kwargs = deployable(data=(y=dataset,), output=[:θ], factorize=(y=true,))
+    @test haskey(result_kwargs, "posteriors")
+    @test haskey(result_kwargs["posteriors"], :θ)
+    post_θ = result_kwargs["posteriors"][:θ]
+    @test mean(post_θ) ≈ θ_real atol = 0.1
+
+    # Test error handling for missing output specification
+    @test_throws ArgumentError deployable(data=(y=dataset,))
+end

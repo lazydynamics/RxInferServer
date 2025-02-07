@@ -85,6 +85,10 @@ function (model::DeployableRxInferModel)(; kwargs...)
 
     # Extract data specification
     data = pop!(kwargs_dict, :data)
+    if haskey(kwargs_dict, :factorize)
+        factorize = pop!(kwargs_dict, :factorize)
+        data = NamedTuple{keys(data)}([factorize[key] ? value : UnfactorizedData(value) for (key, value) in pairs(data)])
+    end
 
     # Extract output specification
     if !haskey(kwargs_dict, :output)

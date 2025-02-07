@@ -341,3 +341,55 @@ end
         stop(server)
     end
 end
+
+
+@testitem "Factorize keyword tests" begin
+    using HTTP
+    using JSON3
+    using RxInfer
+    using RxInferServer
+    using StableRNGs
+    using Distributions
+
+
+    @model function coin_model(y, a, b)
+        θ ~ Beta(a, b)
+        for i in eachindex(y)
+            y[i] ~ Bernoulli(θ)
+        end
+    end
+
+    # Create server
+    server = RxInferModelServer(8086)
+
+    # Add coin model endpoint
+    add_model(server, "/coin",
+        coin_model(a=1.0, b=1.0),
+        [:θ],
+        constraints=@constraints(q(θ, y) = q(θ)q(y)),
+        initialization=@initialization(q(θ) = Beta(1.0, 1.0)),
+        factorize=(y=true,)
+    )
+
+    @async start(server)
+    sleep(1)
+
+    try
+        # Test coin model
+        rng = StableRNG(42)
+        coin_data = float.(rand(rng, Bernoulli(0.7), 100))
+        coin_response = HTTP.post(
+            "http://localhost:8086/coin",
+            ["Content-Type" => "application/json"],
+            JSON3.write(Dict("data" => Dict("y" => coin_data)))
+        )
+        @test coin_response.status == 200
+        coin_result = JSON3.read(coin_response.body)
+        @test haskey(coin_result, "posteriors")
+        @test haskey(coin_result["posteriors"], "θ")
+        post = coin_result["posteriors"]["θ"]
+    finally
+        stop(server)
+    end
+
+end

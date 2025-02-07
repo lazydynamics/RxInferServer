@@ -93,7 +93,7 @@ function add_model(server::RxInferModelServer, path::String, model_spec::GraphPP
         try
 
             request_kwargs = NamedTuple{Tuple(Symbol.(keys(request_kwargs)))}(values(request_kwargs))
-            result = deployable(data, output_vars; request_kwargs...)
+            result = deployable(; data=data, output=output_vars, request_kwargs...)
 
             return HTTP.Response(200, JSON3.write(result))
         catch e

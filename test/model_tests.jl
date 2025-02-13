@@ -1,4 +1,4 @@
-@testitem "DeployableRxInferModel - Coin Toss" begin
+@testitem "DeployableRxInferModel - Coin Toss #1" begin
     using RxInfer
     using RxInferServer
     using StableRNGs
@@ -265,7 +265,7 @@ end
 
     @test error_correct < error_wrong
 end
-@testitem "DeployableRxInferModel - Coin Toss" begin
+@testitem "DeployableRxInferModel - Coin Toss #2" begin
     using RxInfer
     using RxInferServer
     using StableRNGs

@@ -1,16 +1,22 @@
-openapi: 3.0.0
+openapi: 3.0.2
 info:
-  title: RxInferServer API
+  title: RxInferServer OpenAPI specification
   description: API for RxInferServer.jl - A Julia server for RxInfer probabilistic programming framework
   version: 1.0.0
   contact:
     name: RxInferServer Team
+    url: https://github.com/lazydynamics/RxInferServer
 servers:
   - url: 'http://localhost:8000/v1'
     description: Local development server
+tags:
+  - name: Server
+    description: Server management endpoints
 paths:
   /info:
     get:
+      tags:
+        - Server
       summary: Get server information
       operationId: getServerInfo
       description: Returns information about the server, including the RxInfer version

@@ -24,7 +24,7 @@ const API_VERSION = "1.0.0"
 
 include("modelincludes.jl")
 
-include("apis/api_DefaultApi.jl")
+include("apis/api_ServerApi.jl")
 
 """
 Register handlers for all APIs in this module in the supplied `Router` instance.
@@ -47,7 +47,7 @@ The order in which middlewares are invoked are:
 `init |> read |> pre_validation |> validate |> pre_invoke |> invoke |> post_invoke`
 """
 function register(router::HTTP.Router, impl; path_prefix::String="", optional_middlewares...)
-    registerDefaultApi(router, impl; path_prefix=path_prefix, optional_middlewares...)
+    registerServerApi(router, impl; path_prefix=path_prefix, optional_middlewares...)
     return router
 end
 

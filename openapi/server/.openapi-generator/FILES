@@ -1,7 +1,7 @@
 README.md
-docs/DefaultApi.md
+docs/ServerApi.md
 docs/ServerInfo.md
 src/RxInferServerOpenAPI.jl
-src/apis/api_DefaultApi.jl
+src/apis/api_ServerApi.jl
 src/modelincludes.jl
 src/models/model_ServerInfo.jl

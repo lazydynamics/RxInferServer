@@ -1,8 +1,136 @@
 module RxInferServer
 
+# Core dependencies for API server, hot reloading, and preferences
 using RxInfer
+using RxInferServerOpenAPI
+using Revise, Preferences, Dates
 
-include("model.jl")
-include("serve.jl")
+include("tags/Server.jl")
+
+# API configuration
+const path_prefix = "/v1"
+const HOT_RELOAD_PREF_KEY = "enable_hot_reload"
+const PORT = get(ENV, "RXINFER_SERVER_PORT", 8000)
+
+"""
+    set_hot_reload(enable::Bool)
+
+Enable or disable hot reloading for the server.
+This setting is stored in the package preferences and persists across Julia sessions.
+"""
+function set_hot_reload(enable::Bool)
+    @set_preferences!(HOT_RELOAD_PREF_KEY => enable)
+    @info "Hot reloading set to: $enable. This setting will take effect on server restart."
+    return enable
+end
+
+"""
+    is_hot_reload_enabled()
+
+Check if hot reloading is enabled.
+"""
+function is_hot_reload_enabled()
+    return @load_preference(HOT_RELOAD_PREF_KEY, true)
+end
+
+"""
+    serve() -> HTTP.Server
+
+Start the RxInfer API server with the configured settings.
+
+# Description
+Initializes and starts an HTTP server that exposes RxInfer functionality through a REST API.
+The server uses the OpenAPI specification defined in RxInferServerOpenAPI to register endpoints.
+
+This is a blocking operation that runs until interrupted (e.g., with Ctrl+C).
+
+# Features
+- Configurable port via the `RXINFER_SERVER_PORT` environment variable (default: 8000)
+- Hot reloading support that can be enabled/disabled via preferences
+- Graceful shutdown with proper resource cleanup when interrupted
+
+# Returns
+- An `HTTP.Server` instance that is actively serving requests
+
+# Examples
+```julia
+using RxInferServer
+
+# Start the server with default settings (blocks until interrupted)
+RxInferServer.serve()
+
+# To run in a separate task if you need to continue using the REPL
+@async RxInferServer.serve()
+```
+
+# See Also
+- [`RxInferServer.set_hot_reload`](@ref): Enable or disable hot reloading
+- [`RxInferServer.is_hot_reload_enabled`](@ref): Check if hot reloading is enabled
+"""
+function serve()
+    # Initialize HTTP router for handling API endpoints
+    router = HTTP.Router()
+    server_running = Ref(true)
+    
+    # Create temp file to track server state and trigger file watchers
+    server_pid_file = tempname()
+    open(server_pid_file, "w") do f
+        print(f, "server started at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+    end
+
+    # Register all API endpoints defined in OpenAPI spec
+    RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix=path_prefix)
+
+    # Conditionally start hot reloading based on preference
+    hot_reload = if is_hot_reload_enabled()
+        @info "Hot reload is enabled. Starting hot reload task..."
+        Threads.@spawn begin
+            try
+                @info "Starting hot reload..."
+                # Watch for changes in server code and automatically update endpoints
+                Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone=true) do
+                    @info "Hot reloading server..."
+                    if server_running[]
+                        RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix=path_prefix)
+                    else
+                        @info "Exiting hot reload task..."
+                        throw(InterruptException())
+                    end
+                end
+            catch _
+                @info "Hot reload task exited."
+            end
+        end
+    else
+        @info "Hot reload is disabled. Use RxInferServer.set_hot_reload(true) to enable it."
+        nothing
+    end
+
+    # Define shutdown procedure to clean up resources
+    function on_shutdown()
+        @info "Shutting down server..."
+
+        server_running[] = false
+
+        # Update server state file to trigger file watcher
+        # This would also trigger the hot reload task
+        # Which checks the `server_running` variable and exits if it is false
+        open(server_pid_file, "w") do f
+            println(f, "server stopped at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+        end
+
+        # Wait for hot reload task to complete if it was running
+        if !isnothing(hot_reload)
+            @info "Closing hot reload task..."
+            wait(hot_reload)
+        end
+    end
+
+    # Start HTTP server on port `PORT`
+    server = HTTP.serve(router, PORT, on_shutdown=on_shutdown)
+    return server
+end
+
+public set_hot_reload, is_hot_reload_enabled, serve
 
 end

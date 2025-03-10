@@ -1,0 +1,168 @@
+openapi: 3.1.0
+info:
+  title: RxInferServer API
+  description: API for RxInferServer.jl - A Julia server for RxInfer probabilistic programming framework
+  version: 1.0.0
+  contact:
+    name: RxInferServer Team
+servers:
+  - url: 'http://localhost:8000'
+    description: Local development server
+paths:
+  /models:
+    get:
+      summary: List all models
+      operationId: listModels
+      responses:
+        '200':
+          description: Successfully retrieved list of models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Model'
+    post:
+      summary: Create a new model
+      operationId: createModel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelCreationRequest'
+      responses:
+        '201':
+          description: Successfully created a new model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+        '400':
+          description: Invalid request
+  /models/{modelId}:
+    get:
+      summary: Get model by ID
+      operationId: getModelById
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model'
+        '404':
+          description: Model not found
+    delete:
+      summary: Delete a model
+      operationId: deleteModel
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Model successfully deleted
+        '404':
+          description: Model not found
+  /models/{modelId}/inference:
+    post:
+      summary: Run inference on a model
+      operationId: runInference
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InferenceRequest'
+      responses:
+        '200':
+          description: Inference results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InferenceResult'
+        '404':
+          description: Model not found
+        '400':
+          description: Invalid request
+
+components:
+  schemas:
+    Model:
+      type: object
+      required:
+        - id
+        - name
+        - created_at
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        parameters:
+          type: object
+          additionalProperties: true
+    
+    ModelCreationRequest:
+      type: object
+      required:
+        - name
+        - model_type
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        model_type:
+          type: string
+          enum: [linear, nonlinear, custom]
+        parameters:
+          type: object
+          additionalProperties: true
+    
+    InferenceRequest:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        options:
+          type: object
+          additionalProperties: true
+    
+    InferenceResult:
+      type: object
+      required:
+        - model_id
+        - results
+      properties:
+        model_id:
+          type: string
+        results:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true 

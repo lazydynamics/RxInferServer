@@ -23,6 +23,60 @@ Pkg.add("RxInferServer")
 - Extensive statistics and diagnostics
 - Support for model history and posterior distribution tracking
 
+## OpenAPI Specification and Code Generation
+
+This repository includes an OpenAPI specification for the RxInferServer.jl API and tools to generate Julia server code from it.
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your system
+
+### Getting Started
+
+From the root directory of the repository, run:
+
+```bash
+docker-compose up -d
+```
+
+This will start:
+- Swagger Editor: a web-based editor for OpenAPI specifications
+- OpenAPI Generator: a tool to generate server code from OpenAPI specifications
+
+### Accessing the Swagger Editor
+
+Open your browser and navigate to: http://localhost:8080
+
+The editor will automatically load the `openapi/openapi.yaml` file from this directory.
+
+### Generating Server Code
+
+To generate Julia server code from the OpenAPI specification, run:
+
+```bash
+./generate-server.sh
+```
+
+This script will:
+1. Check if Docker is running
+2. Ensure the Docker Compose services are up
+3. Run the OpenAPI Generator with appropriate parameters
+4. Generate Julia server code in the `generated` directory
+
+### Working with the Generated Code
+
+The generated code will be placed in the `generated` directory. You can integrate this code with your existing RxInferServer.jl implementation.
+
+### Customizing the OpenAPI Specification
+
+Edit the `openapi/openapi.yaml` file either directly or through the Swagger Editor to customize your API specification. After making changes, run the generation script again to update the server code.
+
+### Additional Resources
+
+- [OpenAPI Specification](https://swagger.io/specification/)
+- [OpenAPI Generator](https://openapi-generator.tech/)
+- [Julia Server Template](https://openapi-generator.tech/docs/generators/julia-server)
+
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 - see the LICENSE file for details.

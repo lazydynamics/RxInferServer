@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  # Swagger Editor for creating and editing OpenAPI specifications
+  swagger-editor:
+    image: swaggerapi/swagger-editor
+    container_name: swagger-editor
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./openapi:/openapi
+    environment:
+      SWAGGER_FILE: "/openapi/openapi.yaml"
+    networks:
+      - openapi-network
+
+  # OpenAPI Generator for generating Julia server code
+  openapi-generator:
+    image: openapitools/openapi-generator-cli:latest
+    container_name: openapi-generator
+    volumes:
+      - ./openapi:/openapi
+      - ./generated:/generated
+    entrypoint: ["sh", "-c", "while true; do sleep 30; done"]
+    networks:
+      - openapi-network
+
+networks:
+  openapi-network:
+    driver: bridge 

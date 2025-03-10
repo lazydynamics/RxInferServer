@@ -1,15 +1,15 @@
 
 services:
-  # Swagger Editor for creating and editing OpenAPI specifications
-  swagger-editor:
-    image: swaggerapi/swagger-editor
-    container_name: swagger-editor
+  # Swagger UI for viewing OpenAPI specifications
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger-ui
     ports:
       - "8080:8080"
     volumes:
       - ./openapi:/openapi
     environment:
-      SWAGGER_FILE: "/openapi/spec.yaml"
+      SWAGGER_JSON: "/openapi/spec.yaml"
     networks:
       - openapi-network
 

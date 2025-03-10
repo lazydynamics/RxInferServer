@@ -12,7 +12,7 @@ if ! docker info > /dev/null 2>&1; then
 fi
 
 # Check if our containers are running
-if ! docker-compose ps | grep -q "swagger-editor"; then
+if ! docker-compose ps | grep -q "swagger-ui"; then
   echo "Starting Docker Compose services..."
   docker-compose up -d
   sleep 5
@@ -30,6 +30,7 @@ docker-compose exec openapi-generator \
 
 echo "Code generation complete!"
 echo "Generated Julia server code is available in the 'openapi/server' directory."
+echo "Do not modify the generated code. Instead, you should implement the API defined in the 'src/RxInferServerOpenAPI.jl' file."
 echo ""
-echo "You can access the Swagger Editor at http://localhost:8080"
-echo "to view and modify the OpenAPI specification." 
+echo "You can access the Swagger UI at http://localhost:8080"
+echo "to view and test your API." 

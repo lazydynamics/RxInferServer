@@ -42,20 +42,13 @@ The following server methods must be implemented:
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*DefaultApi* | [**create_model**](docs/DefaultApi.md#create_model) | **POST** /models | Create a new model
-*DefaultApi* | [**delete_model**](docs/DefaultApi.md#delete_model) | **DELETE** /models/{modelId} | Delete a model
-*DefaultApi* | [**get_model_by_id**](docs/DefaultApi.md#get_model_by_id) | **GET** /models/{modelId} | Get model by ID
-*DefaultApi* | [**list_models**](docs/DefaultApi.md#list_models) | **GET** /models | List all models
-*DefaultApi* | [**run_inference**](docs/DefaultApi.md#run_inference) | **POST** /models/{modelId}/inference | Run inference on a model
+*DefaultApi* | [**get_server_info**](docs/DefaultApi.md#get_server_info) | **GET** /info | Get server information
 
 
 
 ## Models
 
- - [InferenceRequest](docs/InferenceRequest.md)
- - [InferenceResult](docs/InferenceResult.md)
- - [Model](docs/Model.md)
- - [ModelCreationRequest](docs/ModelCreationRequest.md)
+ - [ServerInfo](docs/ServerInfo.md)
 
 
 

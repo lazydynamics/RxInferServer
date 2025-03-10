@@ -7,21 +7,9 @@ Encapsulates generated server code for RxInferServerOpenAPI
 
 The following server methods must be implemented:
 
-- **create_model**
-    - *invocation:* POST /models
-    - *signature:* create_model(req::HTTP.Request, model_creation_request::ModelCreationRequest;) -> Model
-- **delete_model**
-    - *invocation:* DELETE /models/{modelId}
-    - *signature:* delete_model(req::HTTP.Request, model_id::String;) -> Nothing
-- **get_model_by_id**
-    - *invocation:* GET /models/{modelId}
-    - *signature:* get_model_by_id(req::HTTP.Request, model_id::String;) -> Model
-- **list_models**
-    - *invocation:* GET /models
-    - *signature:* list_models(req::HTTP.Request;) -> Vector{Model}
-- **run_inference**
-    - *invocation:* POST /models/{modelId}/inference
-    - *signature:* run_inference(req::HTTP.Request, model_id::String, inference_request::InferenceRequest;) -> InferenceResult
+- **get_server_info**
+    - *invocation:* GET /info
+    - *signature:* get_server_info(req::HTTP.Request;) -> ServerInfo
 """
 module RxInferServerOpenAPI
 

@@ -69,7 +69,15 @@ The generated code will be placed in the `generated` directory. You can integrat
 
 ### Customizing the OpenAPI Specification
 
-Edit the `openapi/openapi.yaml` file either directly or through the Swagger Editor to customize your API specification. After making changes, run the generation script again to update the server code.
+Edit the `openapi/openapi.yaml` file either directly or through the Swagger Editor to customize your API specification. 
+
+**Important:** After making ANY changes to the OpenAPI specification, you MUST regenerate the server code by running the generation script again:
+
+```bash
+./generate-server.sh
+```
+
+Changes to the OpenAPI specification are NOT automatically reflected in the server code. Failing to regenerate the code will result in inconsistencies between your API specification and the actual server implementation.
 
 ### Additional Resources
 

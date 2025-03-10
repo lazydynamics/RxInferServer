@@ -23,13 +23,13 @@ echo "Generating Julia server code from OpenAPI specification..."
 # Run the OpenAPI Generator for Julia
 docker-compose exec openapi-generator \
   /usr/local/bin/docker-entrypoint.sh generate \
-  -i /openapi/openapi.yaml \
+  -i /openapi/spec.yaml \
   -g julia-server \
-  -o /generated \
-  --additional-properties=packageName=RxInferServer
+  -o /openapi/server \
+  --additional-properties=packageName=RxInferServerOpenAPI
 
 echo "Code generation complete!"
-echo "Generated Julia server code is available in the 'generated' directory."
+echo "Generated Julia server code is available in the 'openapi/server' directory."
 echo ""
 echo "You can access the Swagger Editor at http://localhost:8080"
 echo "to view and modify the OpenAPI specification." 

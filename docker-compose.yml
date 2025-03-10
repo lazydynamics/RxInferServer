@@ -1,4 +1,3 @@
-version: '3'
 
 services:
   # Swagger Editor for creating and editing OpenAPI specifications
@@ -10,7 +9,7 @@ services:
     volumes:
       - ./openapi:/openapi
     environment:
-      SWAGGER_FILE: "/openapi/openapi.yaml"
+      SWAGGER_FILE: "/openapi/spec.yaml"
     networks:
       - openapi-network
 
@@ -20,7 +19,7 @@ services:
     container_name: openapi-generator
     volumes:
       - ./openapi:/openapi
-      - ./generated:/generated
+      - ./openapi/server:/openapi/server
     entrypoint: ["sh", "-c", "while true; do sleep 30; done"]
     networks:
       - openapi-network

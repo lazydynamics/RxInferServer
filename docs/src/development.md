@@ -43,25 +43,27 @@ The Swagger UI will automatically load the `openapi/spec.yaml` file, allowing yo
 
 #### Testing Authenticated Endpoints
 
-If your API uses authentication (via Bearer token):
+The API uses standard Bearer token authentication with the `Authorization` header. Here's how to test authenticated endpoints:
 
 1. **Get a token**:
    - Navigate to the `/token` endpoint
    - Click "Try it out" followed by "Execute"
    - Copy the token from the response
-   - **For development**: You can use the predefined dev token (`dev-token`) configured in the environment
+   - **For development**: You can use the predefined dev token (`dev-token`) configured in the environment variable `RXINFER_SERVER_DEV_TOKEN`
 
 2. **Set up authentication**:
    - Click the "Authorize" button (padlock icon) at the top of Swagger UI
    - Enter your token in the value field (without "Bearer" prefix)
    - For local development, you can enter `dev-token`
    - Click "Authorize" and "Close"
+   - The client will send requests with `Authorization: Bearer your-token-here`
 
 3. **Test protected endpoints**:
    - All subsequent requests will include the authorization header
    - The token remains active until you log out or close the browser
+   - By default, all endpoints except `/token` require authentication
 
-See [Configuration](configuration.md) for more details on the development token.
+See [Configuration](configuration.md) for more details on setting up authentication for development and production.
 
 ### Generating Server Code
 

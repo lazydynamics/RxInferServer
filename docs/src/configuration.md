@@ -30,7 +30,9 @@ The server supports CORS configuration. The following environment variables can 
 
 #### Authentication Configuration
 
-The server uses Bearer token authentication and provides development-friendly options through the `RXINFER_SERVER_DEV_TOKEN` environment variable:
+The server implements standard Bearer token authentication using the HTTP `Authorization` header. All endpoints except `/token` require authentication by default.
+
+Authentication for development can be configured through the `RXINFER_SERVER_DEV_TOKEN` environment variable:
 
 - Default value: `dev-token` (allows authentication with this value during development)
 - Special values:
@@ -44,8 +46,27 @@ ENV["RXINFER_SERVER_DEV_TOKEN"] = "my-custom-token"
 ENV["RXINFER_SERVER_DEV_TOKEN"] = "disabled"
 ```
 
+When implementing client applications, you must include the token in the `Authorization` header with the `Bearer` prefix:
+
+```
+Authorization: Bearer your-token-here
+```
+
+For development and testing, you can use the configured development token (default is `dev-token`):
+
+```
+Authorization: Bearer dev-token
+```
+
+```@docs
+RxInferServer.DEV_TOKEN
+RxInferServer.is_dev_token_enabled
+RxInferServer.is_dev_token_disabled
+RxInferServer.is_dev_token
+```
+
 !!! note
-    In production environments, you should set `RXINFER_SERVER_DEV_TOKEN=disabled`.
+    In production environments, you should set `RXINFER_SERVER_DEV_TOKEN=disabled` and implement proper token validation logic.
 
 #### Server Edition
 

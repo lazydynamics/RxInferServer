@@ -42,7 +42,33 @@ function middleware_cors(handler::F) where {F}
     end
 end
 
+"""
+    DEV_TOKEN::String
+
+The development token. Set to `disabled` to disable the development token.
+"""
 const DEV_TOKEN = get(ENV, "RXINFER_SERVER_DEV_TOKEN", "dev-token")
+
+"""
+    is_dev_token_enabled()::Bool
+
+Returns true if the development token is enabled.
+"""
+is_dev_token_enabled() = DEV_TOKEN != "disabled"
+
+"""
+    is_dev_token_disabled()::Bool
+
+Returns true if the development token is disabled.
+"""
+is_dev_token_disabled() = DEV_TOKEN == "disabled"
+
+"""
+    is_dev_token(token::String)::Bool
+
+Returns true if the token is the development token. Returns false if the development token is disabled.
+"""
+is_dev_token(token::String) = is_dev_token_enabled() && token == DEV_TOKEN
 
 # List of URL paths that are exempt from authentication
 const AUTH_EXEMPT_PATHS = [
@@ -72,7 +98,7 @@ function middleware_check_token(req::HTTP.Request)::Bool
     token = token[8:end]
 
     # In development, accept the dev token (unless set to "disabled")
-    if DEV_TOKEN != "disabled" && token == DEV_TOKEN
+    if is_dev_token_enabled() && is_dev_token(token)
         return true
     end
 
@@ -84,7 +110,7 @@ end
 const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
     HTTP.Response(401, RxInferServerOpenAPI.UnauthorizedResponse(
         message=ifelse(
-            DEV_TOKEN != "disabled",
+            is_dev_token_enabled(),
             "The request requires authentication, generate a token using the /token endpoint or use the development token `$(DEV_TOKEN)`",
             "The request requires authentication, generate a token using the /token endpoint"
         )

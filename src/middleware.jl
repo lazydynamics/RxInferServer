@@ -42,17 +42,16 @@ function middleware_cors(handler::F) where {F}
     end
 end
 
-"""
-    DEV_TOKEN::String
-
-The development token. Set to `disabled` to disable the development token.
-"""
 const DEV_TOKEN = get(ENV, "RXINFER_SERVER_DEV_TOKEN", "dev-token")
 
 """
     is_dev_token_enabled()::Bool
 
 Returns true if the development token is enabled.
+Set the `RXINFER_SERVER_DEV_TOKEN` environment variable to `disabled` to disable the development token.
+Any other value will enable the development token.
+
+See also: [`is_dev_token_disabled`](@ref), [`is_dev_token`](@ref)
 """
 is_dev_token_enabled() = DEV_TOKEN != "disabled"
 
@@ -60,6 +59,10 @@ is_dev_token_enabled() = DEV_TOKEN != "disabled"
     is_dev_token_disabled()::Bool
 
 Returns true if the development token is disabled.
+Set the `RXINFER_SERVER_DEV_TOKEN` environment variable to `disabled` to disable the development token.
+Any other value will enable the development token.
+
+See also: [`is_dev_token_enabled`](@ref), [`is_dev_token`](@ref)
 """
 is_dev_token_disabled() = DEV_TOKEN == "disabled"
 
@@ -67,6 +70,8 @@ is_dev_token_disabled() = DEV_TOKEN == "disabled"
     is_dev_token(token::String)::Bool
 
 Returns true if the token is the development token. Returns false if the development token is disabled.
+
+See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref)
 """
 is_dev_token(token::String) = is_dev_token_enabled() && token == DEV_TOKEN
 

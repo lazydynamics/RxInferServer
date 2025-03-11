@@ -59,7 +59,6 @@ Authorization: Bearer dev-token
 ```
 
 ```@docs
-RxInferServer.DEV_TOKEN
 RxInferServer.is_dev_token_enabled
 RxInferServer.is_dev_token_disabled
 RxInferServer.is_dev_token

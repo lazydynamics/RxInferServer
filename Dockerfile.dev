@@ -1,4 +1,4 @@
-FROM julia:1.11
+FROM julia:1.11.3-bullseye
 
 # Set working directory
 WORKDIR /app

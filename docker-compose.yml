@@ -4,40 +4,27 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: rxinfer-server-dev
     ports:
       - "8000:8000"
     volumes:
       - ./:/app
     environment:
       - RXINFER_SERVER_PORT=8000
-    networks:
-      - openapi-network
 
   # Swagger UI for viewing OpenAPI specifications
   swagger-ui:
     image: swaggerapi/swagger-ui
-    container_name: swagger-ui
     ports:
       - "8080:8080"
     volumes:
       - ./openapi:/openapi
     environment:
       SWAGGER_JSON: "/openapi/spec.yaml"
-    networks:
-      - openapi-network
 
   # OpenAPI Generator for generating Julia server code
   openapi-generator:
     image: openapitools/openapi-generator-cli:latest
-    container_name: openapi-generator
     volumes:
       - ./openapi:/openapi
       - ./openapi/server:/openapi/server
     entrypoint: ["sh", "-c", "while true; do sleep 30; done"]
-    networks:
-      - openapi-network
-
-networks:
-  openapi-network:
-    driver: bridge 

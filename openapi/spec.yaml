@@ -41,6 +41,9 @@ components:
         server_version:
           type: string
           description: The version of the RxInferServer
+        server_edition:
+          type: string
+          description: The edition of the RxInferServer
         julia_version:
           type: string
           description: The version of Julia 

@@ -12,6 +12,11 @@ servers:
 tags:
   - name: Server
     description: Server management endpoints
+  - name: Authentication
+    description: Authentication related endpoints
+# Global security - apply to all endpoints by default
+security:
+  - ApiKeyAuth: []
 paths:
   /info:
     get:
@@ -40,7 +45,30 @@ paths:
                     server_version: "unknown" 
                     server_edition: "CommunityEdition"
                     julia_version: "1.11.3"
+        '401':
+          description: Access token is missing or invalid
+  /token:
+    post:
+      tags:
+        - Authentication
+      summary: Generate authentication token
+      operationId: generateToken
+      description: Generates a new authentication token for accessing protected endpoints
+      # This endpoint doesn't require authentication
+      security: []
+      responses:
+        '200':
+          description: Successfully generated authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+      description: Simple token authentication. Use the Authorization header with the Bearer scheme.
   schemas:
     ServerInfo:
       type: object
@@ -62,3 +90,11 @@ components:
         julia_version:
           type: string
           description: The version of Julia as presented in VERSION
+    TokenResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: The token to use in the Authorization header with the format "Bearer {token}"

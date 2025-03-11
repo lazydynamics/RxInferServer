@@ -10,6 +10,7 @@ services:
       - ./:/app
     environment:
       - RXINFER_SERVER_PORT=8000
+      - RXINFER_SERVER_DEV_TOKEN=dev-token
 
   # Swagger UI for viewing OpenAPI specifications
   swagger-ui:
@@ -20,11 +21,3 @@ services:
       - ./openapi:/openapi
     environment:
       SWAGGER_JSON: "/openapi/spec.yaml"
-
-  # OpenAPI Generator for generating Julia server code
-  openapi-generator:
-    image: openapitools/openapi-generator-cli:latest
-    volumes:
-      - ./openapi:/openapi
-      - ./openapi/server:/openapi/server
-    entrypoint: ["sh", "-c", "while true; do sleep 30; done"]

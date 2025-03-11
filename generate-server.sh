@@ -11,18 +11,21 @@ if ! docker info > /dev/null 2>&1; then
   exit 1
 fi
 
-# Check if our containers are running
-if ! docker-compose ps | grep -q "swagger-ui"; then
-  echo "Starting Docker Compose services..."
-  docker-compose up -d
-  sleep 5
-fi
+# Stop all running Docker Compose services to prevent conflicts
+echo "Stopping all Docker Compose services to prevent code conflicts..."
+docker-compose down
+echo "Services stopped."
 
 echo "Generating Julia server code from OpenAPI specification..."
 
-# Run the OpenAPI Generator for Julia
-docker-compose exec openapi-generator \
-  /usr/local/bin/docker-entrypoint.sh generate \
+# Get absolute path to the current directory
+CURRENT_DIR=$(pwd)
+
+# Run the OpenAPI Generator for Julia directly with Docker
+docker run --rm \
+  -v "${CURRENT_DIR}/openapi:/openapi" \
+  -v "${CURRENT_DIR}/openapi/server:/openapi/server" \
+  openapitools/openapi-generator-cli:latest generate \
   -i /openapi/spec.yaml \
   -g julia-server \
   -o /openapi/server \
@@ -32,5 +35,7 @@ echo "Code generation complete!"
 echo "Generated Julia server code is available in the 'openapi/server' directory."
 echo "Do not modify the generated code. Instead, you should implement the API defined in the 'src/RxInferServerOpenAPI.jl' file."
 echo ""
-echo "You can access the Swagger UI at http://localhost:8080"
-echo "to view and test your API." 
+echo "IMPORTANT: Docker Compose services were stopped before generating code."
+echo "You will need to restart them manually with: docker-compose up -d"
+echo ""
+echo "You can access the Swagger UI at http://localhost:8080 after restarting services." 

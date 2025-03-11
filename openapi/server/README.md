@@ -43,6 +43,7 @@ The following server methods must be implemented:
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token) | **POST** /token | Generate authentication token
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info) | **GET** /info | Get server information
 
 
@@ -50,6 +51,7 @@ Class | Method | HTTP request | Description
 ## Models
 
  - [ServerInfo](docs/ServerInfo.md)
+ - [TokenResponse](docs/TokenResponse.md)
 
 
 

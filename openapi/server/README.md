@@ -52,6 +52,7 @@ Class | Method | HTTP request | Description
 
  - [ServerInfo](docs/ServerInfo.md)
  - [TokenResponse](docs/TokenResponse.md)
+ - [UnauthorizedResponse](docs/UnauthorizedResponse.md)
 
 
 

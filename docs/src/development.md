@@ -82,6 +82,9 @@ The script uses the official `openapitools/openapi-generator-cli` Docker image a
 !!! note
     The script stops all Docker Compose services before generating code to prevent conflicts. You will need to manually restart the services after generation with `docker-compose up -d`.
 
+!!! note
+    After the re-generation of the server code, the initial startup time will be longer due to initial compilation of the generated code.
+
 ### Working with the Generated Code
 
 The generated code will be placed in the `openapi/server` directory as a separate Julia module and should never be modified directly. The `RxInferServer.jl` package will automatically load the generated code when the package is loaded. 
@@ -122,9 +125,7 @@ Edit the `openapi/spec.yaml` file directly in your code editor to customize your
 !!! warning "Important"
     After making ANY changes to the OpenAPI specification, you MUST regenerate the server code by running the generation script again:
 
-```bash
-./generate-server.sh
-```
+See [Generating Server Code](#generating-server-code) for more details.
 
 Failing to regenerate the code after changes to the OpenAPI specification will result in inconsistencies between your API specification and the actual server implementation. The code is not being re-generated automatically for two primary reasons:
 - It might be somewhat slow for a lot of endpoints

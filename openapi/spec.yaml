@@ -39,14 +39,20 @@ paths:
                     server_version: "1.0.0-DEV"
                     server_edition: "CommunityEdition"
                     julia_version: "1.11.3"
+                    api_version: "v1"
                 unknown_versions:
                   value:
                     rxinfer_version: "unknown"
                     server_version: "unknown" 
                     server_edition: "CommunityEdition"
                     julia_version: "1.11.3"
+                    api_version: "v1"
         '401':
           description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
   /token:
     post:
       tags:
@@ -77,6 +83,7 @@ components:
         - server_version
         - server_edition
         - julia_version
+        - api_version
       properties:
         rxinfer_version:
           type: string
@@ -90,6 +97,10 @@ components:
         julia_version:
           type: string
           description: The version of Julia as presented in VERSION
+        api_version:
+          type: string
+          description: The version of the API being used
+          default: "v1"
     TokenResponse:
       type: object
       required:
@@ -98,3 +109,19 @@ components:
         token:
           type: string
           description: The token to use in the Authorization header with the format "Bearer {token}"
+    UnauthorizedResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message explaining the authentication failure
+          default: "Unauthorized"
+        message:
+          type: string
+          description: Additional message explaining the authentication failure
+          default: "The request requires authentication, generate a token using the /token endpoint"
+      example:
+        error: "Unauthorized"
+        message: "The request requires authentication, generate a token using the /token endpoint"

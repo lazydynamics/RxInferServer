@@ -5,12 +5,14 @@ using RxInfer
 using HTTP, Sockets, JSON3, RxInferServerOpenAPI
 using Revise, Preferences, Dates
 
-include("tags/Server.jl")
-
 # API configuration
-const path_prefix = "/v1"
-const HOT_RELOAD_PREF_KEY = "enable_hot_reload"
+const API_PATH_PREFIX = "/v1"
 const PORT = parse(Int, get(ENV, "RXINFER_SERVER_PORT", "8000"))
+
+include("tags/Server.jl")
+include("tags/Authentification.jl")
+
+const HOT_RELOAD_PREF_KEY = "enable_hot_reload"
 
 """
     set_hot_reload(enable::Bool)
@@ -36,16 +38,7 @@ end
 include("middleware.jl")
 
 function middleware_pre_validation(handler::F) where {F}
-    return function(req::HTTP.Request)
-        if !(middleware_check_token(req))
-            return HTTP.Response(401, "Unauthorized")
-        end
-        return handler(req)
-    end
-end
-
-function middleware_post_invoke(req::HTTP.Request, res::HTTP.Response)
-    return res |> middleware_post_invoke_cors
+    return handler |> middleware_check_token |> middleware_cors
 end
 
 """
@@ -84,7 +77,7 @@ RxInferServer.serve()
 """
 function serve()
     # Initialize HTTP router for handling API endpoints
-    router = HTTP.Router()
+    router = HTTP.Router(cors404, cors405)
     server_running = Ref(true)
 
     # Create temp file to track server state and trigger file watchers
@@ -96,9 +89,8 @@ function serve()
     # Register all API endpoints defined in OpenAPI spec
     RxInferServerOpenAPI.register(
         router, @__MODULE__;
-        path_prefix=path_prefix,
-        pre_validation=middleware_pre_validation,
-        post_invoke=middleware_post_invoke
+        path_prefix=API_PATH_PREFIX,
+        pre_validation=middleware_pre_validation
     )
 
     # Conditionally start hot reloading based on preference
@@ -115,9 +107,8 @@ function serve()
                         if server_running[]
                             RxInferServerOpenAPI.register(
                                 router, @__MODULE__;
-                                path_prefix=path_prefix,
-                                pre_validation=middleware_pre_validation,
-                                post_invoke=middleware_post_invoke
+                                path_prefix=API_PATH_PREFIX,
+                                pre_validation=middleware_pre_validation
                             )
                         else
                             @info "[$(Dates.format(now(), "HH:MM:SS"))] Exiting hot reload task..."

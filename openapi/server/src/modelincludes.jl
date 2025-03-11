@@ -3,3 +3,4 @@
 
 include("models/model_ServerInfo.jl")
 include("models/model_TokenResponse.jl")
+include("models/model_UnauthorizedResponse.jl")

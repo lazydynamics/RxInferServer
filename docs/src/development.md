@@ -81,6 +81,14 @@ end
 
 This tells you that you need to implement the `get_server_info` function that must return a `ServerInfo` object as defined in the `openapi/spec.yaml` file.
 
+For a quick check of which server methods need to be implemented, you can use the provided Makefile target:
+
+```bash
+make openapi-endpoints
+```
+
+This command will load RxInferServer and display the documentation of the RxInferServerOpenAPI module, which contains the list of methods that must be implemented.
+
 ### Customizing the OpenAPI Specification
 
 Edit the `openapi/spec.yaml` file directly in your code editor to customize your API specification. 

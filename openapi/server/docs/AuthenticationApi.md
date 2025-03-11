@@ -1,29 +1,29 @@
-# ServerApi
+# AuthenticationApi
 
 All URIs are relative to *http://localhost:8000/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**get_server_info**](ServerApi.md#get_server_info) | **GET** /info | Get server information
+[**generate_token**](AuthenticationApi.md#generate_token) | **POST** /token | Generate authentication token
 
 
-# **get_server_info**
-> get_server_info(req::HTTP.Request;) -> ServerInfo
+# **generate_token**
+> generate_token(req::HTTP.Request;) -> TokenResponse
 
-Get server information
+Generate authentication token
 
-Returns information about the server, such as the RxInfer version, Server version, Server edition, and Julia version
+Generates a new authentication token for accessing protected endpoints
 
 ### Required Parameters
 This endpoint does not need any parameter.
 
 ### Return type
 
-[**ServerInfo**](ServerInfo.md)
+[**TokenResponse**](TokenResponse.md)
 
 ### Authorization
 
-[ApiKeyAuth](../README.md#ApiKeyAuth)
+No authorization required
 
 ### HTTP request headers
 

@@ -7,6 +7,9 @@ Encapsulates generated server code for RxInferServerOpenAPI
 
 The following server methods must be implemented:
 
+- **generate_token**
+    - *invocation:* POST /token
+    - *signature:* generate_token(req::HTTP.Request;) -> TokenResponse
 - **get_server_info**
     - *invocation:* GET /info
     - *signature:* get_server_info(req::HTTP.Request;) -> ServerInfo
@@ -24,6 +27,7 @@ const API_VERSION = "1.0.0"
 
 include("modelincludes.jl")
 
+include("apis/api_AuthenticationApi.jl")
 include("apis/api_ServerApi.jl")
 
 """
@@ -47,6 +51,7 @@ The order in which middlewares are invoked are:
 `init |> read |> pre_validation |> validate |> pre_invoke |> invoke |> post_invoke`
 """
 function register(router::HTTP.Router, impl; path_prefix::String="", optional_middlewares...)
+    registerAuthenticationApi(router, impl; path_prefix=path_prefix, optional_middlewares...)
     registerServerApi(router, impl; path_prefix=path_prefix, optional_middlewares...)
     return router
 end

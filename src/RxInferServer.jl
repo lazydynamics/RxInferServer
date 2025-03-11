@@ -5,12 +5,14 @@ using RxInfer
 using HTTP, Sockets, JSON3, RxInferServerOpenAPI
 using Revise, Preferences, Dates
 
-include("tags/Server.jl")
-
 # API configuration
-const path_prefix = "/v1"
-const HOT_RELOAD_PREF_KEY = "enable_hot_reload"
+const API_PATH_PREFIX = "/v1"
 const PORT = parse(Int, get(ENV, "RXINFER_SERVER_PORT", "8000"))
+
+include("tags/Server.jl")
+include("tags/Authentification.jl")
+
+const HOT_RELOAD_PREF_KEY = "enable_hot_reload"
 
 """
     set_hot_reload(enable::Bool)
@@ -33,25 +35,10 @@ function is_hot_reload_enabled()
     return @load_preference(HOT_RELOAD_PREF_KEY, true)
 end
 
-const CORS_ACCESS_CONTROL_ALLOW_ORIGIN = get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN", "*")
-const CORS_ACCESS_CONTROL_ALLOW_METHODS = get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS", "GET, POST, PUT, DELETE, OPTIONS")
-const CORS_ACCESS_CONTROL_ALLOW_HEADERS = get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS", "Content-Type, Authorization")
+include("middleware.jl")
 
-function middleware_post_invoke_cors(res::HTTP.Response)
-    if !HTTP.hasheader(res, "Access-Control-Allow-Origin")
-        push!(res.headers, "Access-Control-Allow-Origin" => CORS_ACCESS_CONTROL_ALLOW_ORIGIN)
-    end
-    if !HTTP.hasheader(res, "Access-Control-Allow-Methods")
-        push!(res.headers, "Access-Control-Allow-Methods" => CORS_ACCESS_CONTROL_ALLOW_METHODS)
-    end
-    if !HTTP.hasheader(res, "Access-Control-Allow-Headers")
-        push!(res.headers, "Access-Control-Allow-Headers" => CORS_ACCESS_CONTROL_ALLOW_HEADERS)
-    end
-    return res
-end
-
-function middleware_post_invoke(req::HTTP.Request, res::HTTP.Response)
-    return res |> middleware_post_invoke_cors
+function middleware_pre_validation(handler::F) where {F}
+    return handler |> middleware_check_token |> middleware_cors
 end
 
 """
@@ -90,7 +77,7 @@ RxInferServer.serve()
 """
 function serve()
     # Initialize HTTP router for handling API endpoints
-    router = HTTP.Router()
+    router = HTTP.Router(cors404, cors405)
     server_running = Ref(true)
 
     # Create temp file to track server state and trigger file watchers
@@ -102,50 +89,50 @@ function serve()
     # Register all API endpoints defined in OpenAPI spec
     RxInferServerOpenAPI.register(
         router, @__MODULE__;
-        path_prefix=path_prefix,
-        post_invoke=middleware_post_invoke
+        path_prefix=API_PATH_PREFIX,
+        pre_validation=middleware_pre_validation
     )
 
     # Conditionally start hot reloading based on preference
     hot_reload = if is_hot_reload_enabled()
-        @info "Hot reload is enabled. Starting hot reload task..."
+        @info "[$(Dates.format(now(), "HH:MM:SS"))] Hot reload is enabled. Starting hot reload task..."
         Threads.@spawn begin
             run_hot_reload_loop = true
             while run_hot_reload_loop
                 try
-                    @info "Starting hot reload..."
+                    @info "[$(Dates.format(now(), "HH:MM:SS"))] Starting hot reload..."
                     # Watch for changes in server code and automatically update endpoints
                     Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone=true) do
-                        @info "Hot reloading server..."
+                        @info "[$(Dates.format(now(), "HH:MM:SS"))] Hot reloading server..."
                         if server_running[]
                             RxInferServerOpenAPI.register(
                                 router, @__MODULE__;
-                                path_prefix=path_prefix,
-                                post_invoke=middleware_post_invoke
+                                path_prefix=API_PATH_PREFIX,
+                                pre_validation=middleware_pre_validation
                             )
                         else
-                            @info "Exiting hot reload task..."
+                            @info "[$(Dates.format(now(), "HH:MM:SS"))] Exiting hot reload task..."
                             throw(InterruptException())
                         end
                     end
                 catch e
                     if e isa InterruptException
                         run_hot_reload_loop = false
-                        @info "Hot reload task exited."
+                        @info "[$(Dates.format(now(), "HH:MM:SS"))] Hot reload task exited."
                     else
-                        @error "Hot reload task encountered an error: $e"
+                        @error "[$(Dates.format(now(), "HH:MM:SS"))] Hot reload task encountered an error: $e"
                     end
                 end
             end
         end
     else
-        @info "Hot reload is disabled. Use RxInferServer.set_hot_reload(true) to enable it."
+        @info "[$(Dates.format(now(), "HH:MM:SS"))] Hot reload is disabled. Use RxInferServer.set_hot_reload(true) to enable it."
         nothing
     end
 
     # Define shutdown procedure to clean up resources
     function on_shutdown()
-        @info "Shutting down server..."
+        @info "[$(Dates.format(now(), "HH:MM:SS"))] Shutting down server..."
 
         server_running[] = false
 
@@ -158,7 +145,7 @@ function serve()
 
         # Wait for hot reload task to complete if it was running
         if !isnothing(hot_reload)
-            @info "Closing hot reload task..."
+            @info "[$(Dates.format(now(), "HH:MM:SS"))] Closing hot reload task..."
             wait(hot_reload)
         end
     end

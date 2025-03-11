@@ -25,7 +25,6 @@ The `docker-compose.yaml` currently has the following services:
 
 - RxInferServer: the server implementation running in the background on `localhost:8000` with hot-reloading enabled by default, use `LocalPreferences.toml` file to configure the server
 - Swagger UI: a web interface for visualizing and testing the OpenAPI specification, the UI is available at `http://localhost:8080` and allows to test the API endpoints, the endpoints can also be tested in VSCode by opening `spec.yaml` directly and clicking on the "Try it" button
-- OpenAPI Generator: a tool to generate server code from OpenAPI specifications, normally is in idle state, but should be running in order to generate the server code from the OpenAPI specification with the `./generate-server.sh` script
 
 ### Editing the OpenAPI Specification
 
@@ -42,6 +41,30 @@ Open your browser and navigate to: http://localhost:8080
 
 The Swagger UI will automatically load the `openapi/spec.yaml` file, allowing you to visualize and test your API without leaving your browser. Alternatively, you can test the API endpoints in VSCode by opening `spec.yaml` directly and clicking on the "Try it" button.
 
+#### Testing Authenticated Endpoints
+
+The API uses standard Bearer token authentication with the `Authorization` header. Here's how to test authenticated endpoints:
+
+1. **Get a token**:
+   - Navigate to the `/token` endpoint
+   - Click "Try it out" followed by "Execute"
+   - Copy the token from the response
+   - **For development**: You can use the predefined dev token (`dev-token`) configured in the environment variable `RXINFER_SERVER_DEV_TOKEN`
+
+2. **Set up authentication**:
+   - Click the "Authorize" button (padlock icon) at the top of Swagger UI
+   - Enter your token in the value field (without "Bearer" prefix)
+   - For local development, you can enter `dev-token`
+   - Click "Authorize" and "Close"
+   - The client will send requests with `Authorization: Bearer your-token-here`
+
+3. **Test protected endpoints**:
+   - All subsequent requests will include the authorization header
+   - The token remains active until you log out or close the browser
+   - By default, all endpoints except `/token` require authentication
+
+See [Configuration](configuration.md) for more details on setting up authentication for development and production.
+
 ### Generating Server Code
 
 To generate Julia server code from the OpenAPI specification, run:
@@ -52,9 +75,17 @@ To generate Julia server code from the OpenAPI specification, run:
 
 This script will:
 1. Check if Docker is running
-2. Ensure the Docker Compose services are up
-3. Run the OpenAPI Generator with appropriate parameters
+2. Stop all running Docker Compose services to prevent code conflicts
+3. Run the OpenAPI Generator Docker image directly
 4. Generate Julia server code in the `openapi/server` directory
+
+The script uses the official `openapitools/openapi-generator-cli` Docker image and mounts the necessary directories to generate the code without needing a persistent container.
+
+!!! note
+    The script stops all Docker Compose services before generating code to prevent conflicts. You will need to manually restart the services after generation with `docker-compose up -d`.
+
+!!! note
+    After the re-generation of the server code, the initial startup time will be longer due to initial compilation of the generated code.
 
 ### Working with the Generated Code
 
@@ -96,9 +127,7 @@ Edit the `openapi/spec.yaml` file directly in your code editor to customize your
 !!! warning "Important"
     After making ANY changes to the OpenAPI specification, you MUST regenerate the server code by running the generation script again:
 
-```bash
-./generate-server.sh
-```
+See [Generating Server Code](#generating-server-code) for more details.
 
 Failing to regenerate the code after changes to the OpenAPI specification will result in inconsistencies between your API specification and the actual server implementation. The code is not being re-generated automatically for two primary reasons:
 - It might be somewhat slow for a lot of endpoints

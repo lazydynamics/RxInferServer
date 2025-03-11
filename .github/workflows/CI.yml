@@ -54,3 +54,33 @@ jobs:
           make docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  openapi-check:
+    name: OpenAPI Generation Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+      - name: Take initial snapshot of openapi/server
+        run: |
+          if [ ! -d "openapi/server" ]; then
+            echo "::error::openapi/server directory does not exist! Please run ./generate-server.sh locally and commit the generated code."
+            exit 1
+          fi
+          find openapi/server -type f -not -path "*/\.*" | sort | xargs md5sum > before_hash.txt
+      - name: Run OpenAPI code generation
+        run: |
+          chmod +x ./generate-server.sh
+          ./generate-server.sh
+      - name: Take after snapshot and compare
+        run: |
+          find openapi/server -type f -not -path "*/\.*" | sort | xargs md5sum > after_hash.txt
+          
+          if ! diff -q before_hash.txt after_hash.txt > /dev/null; then
+            echo "::error::OpenAPI generated code is out of date! Please run ./generate-server.sh locally and commit the changes."
+            diff before_hash.txt after_hash.txt || true
+            exit 1
+          else
+            echo "✅ OpenAPI generated code is up-to-date."
+          fi

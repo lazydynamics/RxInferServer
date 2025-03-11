@@ -1,0 +1,10 @@
+FROM julia:1.11.3-bullseye
+
+# Set working directory
+WORKDIR /app
+
+# Expose the default port
+EXPOSE 8000
+
+# The entrypoint runs the server
+CMD ["julia", "-e", "using Pkg; Pkg.develop(path=\"/app\"); Pkg.instantiate(); using RxInferServer; RxInferServer.serve()"] 

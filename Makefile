@@ -51,6 +51,6 @@ deps: ## Install project dependencies
 	julia -e 'using Pkg; Pkg.instantiate()'
 
 test: ## Run project tests
-	julia -e 'using Pkg; Pkg.test("RxInferServer")'
+	julia -e 'using Pkg; Pkg.activate("."); Pkg.test()'
 
 clean: docs-clean ## Clean all generated files

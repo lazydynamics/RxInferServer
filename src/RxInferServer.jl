@@ -2,7 +2,7 @@ module RxInferServer
 
 # Core dependencies for API server, hot reloading, and preferences
 using RxInfer
-using HTTP, Sockets, RxInferServerOpenAPI
+using HTTP, Sockets, JSON3, RxInferServerOpenAPI
 using Revise, Preferences, Dates
 
 include("tags/Server.jl")

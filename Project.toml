@@ -25,6 +25,7 @@ Pkg = "1.11.0"
 Preferences = "1.4"
 Revise = "3.7.2"
 RxInfer = "4.0.0"
+RxInferServerOpenAPI = "1.0.0"
 Sockets = "1.11.0"
 julia = "1.11"
 

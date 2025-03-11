@@ -11,10 +11,10 @@
         julia_version=nothing,
     )
 
-    - rxinfer_version::String : The version of RxInfer that the server is using
-    - server_version::String : The version of the RxInferServer
-    - server_edition::String : The edition of the RxInferServer
-    - julia_version::String : The version of Julia
+    - rxinfer_version::String : The version of RxInfer that the server is using, returns unknown if the version is unknown or hidden
+    - server_version::String : The version of the RxInferServer, returns unknown if the version is unknown or hidden
+    - server_edition::String : The edition of the RxInferServer, as set in RXINFER_EDITION environment variable
+    - julia_version::String : The version of Julia as presented in VERSION
 """
 Base.@kwdef mutable struct ServerInfo <: OpenAPI.APIModel
     rxinfer_version::Union{Nothing, String} = nothing
@@ -37,6 +37,8 @@ OpenAPI.property_type(::Type{ ServerInfo }, name::Symbol) = Union{Nothing,eval(B
 function check_required(o::ServerInfo)
     o.rxinfer_version === nothing && (return false)
     o.server_version === nothing && (return false)
+    o.server_edition === nothing && (return false)
+    o.julia_version === nothing && (return false)
     true
 end
 

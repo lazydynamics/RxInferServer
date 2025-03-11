@@ -47,16 +47,18 @@ components:
       required:
         - rxinfer_version
         - server_version
+        - server_edition
+        - julia_version
       properties:
         rxinfer_version:
           type: string
-          description: The version of RxInfer that the server is using, returns "unknown" if the version is unknown or hidden
+          description: The version of RxInfer that the server is using, returns unknown if the version is unknown or hidden
         server_version:
           type: string
-          description: The version of the RxInferServer, returns "unknown" if the version is unknown or hidden
+          description: The version of the RxInferServer, returns unknown if the version is unknown or hidden
         server_edition:
           type: string
-          description: The edition of the RxInferServer
+          description: The edition of the RxInferServer, as set in RXINFER_EDITION environment variable
         julia_version:
           type: string
-          description: The version of Julia 
+          description: The version of Julia as presented in VERSION

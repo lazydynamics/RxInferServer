@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 Get server information
 
-Returns information about the server, including the RxInfer version
+Returns information about the server, such as the RxInfer version, Server version, Server edition, and Julia version
 
 ### Required Parameters
 This endpoint does not need any parameter.

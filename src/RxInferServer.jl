@@ -87,11 +87,7 @@ function serve()
     end
 
     # Register all API endpoints defined in OpenAPI spec
-    RxInferServerOpenAPI.register(
-        router, @__MODULE__;
-        path_prefix=API_PATH_PREFIX,
-        pre_validation=middleware_pre_validation
-    )
+    RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
 
     # Conditionally start hot reloading based on preference
     hot_reload = if is_hot_reload_enabled()
@@ -102,14 +98,10 @@ function serve()
                 try
                     @info "[$(Dates.format(now(), "HH:MM:SS"))] Starting hot reload..."
                     # Watch for changes in server code and automatically update endpoints
-                    Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone=true) do
+                    Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone = true) do
                         @info "[$(Dates.format(now(), "HH:MM:SS"))] Hot reloading server..."
                         if server_running[]
-                            RxInferServerOpenAPI.register(
-                                router, @__MODULE__;
-                                path_prefix=API_PATH_PREFIX,
-                                pre_validation=middleware_pre_validation
-                            )
+                            RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
                         else
                             @info "[$(Dates.format(now(), "HH:MM:SS"))] Exiting hot reload task..."
                             throw(InterruptException())
@@ -151,7 +143,7 @@ function serve()
     end
 
     # Start HTTP server on port `PORT`
-    server = HTTP.serve(router, ip"0.0.0.0", PORT, on_shutdown=on_shutdown)
+    server = HTTP.serve(router, ip"0.0.0.0", PORT, on_shutdown = on_shutdown)
     return server
 end
 

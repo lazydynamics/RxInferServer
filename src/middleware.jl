@@ -76,9 +76,7 @@ See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref)
 is_dev_token(token::String) = is_dev_token_enabled() && token == DEV_TOKEN
 
 # List of URL paths that are exempt from authentication
-const AUTH_EXEMPT_PATHS = [
-    string(API_PATH_PREFIX, "/token")
-]
+const AUTH_EXEMPT_PATHS = [string(API_PATH_PREFIX, "/token")]
 
 """
     should_bypass_auth(req::HTTP.Request)::Bool
@@ -113,13 +111,16 @@ function middleware_check_token(req::HTTP.Request)::Bool
 end
 
 const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
-    HTTP.Response(401, RxInferServerOpenAPI.UnauthorizedResponse(
-        message=ifelse(
-            is_dev_token_enabled(),
-            "The request requires authentication, generate a token using the /token endpoint or use the development token `$(DEV_TOKEN)`",
-            "The request requires authentication, generate a token using the /token endpoint"
+    HTTP.Response(
+        401,
+        RxInferServerOpenAPI.UnauthorizedResponse(
+            message = ifelse(
+                is_dev_token_enabled(),
+                "The request requires authentication, generate a token using the /token endpoint or use the development token `$(DEV_TOKEN)`",
+                "The request requires authentication, generate a token using the /token endpoint"
+            )
         )
-    ))
+    )
 )
 
 function middleware_check_token(handler::F) where {F}

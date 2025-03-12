@@ -26,5 +26,4 @@ function check_required(o::TokenResponse)
     true
 end
 
-function OpenAPI.validate_property(::Type{TokenResponse}, name::Symbol, val)
-end
+function OpenAPI.validate_property(::Type{TokenResponse}, name::Symbol, val) end

@@ -52,5 +52,4 @@ function check_required(o::ServerInfo)
     true
 end
 
-function OpenAPI.validate_property(::Type{ServerInfo}, name::Symbol, val)
-end
+function OpenAPI.validate_property(::Type{ServerInfo}, name::Symbol, val) end

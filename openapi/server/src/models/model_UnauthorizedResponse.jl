@@ -30,5 +30,4 @@ function check_required(o::UnauthorizedResponse)
     true
 end
 
-function OpenAPI.validate_property(::Type{UnauthorizedResponse}, name::Symbol, val)
-end
+function OpenAPI.validate_property(::Type{UnauthorizedResponse}, name::Symbol, val) end

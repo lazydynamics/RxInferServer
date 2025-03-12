@@ -1,6 +1,6 @@
 # RxInferServer.jl Makefile
 
-.PHONY: help docs docs-serve docs-clean docs-build deps test clean openapi-endpoints
+.PHONY: help docs docs-serve docs-clean docs-build deps test clean openapi-endpoints format check-format
 
 # Colors for terminal output
 GREEN  := $(shell tput -Txterm setaf 2)
@@ -27,6 +27,10 @@ help:
 	@echo '  ${YELLOW}test${RESET}            Run project tests'
 	@echo '  ${YELLOW}openapi-endpoints${RESET}        Show RxInferServerOpenAPI module documentation (methods to implement)'
 	@echo '  ${YELLOW}clean${RESET}           Clean all generated files'
+	@echo ''
+	@echo '${GREEN}Formatting commands:${RESET}'
+	@echo '  ${YELLOW}format${RESET}         Format Julia code'
+	@echo '  ${YELLOW}check-format${RESET}    Check Julia code formatting'
 	@echo ''
 	@echo '${GREEN}Help:${RESET}'
 	@echo '  ${YELLOW}help${RESET}            Show this help message'
@@ -58,3 +62,13 @@ openapi-endpoints: ## Show RxInferServerOpenAPI module documentation (methods to
 	julia -e 'using Pkg; Pkg.activate("."); using RxInferServer; println(@doc(RxInferServer.RxInferServerOpenAPI))'
 
 clean: docs-clean ## Clean all generated files
+
+# Formatting commands:
+scripts-deps: ## Install dependencies for the scripts
+	julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
+
+format: scripts-deps ## Format Julia code
+	julia --project=scripts scripts/formatter.jl --overwrite
+
+check-format: scripts-deps ## Check Julia code formatting
+	julia --project=scripts scripts/formatter.jl

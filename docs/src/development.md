@@ -25,6 +25,27 @@ The `docker-compose.yaml` currently has the following services:
 
 - RxInferServer: the server implementation running in the background on `localhost:8000` with hot-reloading enabled by default, use `LocalPreferences.toml` file to configure the server
 - Swagger UI: a web interface for visualizing and testing the OpenAPI specification, the UI is available at `http://localhost:8080` and allows to test the API endpoints, the endpoints can also be tested in VSCode by opening `spec.yaml` directly and clicking on the "Try it" button
+- MongoDB Atlas Local: a local MongoDB instance running on `localhost:27017` that mimics MongoDB Atlas functionality for development and testing purposes
+
+### MongoDB in Development
+
+The development environment includes a MongoDB Atlas Local instance that's accessible to the RxInferServer service. The connection is pre-configured and available through the environment variable `RXINFER_MONGODB_URL`.
+
+#### Connecting with MongoDB Compass
+
+[MongoDB Compass](https://www.mongodb.com/products/compass) is a GUI for MongoDB that allows you to explore and manipulate your data visually. To connect to the development MongoDB instance:
+
+1. Download and install [MongoDB Compass](https://www.mongodb.com/try/download/compass)
+2. Open MongoDB Compass
+3. Use the following connection string to connect to the local MongoDB instance:
+   ```
+   mongodb://localhost:27017
+   ```
+4. Click "Connect"
+
+Note that when connecting from your host machine (outside the Docker network), you'll always use `localhost:27017` as the address (except when using the `RXINFER_MONGODB_URL` environment variable). This is because the Docker port mapping makes the database accessible at this address on your host machine.
+
+When running in the Docker development environment, the connection URL will automatically point to the MongoDB container (`mongodb://database:27017`).
 
 ### Editing the OpenAPI Specification
 

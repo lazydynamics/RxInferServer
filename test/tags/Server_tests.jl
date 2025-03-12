@@ -14,3 +14,26 @@ end
         @show info
     end
 end
+
+@testitem "blahblha" begin 
+    import RxInferServer: Client, ServerApi
+    import RxInferServer.RxInferClientOpenAPI: get_server_info
+
+    client = Client("http://localhost:8000/v1")
+    server_api = ServerApi(client)
+
+    response, info = get_server_info(server_api)
+    @test info.status === 401
+
+    client = Client("http://localhost:8000/v1", 
+        headers = Dict("Authorization" => "Bearer $(RxInferServer.DEV_TOKEN)")
+    )
+    server_api = ServerApi(client)
+
+    response, info = get_server_info(server_api)
+    @test info.status === 200
+    @test !isempty(response.rxinfer_version)
+    @test !isempty(response.server_version)
+    @test !isempty(response.server_edition)
+    @test !isempty(response.julia_version)
+end

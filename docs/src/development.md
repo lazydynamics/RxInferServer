@@ -4,7 +4,7 @@ This section describes the development process for the RxInferServer.jl project 
 
 ## OpenAPI Specification and Code Generation
 
-This repository includes an OpenAPI specification for the RxInferServer.jl API and tools to generate Julia server code from it.
+This repository includes an OpenAPI specification for the RxInferServer.jl API and tools to generate Julia server and client code from it.
 
 ### Prerequisites
 
@@ -86,7 +86,28 @@ The API uses standard Bearer token authentication with the `Authorization` heade
 
 See [Configuration](configuration.md) for more details on setting up authentication for development and production.
 
-### Generating Server Code
+### Generating Code from OpenAPI Specification
+
+You can generate both server and client code from the OpenAPI specification using the provided scripts and Makefile commands.
+
+#### Using Makefile Commands
+
+The project includes several convenient Makefile commands for code generation:
+
+```bash
+# Generate only the client code
+make generate-client
+
+# Generate only the server code
+make generate-server
+
+# Generate both client and server code in one go
+make generate-all
+```
+
+These commands use the underlying scripts to perform the code generation with appropriate settings.
+
+#### Generating Server Code
 
 To generate Julia server code from the OpenAPI specification, run:
 
@@ -100,17 +121,27 @@ This script will:
 3. Run the OpenAPI Generator Docker image directly
 4. Generate Julia server code in the `openapi/server` directory
 
-The script uses the official `openapitools/openapi-generator-cli` Docker image and mounts the necessary directories to generate the code without needing a persistent container.
+#### Generating Client Code
+
+To generate Julia client code from the OpenAPI specification, run:
+
+```bash
+./generate-client.sh
+```
+
+This script follows the same workflow as the server generation script but produces a Julia client instead, placing the output in the `openapi/client` directory. The client code can be used to interact with the RxInfer API from Julia applications.
 
 !!! note
-    The script stops all Docker Compose services before generating code to prevent conflicts. You will need to manually restart the services after generation with `docker-compose up -d`.
+    Both scripts stop all Docker Compose services before generating code to prevent conflicts. You will need to manually restart the services after generation with `docker-compose up -d`.
 
 !!! note
     After the re-generation of the server code, the initial startup time will be longer due to initial compilation of the generated code.
 
 ### Working with the Generated Code
 
-The generated code will be placed in the `openapi/server` directory as a separate Julia module and should never be modified directly. The `RxInferServer.jl` package will automatically load the generated code when the package is loaded. 
+#### Server Code
+
+The generated server code will be placed in the `openapi/server` directory as a separate Julia module and should never be modified directly. The `RxInferServer.jl` package will automatically load the generated code when the package is loaded. 
 
 The generated code does not contain the actual implementation of the endpoints. The actual implementation is located in the `src/tags` directory for each tag specified in the OpenAPI specification. You can also manually open the `openapi/server/src/RxInferServerOpenAPI.jl` file to view which endpoints must be implemented. An example generated output might look like this:
 
@@ -141,14 +172,18 @@ make openapi-endpoints
 
 This command will load RxInferServer and display the documentation of the RxInferServerOpenAPI module, which contains the list of methods that must be implemented.
 
+#### Client Code
+
+The generated client code will be placed in the `openapi/client` directory as a separate Julia module. This client code can be used to interact with the RxInfer API from Julia applications. The client provides Julia functions that correspond to each API endpoint defined in the OpenAPI specification.
+
 ### Customizing the OpenAPI Specification
 
 Edit the `openapi/spec.yaml` file directly in your code editor to customize your API specification. 
 
 !!! warning "Important"
-    After making ANY changes to the OpenAPI specification, you MUST regenerate the server code by running the generation script again:
+    After making ANY changes to the OpenAPI specification, you MUST regenerate both the server and client code by running the generation scripts again or using the Makefile command `make generate-all`.
 
-See [Generating Server Code](#generating-server-code) for more details.
+See [Generating Code from OpenAPI Specification](#generating-code-from-openapi-specification) for more details.
 
 Failing to regenerate the code after changes to the OpenAPI specification will result in inconsistencies between your API specification and the actual server implementation. The code is not being re-generated automatically for two primary reasons:
 - It might be somewhat slow for a lot of endpoints
@@ -159,3 +194,4 @@ Failing to regenerate the code after changes to the OpenAPI specification will r
 - [OpenAPI Specification](https://swagger.io/specification/)
 - [OpenAPI Generator](https://openapi-generator.tech/)
 - [Julia Server Template](https://openapi-generator.tech/docs/generators/julia-server)
+- [Julia Client Template](https://openapi-generator.tech/docs/generators/julia)

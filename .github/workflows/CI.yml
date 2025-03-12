@@ -62,24 +62,33 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
-      - name: Take initial snapshot of openapi/server
+      
+      # Check if required directories exist
+      - name: Check if OpenAPI directories exist
         run: |
-          if [ ! -d "openapi/server" ]; then
-            echo "::error::openapi/server directory does not exist! Please run ./generate-server.sh locally and commit the generated code."
+          if [ ! -d "openapi/server" ] || [ ! -d "openapi/client" ]; then
+            echo "::error::OpenAPI generated code directories are missing! Please run 'make generate-all' locally and commit the generated code."
             exit 1
           fi
-          find openapi/server -type f -not -path "*/\.*" | sort | xargs md5sum > before_hash.txt
+      
+      # Take initial snapshot
+      - name: Take initial snapshot of OpenAPI generated code
+        run: |
+          find openapi -type f -not -path "*/\.*" | sort | xargs md5sum > openapi_before_hash.txt
+      
+      # Run OpenAPI code generation
       - name: Run OpenAPI code generation
         run: |
-          chmod +x ./generate-server.sh
-          ./generate-server.sh
-      - name: Take after snapshot and compare
+          make generate-all
+      
+      # Compare code
+      - name: Check if OpenAPI generated code is up-to-date
         run: |
-          find openapi/server -type f -not -path "*/\.*" | sort | xargs md5sum > after_hash.txt
+          find openapi -type f -not -path "*/\.*" | sort | xargs md5sum > openapi_after_hash.txt
           
-          if ! diff -q before_hash.txt after_hash.txt > /dev/null; then
-            echo "::error::OpenAPI generated code is out of date! Please run ./generate-server.sh locally and commit the changes."
-            diff before_hash.txt after_hash.txt || true
+          if ! diff -q openapi_before_hash.txt openapi_after_hash.txt > /dev/null; then
+            echo "::error::OpenAPI generated code is out of date! Please run 'make generate-all' locally and commit the changes."
+            diff openapi_before_hash.txt openapi_after_hash.txt || true
             exit 1
           else
             echo "✅ OpenAPI generated code is up-to-date."

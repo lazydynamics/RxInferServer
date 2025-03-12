@@ -13,10 +13,12 @@ Preferences = "21216c6a-2e73-6563-6e65-726566657250"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 RxInfer = "86711068-29c9-4ff7-b620-ae75d7495b3d"
 RxInferServerOpenAPI = "476dbcea-416d-4115-b70c-6e4041cc1de4"
+RxInferClientOpenAPI = "8b1d2e5c-3735-4918-bca0-1c0cc8ef920a"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [sources]
 RxInferServerOpenAPI = {path = "openapi/server"}
+RxInferClientOpenAPI = {path = "openapi/client"}
 
 [compat]
 Dates = "1.11.0"

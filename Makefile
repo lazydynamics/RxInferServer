@@ -1,6 +1,6 @@
 # RxInferServer.jl Makefile
 
-.PHONY: help docs docs-serve docs-clean docs-build deps test clean openapi-endpoints format check-format
+.PHONY: help docs docs-serve docs-clean docs-build deps test clean openapi-endpoints format check-format generate-client generate-server generate-all
 
 # Colors for terminal output
 GREEN  := $(shell tput -Txterm setaf 2)
@@ -26,6 +26,9 @@ help:
 	@echo '  ${YELLOW}deps${RESET}                 Install project dependencies'
 	@echo '  ${YELLOW}test${RESET}                 Run project tests'
 	@echo '  ${YELLOW}openapi-endpoints${RESET}    Show RxInferServerOpenAPI module documentation'
+	@echo '  ${YELLOW}generate-client${RESET}      Generate OpenAPI client code'
+	@echo '  ${YELLOW}generate-server${RESET}      Generate OpenAPI server code'
+	@echo '  ${YELLOW}generate-all${RESET}         Generate both OpenAPI client and server code'
 	@echo '  ${YELLOW}clean${RESET}                Clean all generated files'
 	@echo ''
 	@echo '${GREEN}Formatting commands:${RESET}'
@@ -60,6 +63,14 @@ test: ## Run project tests
 
 openapi-endpoints: ## Show RxInferServerOpenAPI module documentation (methods to implement)
 	julia -e 'using Pkg; Pkg.activate("."); using RxInferServer; println(@doc(RxInferServer.RxInferServerOpenAPI))'
+
+generate-client: ## Generate OpenAPI client code
+	./generate-client.sh
+
+generate-server: ## Generate OpenAPI server code
+	./generate-server.sh
+
+generate-all: generate-client generate-server ## Generate both OpenAPI client and server code
 
 clean: docs-clean ## Clean all generated files
 

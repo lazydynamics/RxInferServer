@@ -13,14 +13,14 @@ A wrapper for RxInfer models that can be deployed as a service.
 - `init`: The initialization specification for the model
 - `meta`: The meta specification for the model
 """
-struct DeployableRxInferModel{M,C,I,ME}
+struct DeployableRxInferModel{M, C, I, ME}
     model::M
     constraints::C
     init::I
     meta::ME
 
-    function DeployableRxInferModel(model, constraints=nothing, init=nothing, meta=nothing)
-        new{typeof(model),typeof(constraints),typeof(init),typeof(meta)}(model, constraints, init, meta)
+    function DeployableRxInferModel(model, constraints = nothing, init = nothing, meta = nothing)
+        new{typeof(model), typeof(constraints), typeof(init), typeof(meta)}(model, constraints, init, meta)
     end
 end
 
@@ -40,11 +40,11 @@ Run inference on the model with the given data and return the specified output p
 function (model::DeployableRxInferModel)(data::NamedTuple, output; kwargs...)
     # Run inference with the model specification
     inference_result = infer(
-        model=model.model,
-        data=data,
-        constraints=model.constraints,
-        initialization=model.init,
-        meta=model.meta;
+        model = model.model,
+        data = data,
+        constraints = model.constraints,
+        initialization = model.init,
+        meta = model.meta;
         kwargs...  # Forward any additional kwargs to infer
     )
 
@@ -100,4 +100,3 @@ function (model::DeployableRxInferModel)(; kwargs...)
     # Call the main method with the separated arguments
     return model(data, output; kwargs_dict...)
 end
-

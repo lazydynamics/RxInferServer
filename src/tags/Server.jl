@@ -13,10 +13,6 @@ function get_server_info(req::HTTP.Request)::RxInferServerOpenAPI.ServerInfo
     server_version = !isnothing(server_version_entry) ? string(manifest[server_version_entry].version) : "unknown"
 
     return RxInferServerOpenAPI.ServerInfo(
-        rxinfer_version=rxinfer_version,
-        server_version=server_version,
-        server_edition=SERVER_EDITION,
-        julia_version=string(VERSION),
-        api_version="v1"
+        rxinfer_version = rxinfer_version, server_version = server_version, server_edition = SERVER_EDITION, julia_version = string(VERSION), api_version = "v1"
     )
 end

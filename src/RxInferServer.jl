@@ -2,8 +2,10 @@ module RxInferServer
 
 # Core dependencies for API server, hot reloading, and preferences
 using RxInfer
-using HTTP, Sockets, JSON3, RxInferServerOpenAPI
+using HTTP, Sockets, JSON, RxInferServerOpenAPI
 using Revise, Preferences, Dates
+
+include("database.jl")
 
 # API configuration
 const API_PATH_PREFIX = "/v1"
@@ -143,8 +145,9 @@ function serve()
     end
 
     # Start HTTP server on port `PORT`
-    server = HTTP.serve(router, ip"0.0.0.0", PORT, on_shutdown = on_shutdown)
-    return server
+    Database.with_connection() do
+        HTTP.serve(router, ip"0.0.0.0", PORT, on_shutdown = on_shutdown)
+    end
 end
 
 end

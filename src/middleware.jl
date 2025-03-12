@@ -73,7 +73,7 @@ Returns true if the token is the development token. Returns false if the develop
 
 See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref)
 """
-is_dev_token(token::String) = is_dev_token_enabled() && token == DEV_TOKEN
+is_dev_token(token) = is_dev_token_enabled() && token == DEV_TOKEN
 
 # List of URL paths that are exempt from authentication
 const AUTH_EXEMPT_PATHS = [string(API_PATH_PREFIX, "/token")]

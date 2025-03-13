@@ -2,6 +2,10 @@ using HTTP, Pkg
 
 const SERVER_EDITION = get(ENV, "RXINFER_SERVER_EDITION", "CommunityEdition")
 
+function ping_server(req::HTTP.Request)::RxInferServerOpenAPI.PingResponse
+    return RxInferServerOpenAPI.PingResponse(status = "ok")
+end
+
 function get_server_info(req::HTTP.Request)::RxInferServerOpenAPI.ServerInfo
     # Somewhat hacky way to get the current context of Julia environment
     manifest = Pkg.Operations.Context().env.manifest

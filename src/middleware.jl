@@ -76,7 +76,10 @@ See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref)
 is_dev_token(token) = is_dev_token_enabled() && token == DEV_TOKEN
 
 # List of URL paths that are exempt from authentication
-const AUTH_EXEMPT_PATHS = [string(API_PATH_PREFIX, "/token")]
+const AUTH_EXEMPT_PATHS = [
+    string(API_PATH_PREFIX, "/token"),
+    string(API_PATH_PREFIX, "/ping")
+]
 
 """
     should_bypass_auth(req::HTTP.Request)::Bool

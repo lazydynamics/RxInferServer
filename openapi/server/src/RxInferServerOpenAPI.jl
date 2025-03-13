@@ -13,6 +13,9 @@ The following server methods must be implemented:
 - **get_server_info**
     - *invocation:* GET /info
     - *signature:* get_server_info(req::HTTP.Request;) -> ServerInfo
+- **ping_server**
+    - *invocation:* GET /ping
+    - *signature:* ping_server(req::HTTP.Request;) -> PingResponse
 """
 module RxInferServerOpenAPI
 

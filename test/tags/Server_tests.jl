@@ -1,3 +1,15 @@
+@testitem "200 on /ping endpoint regardless of authentication" setup = [TestUtils] begin
+    authorized_client = TestUtils.TestClient(authorized = true)
+    nonauthorized_client = TestUtils.TestClient(authorized = false)
+
+    for client in [authorized_client, nonauthorized_client]
+        server_api = TestUtils.RxInferClientOpenAPI.ServerApi(client)
+        response, info = TestUtils.RxInferClientOpenAPI.ping_server(server_api)
+        @test info.status == 200
+        @test response.status == "ok"
+    end
+end
+
 @testitem "401 on /info endpoint without `Authorization`" setup = [TestUtils] begin
     client     = TestUtils.TestClient(authorized = false)
     server_api = TestUtils.RxInferClientOpenAPI.ServerApi(client)

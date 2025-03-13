@@ -1,6 +1,7 @@
 README.md
 docs/AuthenticationApi.md
 docs/ErrorResponse.md
+docs/PingResponse.md
 docs/ServerApi.md
 docs/ServerInfo.md
 docs/TokenResponse.md
@@ -9,5 +10,6 @@ src/apis/api_AuthenticationApi.jl
 src/apis/api_ServerApi.jl
 src/modelincludes.jl
 src/models/model_ErrorResponse.jl
+src/models/model_PingResponse.jl
 src/models/model_ServerInfo.jl
 src/models/model_TokenResponse.jl

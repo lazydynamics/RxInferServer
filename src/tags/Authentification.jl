@@ -8,7 +8,10 @@ function generate_token(req::HTTP.Request)::RxInferServerOpenAPI.TokenResponse
     insert_result = Mongoc.insert_one(collection, document)
 
     if insert_result.reply["insertedCount"] != 1
-        # TODO: Handle error
+        return RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request",
+            message = "Unable to generate token due to internal error"
+        )
     end
 
     return RxInferServerOpenAPI.TokenResponse(token = token)

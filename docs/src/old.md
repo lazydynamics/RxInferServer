@@ -146,3 +146,13 @@ end
 # Data with missing values is handled automatically
 data = [1.0, 2.0, missing, 4.0, 5.0]
 ```
+
+```@docs 
+RxInferServer.OldImplementation.start   
+RxInferServer.OldImplementation.add_model 
+RxInferServer.OldImplementation.add 
+RxInferServer.OldImplementation.stop 
+RxInferServer.OldImplementation.DeployableRxInferModel 
+RxInferServer.OldImplementation.DeployableRxInferModel
+RxInferServer.OldImplementation.RxInferModelServer
+```

@@ -62,7 +62,7 @@ deps: ## Install project dependencies
 	julia --project -e 'using Pkg; Pkg.instantiate()'
 
 test: deps ## Run project tests
-	julia --project -e 'using RxInferServer; Pkg.test()'
+	julia --project -e 'using Pkg; Pkg.test()'
 
 serve: deps ## Run the server
 	julia --project -e 'using RxInferServer; RxInferServer.serve()'

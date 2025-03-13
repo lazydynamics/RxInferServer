@@ -156,4 +156,9 @@ const Client = RxInferClientOpenAPI.OpenAPI.Clients.Client
 const ServerApi = RxInferClientOpenAPI.ServerApi
 const AuthenticationApi = RxInferClientOpenAPI.AuthenticationApi
 
+module OldImplementation
+include("old_impl/model.jl")
+include("old_impl/serve.jl")
+end
+
 end

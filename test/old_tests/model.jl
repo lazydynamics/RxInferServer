@@ -1,277 +1,352 @@
-# @testitem "DeployableRxInferModel - Coin Toss #1" begin
-#     using RxInfer
-#     using RxInferServer
-#     using StableRNGs
-#     using Distributions
+@testitem "Server Creation" begin
+    using HTTP
+    using RxInferServer
+    using RxInferServer.OldImplementation
 
-#     # Define a simple coin toss model
-#     @model function coin_model(y, a, b)
-#         θ ~ Beta(a, b)
-#         for i in eachindex(y)
-#             y[i] ~ Bernoulli(θ)
-#         end
-#     end
+    server = RxInferModelServer(8081)
+    @test server.port == 8081
+    @test server.server === nothing
+    @test server.router isa HTTP.Router
+end
 
-#     # Generate some synthetic data
-#     rng = StableRNG(42)
-#     n = 100
-#     θ_real = 0.75
-#     dataset = float.(rand(rng, Bernoulli(θ_real), n))
+@testitem "Adding Endpoints" begin
+    using HTTP
+    using RxInferServer
+    using RxInferServer.OldImplementation
 
-#     # Define constraints and initialization
-#     constraints = @constraints begin
-#         q(θ, y) = q(θ)q(y)
-#     end
+    server = RxInferModelServer(8082)
 
-#     init = @initialization begin
-#         q(θ) = Beta(1.0, 1.0)
-#     end
+    # Test adding a GET endpoint
+    handler(req) = HTTP.Response(200, "OK")
+    add(handler, server, "/test")
 
-#     # Create deployable model
-#     deployable = DeployableRxInferModel(coin_model(a = 4.0, b = 8.0), constraints, init)
+    # Test adding a POST endpoint
+    post_handler(req) = HTTP.Response(201, "Created")
+    add(post_handler, server, "/post-test", method = "POST")
 
-#     # Test NamedTuple interface
-#     result_dict = deployable((y = dataset,), [:θ])
-#     @test haskey(result_dict, "posteriors")
-#     @test haskey(result_dict["posteriors"], :θ)
+    # Start server to test endpoints
+    @async start(server)
+    sleep(1)  # Give server time to start
 
-#     post = result_dict["posteriors"][:θ]
+    try
+        # Test GET endpoint
+        response = HTTP.get("http://localhost:8082/test")
+        @test response.status == 200
+        @test String(response.body) == "OK"
 
-#     @test mean(post) ≈ θ_real atol = 0.1
+        # Test POST endpoint
+        response = HTTP.post("http://localhost:8082/post-test")
+        @test response.status == 201
+        @test String(response.body) == "Created"
 
-#     # Test kwargs interface
-#     result_kwargs = deployable(data = (y = dataset,), output = [:θ])
-#     @test haskey(result_kwargs, "posteriors")
-#     @test haskey(result_kwargs["posteriors"], :θ)
-#     post_θ = result_kwargs["posteriors"][:θ]
-#     @test mean(post_θ) ≈ θ_real atol = 0.1
+        # Test wrong method on GET endpoint
+        @test_throws HTTP.ExceptionRequest.StatusError HTTP.post("http://localhost:8082/test")
 
-#     # Test error handling for missing output specification
-#     @test_throws ArgumentError deployable(data = (y = dataset,))
-# end
+        # Test wrong method on POST endpoint
+        @test_throws HTTP.ExceptionRequest.StatusError HTTP.get("http://localhost:8082/post-test")
 
-# @testitem "DeployableRxInferModel - Missing Data Handling" begin
-#     using RxInfer
-#     using RxInferServer
-#     using StableRNGs
-#     using Distributions
+        # Test non-existent endpoint
+        @test_throws HTTP.ExceptionRequest.StatusError HTTP.get("http://localhost:8082/nonexistent")
+    finally
+        stop(server)
+    end
+end
 
-#     # Define a simple smoothing model that can handle missing data
-#     @model function smoothing_model(x0, y)
-#         P ~ Gamma(shape = 0.001, scale = 0.001)
-#         x_prior ~ Normal(mean = mean(x0), var = var(x0))
+@testitem "Server Lifecycle" begin
+    using HTTP
+    using RxInferServer
+    using RxInferServer.OldImplementation
+    server = RxInferModelServer(8083)
 
-#         local x
-#         x_prev = x_prior
+    # Add a test endpoint
+    add(server, "/hello") do req
+        return HTTP.Response(200, "Hello, World!")
+    end
 
-#         for i in 1:length(y)
-#             x[i] ~ Normal(mean = x_prev, precision = 1.0)
-#             y[i] ~ Normal(mean = x[i], precision = P)
-#             x_prev = x[i]
-#         end
-#     end
+    # Start the server
+    @async start(server)
+    sleep(1)  # Give the server time to start
 
-#     # Generate data with missing values
-#     rng = StableRNG(42)
-#     n = 50
-#     real_signal = map(e -> sin(0.05 * e), 1:n)
-#     noisy_data = real_signal + randn(rng, n)
-#     missing_data = Vector{Union{Float64, Missing}}(noisy_data)
-#     missing_data[20:25] .= missing
+    # Test if server is running
+    @test server.server !== nothing
 
-#     # Define constraints and initialization
-#     constraints = @constraints begin
-#         q(x_prior, x, y, P) = q(x_prior, x)q(P)q(y)
-#     end
+    try
+        # Test the endpoint
+        response = HTTP.get("http://localhost:8083/hello")
+        @test response.status == 200
+        @test String(response.body) == "Hello, World!"
 
-#     init = @initialization begin
-#         q(P) = Gamma(0.001, 0.001)
-#     end
+        # Test non-existent endpoint
+        @test_throws HTTP.ExceptionRequest.StatusError HTTP.get("http://localhost:8083/nonexistent")
 
-#     x0_prior = NormalMeanVariance(0.0, 1000.0)
+        # Test starting an already running server
+        start(server)  # Should print "Server is already running"
+        @test server.server !== nothing
+    finally
+        # Test stopping the server
+        stop(server)
+        @test server.server === nothing
 
-#     # Create deployable model
-#     deployable = DeployableRxInferModel(smoothing_model(x0 = x0_prior), constraints, init)
+        # Test stopping an already stopped server
+        stop(server)  # Should handle this gracefully
+        @test server.server === nothing
+    end
+end
 
-#     # Test handling of missing data
-#     result = deployable((y = missing_data,), [:x])
-#     @test haskey(result, "posteriors")
-#     @test haskey(result["posteriors"], :x)
-#     x_posts = result["posteriors"][:x]
-#     @test length(x_posts) == n
+@testitem "Serving RxInfer Model - Basic Functionality" begin
+    using HTTP
+    using RxInferServer
+    using RxInfer
+    using StableRNGs
+    using Distributions
+    using JSON3
+    using RxInferServer.OldImplementation
 
-#     # Check that we get estimates even for missing data points
-#     for i in 20:25
-#         post = x_posts[i]
-#         @test !isnan(mean(post))
-#     end
-# end
+    # Define a simple coin toss model
+    @model function coin_model(y, a, b)
+        θ ~ Beta(a, b)
+        for i in eachindex(y)
+            y[i] ~ Bernoulli(θ)
+        end
+    end
 
-# @testitem "DeployableRxInferModel - Inference Parameters" begin
-#     using RxInfer
-#     using RxInferServer
-#     using StableRNGs
-#     using Distributions
+    # Generate some synthetic data
+    rng = StableRNG(42)
+    n = 100
+    θ_real = 0.75
+    dataset = float.(rand(rng, Bernoulli(θ_real), n))
 
-#     # Define a simple model where iterations matter
-#     @model function nonlinear_model(x)
-#         μ ~ NormalMeanVariance(0.0, 10.0)
-#         σ ~ InverseGamma(1.0, 1.0)
-#         for i in eachindex(x)
-#             x[i] ~ NormalMeanVariance(μ, σ)
-#         end
-#     end
+    # Define constraints and initialization
+    constraints = @constraints begin
+        q(θ, y) = q(θ)q(y)
+    end
 
-#     # Generate synthetic data
-#     rng = StableRNG(42)
-#     n = 1000
-#     μ_real = 2.0
-#     σ_real = 1.0
-#     data = randn(rng, n) .* sqrt(σ_real) .+ μ_real
+    init = @initialization begin
+        q(θ) = Beta(1.0, 1.0)
+    end
 
-#     # Create deployable model
-#     deployable = DeployableRxInferModel(nonlinear_model(), @constraints(q(μ, σ, x) = q(μ)q(σ)q(x)), @initialization begin
-#         q(μ) = NormalMeanVariance(0.0, 10.0)
-#         q(σ) = InverseGamma(1.0, 1.0)
-#     end)
+    # Create server
+    server = RxInferModelServer(8084)
 
-#     # Test with different numbers of iterations
-#     result_few = deployable(data = (x = data,), output = [:μ], iterations = 1)
-#     result_many = deployable(data = (x = data,), output = [:μ], iterations = 50)
+    # Add endpoints with different settings
+    add_model(server, "/coin-single", coin_model(a = 4.0, b = 8.0), [:θ], constraints = constraints, initialization = init)
 
-#     # More iterations should give better estimate
-#     error_few = abs(mean(last(result_few["posteriors"][:μ])) - μ_real)
-#     error_many = abs(mean(last(result_many["posteriors"][:μ])) - μ_real)
-#     @test error_many < error_few
+    add_model(server, "/coin-history", coin_model(a = 4.0, b = 8.0), [:θ], constraints = constraints, initialization = init, returnvars = (θ = KeepEach(),), iterations = 30)
 
-#     # Test free energy computation
-#     result_with_fe = deployable((x = data,), [:μ, :σ], iterations = 10, free_energy = true)
-#     @test haskey(result_with_fe, "posteriors")
-#     @test haskey(result_with_fe, "free_energy")
-#     @test haskey(result_with_fe["posteriors"], :μ)
-#     @test haskey(result_with_fe["posteriors"], :σ)
-#     @test typeof(collect(result_with_fe["free_energy"])) <: Vector{Real}
+    # Start server
+    @async start(server)
+    sleep(1)  # Give server time to start
 
-#     # Test both interfaces with inference parameters
-#     result_nt = deployable((x = data,), [:μ], iterations = 20, free_energy = true)
-#     result_kwargs = deployable(data = (x = data,), output = [:μ], iterations = 20, free_energy = true)
-#     @test mean(last(result_nt["posteriors"][:μ])) ≈ mean(last(result_kwargs["posteriors"][:μ])) atol = 1e-10
+    try
+        # Test single distribution response with default settings
+        response = HTTP.post("http://localhost:8084/coin-single", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => dataset))))
 
-#     # Test with returnvars
-#     result_with_history = deployable(data = (x = data,), output = [:μ], iterations = 10, returnvars = (μ = KeepEach(), σ = KeepEach()))
-#     @test haskey(result_with_history, "posteriors")
-#     @test haskey(result_with_history["posteriors"], :μ)
-#     @test length(result_with_history["posteriors"][:μ]) == 10  # One for each iteration
-# end
+        @test response.status == 200
+        result = JSON3.read(response.body)
+        # Check response format
+        @test haskey(result, "posteriors")
+        @test haskey(result["posteriors"], "θ")
+        @test result["posteriors"]["θ"] == Dict(:α => 76.0, :β => 36.0)
+        @test length(result["posteriors"]["θ"]) == 2  # Beta has 2 parameters
 
-# @testitem "DeployableRxInferModel - Meta Specifications" begin
-#     using RxInfer
-#     using RxInferServer
-#     using StableRNGs
-#     using Distributions
+        # Reconstruct distribution and verify
+        post = result["posteriors"]["θ"]
+        α, β = post[:α], post[:β]
+        reconstructed_dist = Beta(α, β)
+        # @test mean(reconstructed_dist) ≈ θ_real atol = 0.1
 
-#     # Define a model with meta specifications
-#     @model function meta_model(y)
-#         θ ~ Beta(2.0, 2.0)
-#         for i in eachindex(y)
-#             y[i] ~ Bernoulli(θ)
-#         end
-#     end
+        # Test with custom inference parameters in request
+        response_custom = HTTP.post(
+            "http://localhost:8084/coin-single",
+            ["Content-Type" => "application/json"],
+            JSON3.write(Dict("data" => Dict("y" => dataset), "iterations" => 50, "free_energy" => true))
+        )
+        @test response_custom.status == 200
+        result_custom = JSON3.read(response_custom.body)
+        @test haskey(result_custom, "free_energy")
+        free_energy = collect(result_custom["free_energy"])
+        @test typeof(free_energy) <: Array{Float64, 1}
+        @test length(free_energy) == 50
 
-#     # Generate synthetic data
-#     rng = StableRNG(42)
-#     n = 100
-#     θ_real = 0.7
-#     dataset = float.(rand(rng, Bernoulli(θ_real), n))
+        # Test history response
+        response_history = HTTP.post("http://localhost:8084/coin-history", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => dataset))))
 
-#     # Define constraints, initialization, and meta
-#     constraints = @constraints begin
-#         q(θ, y) = q(θ)q(y)
-#     end
+        @test response_history.status == 200
+        result_history = JSON3.read(response_history.body)
 
-#     init = @initialization begin
-#         q(θ) = Beta(1.0, 1.0)
-#     end
+        # Check history format
+        @test haskey(result_history, "posteriors")
+        @test haskey(result_history["posteriors"], "θ")
+        posteriors = collect(result_history["posteriors"]["θ"])
+        @test length(posteriors) > 1  # Should have multiple iterations
+        @test haskey(posteriors[1], "α")
+        @test haskey(posteriors[1], "β")
 
-#     struct CustomMeta end
+        # Test error handling
+        # Missing data field
+        @test_throws HTTP.ExceptionRequest.StatusError HTTP.post(
+            "http://localhost:8084/coin-single", ["Content-Type" => "application/json"], JSON3.write(Dict("invalid" => "data"))
+        )
 
-#     # Define stupid rule
-#     @rule Bernoulli(:p, Marginalisation) (q_out::PointMass, meta::CustomMeta) = Beta(1.0, 1.0)
+        # Malformed JSON
+        @test_throws HTTP.ExceptionRequest.StatusError HTTP.post("http://localhost:8084/coin-single", ["Content-Type" => "application/json"], "invalid json")
 
-#     meta = @meta begin
-#         Bernoulli(θ, y) -> CustomMeta()
-#     end
+        # Wrong data type
+        @test_throws HTTP.ExceptionRequest.StatusError HTTP.post(
+            "http://localhost:8084/coin-single", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => "not an array")))
+        )
+    finally
+        stop(server)
+    end
+end
 
-#     # Create deployable model with meta
-#     deployable = DeployableRxInferModel(meta_model(), constraints, init, meta)
+@testitem "Serving RxInfer Model - Multiple Endpoints" begin
+    using HTTP
+    using RxInferServer
+    using RxInfer
+    using StableRNGs
+    using Distributions
+    using JSON3
+    using RxInferServer.OldImplementation
 
-#     # Test that inference works with meta specifications
-#     result = deployable((y = dataset,), [:θ])
-#     @test haskey(result, "posteriors")
-#     @test haskey(result["posteriors"], :θ)
-#     post = result["posteriors"][:θ]
-#     @test !(mean(post) ≈ θ_real)
+    # Define two different models
+    @model function coin_model(y, a, b)
+        θ ~ Beta(a, b)
+        for i in eachindex(y)
+            y[i] ~ Bernoulli(θ)
+        end
+    end
 
-#     # Create deployable without meta
-#     deployable_no_meta = DeployableRxInferModel(meta_model(), constraints, init)
+    @model function normal_model(x)
+        μ ~ NormalMeanVariance(0.0, 10.0)
+        σ ~ InverseGamma(1.0, 1.0)
+        for i in eachindex(x)
+            x[i] ~ NormalMeanVariance(μ, σ)
+        end
+    end
 
-#     # Compare convergence with different meta settings
-#     result_correct = deployable_no_meta((y = dataset,), [:θ], iterations = 5)
-#     result_wrong = deployable((y = dataset,), [:θ], iterations = 5)
+    # Create server with both models
+    server = RxInferModelServer(8085)
 
-#     error_correct = abs(mean(last(result_correct["posteriors"][:θ])) - θ_real)
-#     error_wrong = abs(mean(last(result_wrong["posteriors"][:θ])) - θ_real)
+    # Add coin model endpoint
+    add_model(server, "/coin", coin_model(a = 1.0, b = 1.0), [:θ], constraints = @constraints(q(θ, y) = q(θ)q(y)), initialization = @initialization(q(θ) = Beta(1.0, 1.0)))
 
-#     @test error_correct < error_wrong
-# end
-# @testitem "DeployableRxInferModel - Coin Toss #2" begin
-#     using RxInfer
-#     using RxInferServer
-#     using StableRNGs
-#     using Distributions
+    constraints = @constraints begin
+        q(μ, σ, x) = q(μ)q(σ)q(x)
+    end
 
-#     # Define a simple coin toss model
-#     @model function coin_model(y, a, b)
-#         θ ~ Beta(a, b)
-#         for i in eachindex(y)
-#             y[i] ~ Bernoulli(θ)
-#         end
-#     end
+    init = @initialization begin
+        q(μ) = NormalMeanVariance(0.0, 10.0)
+        q(σ) = InverseGamma(1.0, 1.0)
+    end
 
-#     # Generate some synthetic data
-#     rng = StableRNG(42)
-#     n = 100
-#     θ_real = 0.75
-#     dataset = float.(rand(rng, Bernoulli(θ_real), n))
+    # Add normal model endpoint with free energy computation
+    add_model(
+        server,
+        "/normal",
+        normal_model(),
+        [:μ, :σ],
+        constraints = constraints,
+        initialization = init,
+        free_energy = true,
+        iterations = 100,
+        returnvars = (μ = KeepLast(), σ = KeepLast())
+    )
 
-#     # Define constraints and initialization
-#     constraints = @constraints begin
-#         q(θ, y) = q(θ)q(y)
-#     end
+    @async start(server)
+    sleep(1)
 
-#     init = @initialization begin
-#         q(θ) = Beta(1.0, 1.0)
-#     end
+    try
+        # Test coin model
+        rng = StableRNG(42)
+        coin_data = float.(rand(rng, Bernoulli(0.7), 100))
+        coin_response = HTTP.post("http://localhost:8085/coin", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => coin_data))))
+        @test coin_response.status == 200
+        coin_result = JSON3.read(coin_response.body)
+        @test haskey(coin_result, "posteriors")
+        @test haskey(coin_result["posteriors"], "θ")
+        post = coin_result["posteriors"]["θ"]
+        α, β = post[:α], post[:β]
+        @test mean(Beta(α, β)) ≈ 0.7 atol = 0.1
 
-#     # Create deployable model
-#     deployable = DeployableRxInferModel(coin_model(a = 4.0, b = 8.0), constraints, init)
+        # Test normal model with free energy
+        normal_data = randn(rng, 1000) .* 2.0 .+ 1.0  # μ=1.0, σ=2.0
+        normal_response = HTTP.post("http://localhost:8085/normal", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("x" => normal_data))))
+        @test normal_response.status == 200
+        normal_result = JSON3.read(normal_response.body)
 
-#     # Test NamedTuple interface
-#     result_dict = deployable(data = (y = dataset,), output = [:θ], factorize = (y = true,))
-#     @test haskey(result_dict, "posteriors")
-#     @test haskey(result_dict["posteriors"], :θ)
+        # Check posteriors
+        @test haskey(normal_result, "posteriors")
+        @test haskey(normal_result["posteriors"], "μ")
+        @test haskey(normal_result["posteriors"], "σ")
 
-#     post = result_dict["posteriors"][:θ]
+        # Check free energy
+        @test haskey(normal_result, "free_energy")
+        free_energy = collect(normal_result["free_energy"])
+        @test typeof(free_energy) <: Array{Float64, 1}
 
-#     @test mean(post) ≈ θ_real atol = 0.1
+        # Verify μ parameters
+        μ_post = normal_result["posteriors"]["μ"]
+        @test haskey(μ_post, "xi")
+        @test haskey(μ_post, "w")
+        μ_dist = NormalWeightedMeanPrecision(μ_post["xi"], μ_post["w"])
+        @test mean(μ_dist) ≈ 1.0 atol = 0.5
 
-#     # Test kwargs interface
-#     result_kwargs = deployable(data = (y = dataset,), output = [:θ], factorize = (y = true,))
-#     @test haskey(result_kwargs, "posteriors")
-#     @test haskey(result_kwargs["posteriors"], :θ)
-#     post_θ = result_kwargs["posteriors"][:θ]
-#     @test mean(post_θ) ≈ θ_real atol = 0.1
+        # Verify σ parameters
+        σ_post = normal_result["posteriors"]["σ"]
+        @test haskey(σ_post, "invd")
+        @test haskey(σ_post, "θ")
+        σ_dist = InverseGamma(σ_post["invd"]["α"], σ_post["θ"])
+        @test mean(σ_dist) ≈ 2.0 atol = 3.0
+    finally
+        stop(server)
+    end
+end
 
-#     # Test error handling for missing output specification
-#     @test_throws ArgumentError deployable(data = (y = dataset,))
-# end
+@testitem "Factorize keyword tests" begin
+    using HTTP
+    using JSON3
+    using RxInfer
+    using RxInferServer
+    using StableRNGs
+    using Distributions
+    using RxInferServer.OldImplementation
+
+    @model function coin_model(y, a, b)
+        θ ~ Beta(a, b)
+        for i in eachindex(y)
+            y[i] ~ Bernoulli(θ)
+        end
+    end
+
+    # Create server
+    server = RxInferModelServer(8086)
+
+    # Add coin model endpoint
+    add_model(
+        server,
+        "/coin",
+        coin_model(a = 1.0, b = 1.0),
+        [:θ],
+        constraints = @constraints(q(θ, y) = q(θ)q(y)),
+        initialization = @initialization(q(θ) = Beta(1.0, 1.0)),
+        factorize = (y = true,)
+    )
+
+    @async start(server)
+    sleep(1)
+
+    try
+        # Test coin model
+        rng = StableRNG(42)
+        coin_data = float.(rand(rng, Bernoulli(0.7), 100))
+        coin_response = HTTP.post("http://localhost:8086/coin", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => coin_data))))
+        @test coin_response.status == 200
+        coin_result = JSON3.read(coin_response.body)
+        @test haskey(coin_result, "posteriors")
+        @test haskey(coin_result["posteriors"], "θ")
+        post = coin_result["posteriors"]["θ"]
+    finally
+        stop(server)
+    end
+end

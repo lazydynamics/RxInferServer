@@ -152,7 +152,6 @@ RxInferServer.OldImplementation.start
 RxInferServer.OldImplementation.add_model 
 RxInferServer.OldImplementation.add 
 RxInferServer.OldImplementation.stop 
-RxInferServer.OldImplementation.DeployableRxInferModel 
 RxInferServer.OldImplementation.DeployableRxInferModel
 RxInferServer.OldImplementation.RxInferModelServer
 ```

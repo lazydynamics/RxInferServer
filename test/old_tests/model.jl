@@ -3,6 +3,7 @@
     using RxInferServer
     using StableRNGs
     using Distributions
+    using RxInferServer.OldImplementation
 
     # Define a simple coin toss model
     @model function coin_model(y, a, b)
@@ -55,6 +56,7 @@ end
     using RxInferServer
     using StableRNGs
     using Distributions
+    using RxInferServer.OldImplementation
 
     # Define a simple smoothing model that can handle missing data
     @model function smoothing_model(x0, y)
@@ -112,6 +114,7 @@ end
     using RxInferServer
     using StableRNGs
     using Distributions
+    using RxInferServer.OldImplementation
 
     # Define a simple model where iterations matter
     @model function nonlinear_model(x)
@@ -169,7 +172,7 @@ end
     using RxInferServer
     using StableRNGs
     using Distributions
-
+    using RxInferServer.OldImplementation
     # Define a model with meta specifications
     @model function meta_model(y)
         θ ~ Beta(2.0, 2.0)
@@ -229,6 +232,7 @@ end
     using RxInferServer
     using StableRNGs
     using Distributions
+    using RxInferServer.OldImplementation
 
     # Define a simple coin toss model
     @model function coin_model(y, a, b)

@@ -1,6 +1,7 @@
 @testitem "Server Creation" begin
     using HTTP
     using RxInferServer
+    using RxInferServer.OldImplementation
 
     server = RxInferModelServer(8081)
     @test server.port == 8081
@@ -11,6 +12,7 @@ end
 @testitem "Adding Endpoints" begin
     using HTTP
     using RxInferServer
+    using RxInferServer.OldImplementation
 
     server = RxInferModelServer(8082)
 
@@ -53,7 +55,7 @@ end
 @testitem "Server Lifecycle" begin
     using HTTP
     using RxInferServer
-
+    using RxInferServer.OldImplementation
     server = RxInferModelServer(8083)
 
     # Add a test endpoint
@@ -98,6 +100,7 @@ end
     using StableRNGs
     using Distributions
     using JSON3
+    using RxInferServer.OldImplementation
 
     # Define a simple coin toss model
     @model function coin_model(y, a, b)
@@ -204,6 +207,7 @@ end
     using StableRNGs
     using Distributions
     using JSON3
+    using RxInferServer.OldImplementation
 
     # Define two different models
     @model function coin_model(y, a, b)
@@ -306,6 +310,7 @@ end
     using RxInferServer
     using StableRNGs
     using Distributions
+    using RxInferServer.OldImplementation
 
     @model function coin_model(y, a, b)
         θ ~ Beta(a, b)

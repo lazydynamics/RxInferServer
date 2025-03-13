@@ -38,10 +38,11 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - name: Run tests
         run: |
-          docker compose up -d --build --wait --wait-timeout 240 || (docker compose logs && exit 1)
+          # Start the docker compose environment
+          make docker-start
           
           # Start the Julia server in the background
-          julia --project -e 'using RxInferServer; RxInferServer.serve()' &
+          make serve &
           SERVER_PID=$!
           
           # Verify that the server started properly with a timeout of 1 minute

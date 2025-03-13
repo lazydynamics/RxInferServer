@@ -19,8 +19,20 @@ To start the development environment with Docker, from the root directory of the
 docker compose up -d --build --wait --wait-timeout 240
 ```
 
+Or use the Makefile convenience command:
+
+```bash
+make docker-start
+```
+
 !!! note
     The very first startup will be slower as all Docker images are being pulled and volumes are being created. Subsequent startups will be faster.
+
+To stop the Docker environment:
+
+```bash
+make docker-stop
+```
 
 Or alternatively, use VSCode extension "Docker" to start the containers. The VSCode extension also allows to check the logs and attach to the running containers. Read more about docker here: [Docker](https://docs.docker.com/get-started/).
 
@@ -32,6 +44,12 @@ The `docker-compose.yaml` currently has the following services:
 ### Starting the RxInferServer
 
 Unlike the Docker services, RxInferServer now needs to be started manually. To start the server, run:
+
+```bash
+make serve
+```
+
+This command is a wrapper around:
 
 ```bash
 julia --project -e 'using RxInferServer; serve()'
@@ -49,6 +67,54 @@ curl -f localhost:8000/v1/ping
 ```
 
 If the server is running correctly, this should return a successful response.
+
+### Development Workflow with Makefile
+
+The project includes a Makefile with various commands to streamline common development tasks. Here are some of the most useful commands:
+
+```bash
+# Start the Docker environment (Swagger UI and MongoDB)
+make docker-start
+
+# Stop the Docker environment
+make docker-stop
+
+# Start the RxInferServer
+make serve
+
+# Run the test suite
+make test
+
+# Install dependencies
+make deps
+
+# Build documentation
+make docs
+
+# Generate OpenAPI client code
+make generate-client
+
+# Generate OpenAPI server code
+make generate-server
+
+# Generate both client and server code
+make generate-all
+
+# Format Julia code
+make format
+
+# Check code formatting without modifying files
+make check-format
+
+# List available OpenAPI endpoints to implement
+make openapi-endpoints
+```
+
+For a full list of available commands, run:
+
+```bash
+make help
+```
 
 ### MongoDB in Development
 

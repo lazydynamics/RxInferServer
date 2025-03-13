@@ -20,15 +20,35 @@ docker compose up -d --build --wait --wait-timeout 240
 ```
 
 !!! note
-    The very first startup will be slower as all Julia packages are being installed and precompiled within Docker environment. Subsequent startups will be faster as the system image is already built unless there is a significant change to the dependencies of the project or its source code in which case Julia will recompile the project again.
+    The very first startup will be slower as all Docker images are being pulled and volumes are being created. Subsequent startups will be faster.
 
-Or alternatively, use VSCode extension "Docker" to start the server. The VSCode extension also allows to check the logs and attach to the running container. Read more about docker here: [Docker](https://docs.docker.com/get-started/).
+Or alternatively, use VSCode extension "Docker" to start the containers. The VSCode extension also allows to check the logs and attach to the running containers. Read more about docker here: [Docker](https://docs.docker.com/get-started/).
 
 The `docker-compose.yaml` currently has the following services:
 
-- RxInferServer: the server implementation running in the background on `localhost:8000` with hot-reloading enabled by default, use `LocalPreferences.toml` file to configure the server
 - Swagger UI: a web interface for visualizing and testing the OpenAPI specification, the UI is available at `http://localhost:8080` and allows to test the API endpoints, the endpoints can also be tested in VSCode by opening `spec.yaml` directly and clicking on the "Try it" button
 - MongoDB Atlas Local: a local MongoDB instance running on `localhost:27017` that mimics MongoDB Atlas functionality for development and testing purposes
+
+### Starting the RxInferServer
+
+Unlike the Docker services, RxInferServer now needs to be started manually. To start the server, run:
+
+```bash
+julia --project -e 'using RxInferServer; serve()'
+```
+
+This will start the server on `localhost:8000` with hot-reloading enabled by default. Use the `LocalPreferences.toml` file to configure the server settings.
+
+!!! note
+    The very first startup will be slower as all Julia packages are being installed and precompiled. Subsequent startups will be faster as the system image is already built unless there is a significant change to the dependencies of the project or its source code in which case Julia will recompile the project again.
+
+You can verify the server is running by accessing the health check endpoint:
+
+```bash
+curl -f localhost:8000/v1/ping
+```
+
+If the server is running correctly, this should return a successful response.
 
 ### MongoDB in Development
 

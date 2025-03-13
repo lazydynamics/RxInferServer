@@ -16,6 +16,10 @@ A Julia package that provides RESTful HTTP server functionality for deploying [R
 - Extensive statistics and diagnostics
 - Support for model history and posterior distribution tracking
 
+## Developer commands 
+
+The repository uses [Makefile](https://www.gnu.org/software/make/manual/make.html) to run commands useful for developers. Use `make help` to see the available commands.
+
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 - see the LICENSE file for details.

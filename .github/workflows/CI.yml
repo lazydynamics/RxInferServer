@@ -138,6 +138,7 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: julia-actions/setup-julia@v2
+      - uses: julia-actions/cache@v2
       
       # Find existing format PR if any
       - name: Find existing format PR
@@ -185,6 +186,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const formatPrNumber = Number(${{ steps.find_pr.outputs.result }});
+
+            if (formatPrNumber === 0) {
+              return;
+            }
+
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             

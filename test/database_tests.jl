@@ -79,5 +79,3 @@ end
         @test result === nothing
     end
 end
-
-

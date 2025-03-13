@@ -38,6 +38,7 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - name: Run tests
         run: |
+          docker compose up -d --build --wait --wait-timeout 240 || (docker compose logs && exit 1)
           make test
 
   docs:

@@ -1,37 +1,30 @@
-@testitem "401 on /info endpoint without `Authorization`" setup = [TestHTTP] begin
-    response = TestHTTP.get("/info", status_exception = false)
-    @test response.status == 401
+@testitem "401 on /info endpoint without `Authorization`" setup = [TestUtils] begin
+    client     = TestUtils.TestClient(authorized = false)
+    server_api = TestUtils.RxInferClientOpenAPI.ServerApi(client)
+
+    response, info = TestUtils.RxInferClientOpenAPI.get_server_info(server_api)
+
+    @test info.status == 401
+    @test response.error == "Unauthorized"
+    @test occursin("The request requires authentication", response.message)
 end
 
-@testitem "200 on /info endpoint with `Authorization`" setup = [TestHTTP] begin
-    import RxInferServer.RxInferServerOpenAPI: ServerInfo
+@testitem "200 on /info endpoint with `Authorization`" setup = [TestUtils] begin
+    using TOML
 
-    TestHTTP.with_auth() do
-        response = TestHTTP.get("/info", status_exception = false)
-        @test response.status == 200
+    project_toml = TOML.parse(read(joinpath(@__DIR__, "..", "..", "Project.toml"), String))
+    server_version = VersionNumber(project_toml["version"])
+    minimum_julia_version = VersionNumber(project_toml["compat"]["julia"])
+    minimum_rxinfer_version = VersionNumber(project_toml["compat"]["RxInfer"])
 
-        info = TestHTTP.response_body_as(response, ServerInfo)
-        @show info
-    end
-end
+    client     = TestUtils.TestClient()
+    server_api = TestUtils.RxInferClientOpenAPI.ServerApi(client)
 
-@testitem "blahblha" begin
-    import RxInferServer: Client, ServerApi
-    import RxInferServer.RxInferClientOpenAPI: get_server_info
+    response, info = TestUtils.RxInferClientOpenAPI.get_server_info(server_api)
 
-    client = Client("http://localhost:8000/v1")
-    server_api = ServerApi(client)
-
-    response, info = get_server_info(server_api)
-    @test info.status === 401
-
-    client = Client("http://localhost:8000/v1", headers = Dict("Authorization" => "Bearer $(RxInferServer.DEV_TOKEN)"))
-    server_api = ServerApi(client)
-
-    response, info = get_server_info(server_api)
     @test info.status === 200
-    @test !isempty(response.rxinfer_version)
-    @test !isempty(response.server_version)
+    @test !isempty(response.rxinfer_version) && VersionNumber(response.rxinfer_version) >= minimum_rxinfer_version
+    @test !isempty(response.server_version) && VersionNumber(response.server_version) == server_version
+    @test !isempty(response.julia_version) && VersionNumber(response.julia_version) >= minimum_julia_version
     @test !isempty(response.server_edition)
-    @test !isempty(response.julia_version)
 end

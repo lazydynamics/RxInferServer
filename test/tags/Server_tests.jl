@@ -39,4 +39,5 @@ end
     @test !isempty(response.server_version) && VersionNumber(response.server_version) == server_version
     @test !isempty(response.julia_version) && VersionNumber(response.julia_version) >= minimum_julia_version
     @test !isempty(response.server_edition)
+    @test response.api_version == "v1"
 end

@@ -41,7 +41,7 @@ jobs:
           docker compose up -d --build --wait --wait-timeout 240 || (docker compose logs && exit 1)
           
           # Start the Julia server in the background
-          julia --project -e 'using RxInferServer; serve()' &
+          julia --project -e 'using RxInferServer; RxInferServer.serve()' &
           SERVER_PID=$!
           
           # Verify that the server started properly with a timeout of 1 minute

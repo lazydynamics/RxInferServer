@@ -16,8 +16,11 @@ This repository includes an OpenAPI specification for the RxInferServer.jl API a
 To start the development environment with Docker, from the root directory of the repository, run:
 
 ```bash
-docker-compose up -d
+docker compose up -d --build --wait --wait-timeout 240
 ```
+
+!!! note
+    The very first startup will be slower as all Julia packages are being installed and precompiled within Docker environment. Subsequent startups will be faster as the system image is already built unless there is a significant change to the dependencies of the project or its source code in which case Julia will recompile the project again.
 
 Or alternatively, use VSCode extension "Docker" to start the server. The VSCode extension also allows to check the logs and attach to the running container. Read more about docker here: [Docker](https://docs.docker.com/get-started/).
 

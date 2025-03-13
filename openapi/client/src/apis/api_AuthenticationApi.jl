@@ -13,6 +13,7 @@ basepath(::Type{ AuthenticationApi }) = "http://localhost:8000/v1"
 
 const _returntypes_generate_token_AuthenticationApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => TokenResponse,
+    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
 )
 
 function _oacinternal_generate_token(_api::AuthenticationApi; _mediaType=nothing)

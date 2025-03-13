@@ -13,7 +13,7 @@ basepath(::Type{ ServerApi }) = "http://localhost:8000/v1"
 
 const _returntypes_get_server_info_ServerApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => ServerInfo,
-    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => ErrorResponse,
 )
 
 function _oacinternal_get_server_info(_api::ServerApi; _mediaType=nothing)

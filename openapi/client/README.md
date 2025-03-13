@@ -28,9 +28,9 @@ Class | Method
 
 ## Models
 
+ - [ErrorResponse](docs/ErrorResponse.md)
  - [ServerInfo](docs/ServerInfo.md)
  - [TokenResponse](docs/TokenResponse.md)
- - [UnauthorizedResponse](docs/UnauthorizedResponse.md)
 
 
 <a id="authorization"></a>

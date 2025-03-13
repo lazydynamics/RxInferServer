@@ -118,7 +118,7 @@ function middleware_check_token(req::HTTP.Request, cache = nothing)::Bool
     collection = Database.collection("tokens")
     query      = Mongoc.BSON("token" => token)
     result     = Mongoc.find_one(collection, query)
-    
+
     if !isnothing(result) && !isnothing(cache)
         push!(cache, token)
     end
@@ -129,7 +129,8 @@ end
 const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
     HTTP.Response(
         401,
-        RxInferServerOpenAPI.UnauthorizedResponse(
+        RxInferServerOpenAPI.ErrorResponse(
+            error = "Unauthorized",
             message = ifelse(
                 is_dev_token_enabled(),
                 "The request requires authentication, generate a token using the /token endpoint or use the development token `$(DEV_TOKEN)`",

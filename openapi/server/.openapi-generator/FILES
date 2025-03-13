@@ -1,13 +1,13 @@
 README.md
 docs/AuthenticationApi.md
+docs/ErrorResponse.md
 docs/ServerApi.md
 docs/ServerInfo.md
 docs/TokenResponse.md
-docs/UnauthorizedResponse.md
 src/RxInferServerOpenAPI.jl
 src/apis/api_AuthenticationApi.jl
 src/apis/api_ServerApi.jl
 src/modelincludes.jl
+src/models/model_ErrorResponse.jl
 src/models/model_ServerInfo.jl
 src/models/model_TokenResponse.jl
-src/models/model_UnauthorizedResponse.jl

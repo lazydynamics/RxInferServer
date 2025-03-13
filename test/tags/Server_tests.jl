@@ -1,9 +1,9 @@
-@testitem "401 on /info endpoint without `Authorization`" setup=[TestHTTP] begin
+@testitem "401 on /info endpoint without `Authorization`" setup = [TestHTTP] begin
     response = TestHTTP.get("/info", status_exception = false)
     @test response.status == 401
 end
 
-@testitem "200 on /info endpoint with `Authorization`" setup=[TestHTTP] begin
+@testitem "200 on /info endpoint with `Authorization`" setup = [TestHTTP] begin
     import RxInferServer.RxInferServerOpenAPI: ServerInfo
 
     TestHTTP.with_auth() do
@@ -15,7 +15,7 @@ end
     end
 end
 
-@testitem "blahblha" begin 
+@testitem "blahblha" begin
     import RxInferServer: Client, ServerApi
     import RxInferServer.RxInferClientOpenAPI: get_server_info
 
@@ -25,9 +25,7 @@ end
     response, info = get_server_info(server_api)
     @test info.status === 401
 
-    client = Client("http://localhost:8000/v1", 
-        headers = Dict("Authorization" => "Bearer $(RxInferServer.DEV_TOKEN)")
-    )
+    client = Client("http://localhost:8000/v1", headers = Dict("Authorization" => "Bearer $(RxInferServer.DEV_TOKEN)"))
     server_api = ServerApi(client)
 
     response, info = get_server_info(server_api)

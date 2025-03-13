@@ -12,12 +12,12 @@
 
     function get(path, headers = HTTP.Header[], body = HTTP.nobody; kwargs...)
         if !isempty(current_token[])
-            headers = vcat(headers, [ HTTP.Header("Authorization", "Bearer $(current_token[])") ])
+            headers = vcat(headers, [HTTP.Header("Authorization", "Bearer $(current_token[])")])
         end
         return HTTP.get(test_server_url(path), headers, body; kwargs...)
     end
 
-    function with_auth(f::F) where {F} 
+    function with_auth(f::F) where {F}
         with(f, current_token => RxInferServer.DEV_TOKEN)
     end
 
@@ -26,5 +26,4 @@
         json = JSON.parse(body)
         return RxInferServer.RxInferServerOpenAPI.OpenAPI.convert(T, json)
     end
-
 end

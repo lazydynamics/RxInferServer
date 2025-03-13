@@ -92,20 +92,20 @@ function should_bypass_auth(req::HTTP.Request)::Bool
     return request_path in AUTH_EXEMPT_PATHS
 end
 
-function middleware_check_token(req::HTTP.Request, cache = nothing)::Bool
+function middleware_extract_token(req::HTTP.Request, cache = nothing)::Tuple{Union{Nothing, String}, Bool}
     token = HTTP.header(req, "Authorization")
     if isnothing(token)
-        return false
+        return nothing, false
     end
     # Extract token after "Bearer " prefix
     if !startswith(token, "Bearer ")
-        return false
+        return nothing, false
     end
     token = token[8:end]
 
     # In development, accept the dev token (unless set to "disabled")
     if is_dev_token_enabled() && is_dev_token(token)
-        return true
+        return token, true
     end
 
     # Check if the token is in the cache set already
@@ -114,7 +114,7 @@ function middleware_check_token(req::HTTP.Request, cache = nothing)::Bool
     # If the token is in the cache set already, just return true 
     # and avoid calling the database
     if cached_valid
-        return true
+        return token, true
     end
 
     # If the token is not in the cache set already, check if it exists in the database
@@ -126,7 +126,7 @@ function middleware_check_token(req::HTTP.Request, cache = nothing)::Bool
         push!(cache, token)
     end
 
-    return !isnothing(result)
+    return !isnothing(result) ? (token, true) : (nothing, false)
 end
 
 const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
@@ -143,6 +143,13 @@ const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
     )
 )
 
+using Base.ScopedValues
+
+const _current_token = ScopedValue{Union{Nothing, String}}(nothing)
+
+is_authorized()::Bool = !isnothing(_current_token[])
+current_token()::String  = _current_token[]::String
+
 function middleware_check_token(handler::F) where {F}
     cache = Set{String}()
     return function (req::HTTP.Request)
@@ -152,11 +159,15 @@ function middleware_check_token(handler::F) where {F}
             return handler(req)
         end
 
-        if !middleware_check_token(req, cache)
+        token, is_valid = middleware_extract_token(req, cache)
+
+        if !is_valid
             return UNAUTHORIZED_RESPONSE
         end
 
         # Request is authenticated, proceed to the handler
-        return handler(req)
+        with(_current_token => token::String) do
+            return handler(req)
+        end
     end
 end

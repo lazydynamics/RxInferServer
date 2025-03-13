@@ -11,6 +11,12 @@ include("database.jl")
 const API_PATH_PREFIX = "/v1"
 const PORT = parse(Int, get(ENV, "RXINFER_SERVER_PORT", "8000"))
 
+include("middleware.jl")
+
+function middleware_pre_validation(handler::F) where {F}
+    return handler |> middleware_check_token |> middleware_cors
+end
+
 include("tags/Server.jl")
 include("tags/Authentification.jl")
 
@@ -35,12 +41,6 @@ Check if hot reloading is enabled.
 """
 function is_hot_reload_enabled()
     return @load_preference(HOT_RELOAD_PREF_KEY, true)
-end
-
-include("middleware.jl")
-
-function middleware_pre_validation(handler::F) where {F}
-    return handler |> middleware_check_token |> middleware_cors
 end
 
 """

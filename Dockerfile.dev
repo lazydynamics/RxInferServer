@@ -6,5 +6,8 @@ WORKDIR /app
 # Expose the default port
 EXPOSE 8000
 
+HEALTHCHECK --interval=30s --timeout=30s --start-period=2m --retries=5 \
+  CMD ["curl", "-f", "http://localhost:8000/v1/ping"]
+
 # The entrypoint runs the server
 CMD ["julia", "-e", "using Pkg; Pkg.develop(path=\"/app\"); Pkg.instantiate(); using RxInferServer; RxInferServer.serve()"] 

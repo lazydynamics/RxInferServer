@@ -39,6 +39,35 @@ jobs:
       - name: Run tests
         run: |
           docker compose up -d --build --wait --wait-timeout 240 || (docker compose logs && exit 1)
+          
+          # Start the Julia server in the background
+          julia --project -e 'using RxInferServer; serve()' &
+          SERVER_PID=$!
+          
+          # Verify that the server started properly with a timeout of 1 minute
+          echo "Waiting for server to start..."
+          timeout=60
+          start_time=$(date +%s)
+          server_started=false
+          
+          while [ $(($(date +%s) - start_time)) -lt $timeout ]; do
+            if curl -s -f localhost:8000/v1/ping > /dev/null 2>&1; then
+              echo "Server started successfully!"
+              server_started=true
+              break
+            fi
+            echo "Server not ready yet, retrying in 3 seconds..."
+            sleep 3
+          done
+          
+          # Check if the server started within the timeout period
+          if [ "$server_started" = false ]; then
+            echo "Server failed to start within the timeout period (${timeout}s)"
+            # Kill the server process if it's running
+            kill $SERVER_PID 2>/dev/null || true
+            exit 1
+          fi
+          
           make test
 
   docs:

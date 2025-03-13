@@ -9,10 +9,12 @@
     export TestClient
     export ServerApi, AuthenticationApi
 
-    function TestClient(; authorized = true)
-        _client = Client("http://localhost:8000/v1")
+    const TEST_SERVER_URL = "http://localhost:8000$(RxInferServer.API_PATH_PREFIX)"
+
+    function TestClient(; authorized = true, token = RxInferServer.DEV_TOKEN)
+        _client = Client(TEST_SERVER_URL)
         if authorized
-            set_header(_client, "Authorization", "Bearer $(RxInferServer.DEV_TOKEN)")
+            set_header(_client, "Authorization", "Bearer $(token)")
         end
         return _client
     end

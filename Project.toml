@@ -15,6 +15,7 @@ Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 RxInfer = "86711068-29c9-4ff7-b620-ae75d7495b3d"
 RxInferServerOpenAPI = "476dbcea-416d-4115-b70c-6e4041cc1de4"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
+UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [sources]
 RxInferClientOpenAPI = {path = "openapi/client"}
@@ -32,6 +33,7 @@ Revise = "3.7.2"
 RxInfer = "4.0.0"
 RxInferServerOpenAPI = "1.0.0"
 Sockets = "1.11.0"
+UUIDs = "1.11.0"
 julia = "1.11"
 
 [extras]
@@ -40,9 +42,9 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 RxInferClientOpenAPI = "8b1d2e5c-3735-4918-bca0-1c0cc8ef920a"
 StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
-TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 
 [targets]
 test = ["Test", "Aqua", "TestItemRunner", "HTTP", "Distributions", "StableRNGs", "RxInferClientOpenAPI", "TOML"]

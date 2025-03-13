@@ -89,7 +89,7 @@ function should_bypass_auth(req::HTTP.Request)::Bool
     return request_path in AUTH_EXEMPT_PATHS
 end
 
-function middleware_check_token(req::HTTP.Request)::Bool
+function middleware_check_token(req::HTTP.Request, cache = nothing)::Bool
     token = HTTP.header(req, "Authorization")
     if isnothing(token)
         return false
@@ -105,9 +105,25 @@ function middleware_check_token(req::HTTP.Request)::Bool
         return true
     end
 
-    # Add your production token validation logic here
-    # For now, always return false until production validation is implemented
-    return false
+    # Check if the token is in the cache set already
+    cached_valid = isnothing(cache) ? false : token ∈ cache
+
+    # If the token is in the cache set already, just return true 
+    # and avoid calling the database
+    if cached_valid
+        return true
+    end
+
+    # If the token is not in the cache set already, check if it exists in the database
+    collection = Database.collection("tokens")
+    query      = Mongoc.BSON("token" => token)
+    result     = Mongoc.find_one(collection, query)
+    
+    if !isnothing(result) && !isnothing(cache)
+        push!(cache, token)
+    end
+
+    return !isnothing(result)
 end
 
 const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
@@ -124,6 +140,7 @@ const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
 )
 
 function middleware_check_token(handler::F) where {F}
+    cache = Set{String}()
     return function (req::HTTP.Request)
         # First check if this request should bypass 
         # authentication entirely
@@ -131,7 +148,7 @@ function middleware_check_token(handler::F) where {F}
             return handler(req)
         end
 
-        if !middleware_check_token(req)
+        if !middleware_check_token(req, cache)
             return UNAUTHORIZED_RESPONSE
         end
 

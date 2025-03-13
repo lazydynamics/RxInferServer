@@ -12,6 +12,7 @@ services:
       - RXINFER_SERVER_PORT=8000
       - RXINFER_SERVER_DEV_TOKEN=dev-token
       - RXINFER_MONGODB_URL=mongodb://database:27017
+      - RXINFER_MONGODB_DATABASE=rxinferserver
     depends_on:
       - database
 
@@ -30,3 +31,5 @@ services:
     image: mongodb/mongodb-atlas-local
     ports:
       - "27017:27017"
+    environment:
+      - MONGODB_INITDB_DATABASE=rxinferserver

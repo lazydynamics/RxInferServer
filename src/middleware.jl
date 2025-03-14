@@ -98,7 +98,7 @@ function middleware_extract_token(req::HTTP.Request, cache = nothing)::Tuple{Uni
     if !startswith(token, "Bearer ")
         return nothing, false
     end
-    token = token[8:end]
+    token = replace(token, "Bearer " => "")
 
     # In development, accept the dev token (unless set to "disabled")
     if is_dev_token_enabled() && is_dev_token(token)

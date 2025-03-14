@@ -1,4 +1,4 @@
-# Development
+# [Development](@id development)
 
 This section describes the development process for the RxInferServer.jl project and how to setup the development environment.
 
@@ -173,7 +173,7 @@ The API uses standard Bearer token authentication with the `Authorization` heade
    - The token remains active until you log out or close the browser
    - By default, all endpoints except `/generate-token` and `/ping` require authentication
 
-See [Configuration](configuration.md) for more details on setting up authentication for development and production.
+See [Configuration](@ref configuration) for more details on setting up authentication for development and production.
 
 ### Generating Code from OpenAPI Specification
 

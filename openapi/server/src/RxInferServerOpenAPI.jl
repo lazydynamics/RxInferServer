@@ -8,7 +8,7 @@ Encapsulates generated server code for RxInferServerOpenAPI
 The following server methods must be implemented:
 
 - **generate_token**
-    - *invocation:* POST /token
+    - *invocation:* POST /generate-token
     - *signature:* generate_token(req::HTTP.Request;) -> TokenResponse
 - **get_server_info**
     - *invocation:* GET /info

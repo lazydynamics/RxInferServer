@@ -78,7 +78,7 @@ The server supports CORS configuration. The following environment variables can 
 
 #### Authentication Configuration
 
-The server implements standard Bearer token authentication using the HTTP `Authorization` header. All endpoints except `/token` require authentication by default.
+The server implements standard Bearer token authentication using the HTTP `Authorization` header. Most of the endpoints except for `/generate-token` and `/ping` require authentication by default.
 
 Authentication for development can be configured through the `RXINFER_SERVER_DEV_TOKEN` environment variable:
 

@@ -22,7 +22,7 @@ Documentation is also embedded in Julia which can be used with a Julia specific 
 
 Class | Method
 ------------ | -------------
-*AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token)<br/>**POST** /token<br/>Generate authentication token
+*AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token)<br/>**POST** /generate-token<br/>Generate authentication token
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info)<br/>**GET** /info<br/>Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server)<br/>**GET** /ping<br/>Health check endpoint
 

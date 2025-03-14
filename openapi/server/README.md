@@ -43,7 +43,7 @@ The following server methods must be implemented:
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token) | **POST** /token | Generate authentication token
+*AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token) | **POST** /generate-token | Generate authentication token
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info) | **GET** /info | Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server) | **GET** /ping | Health check endpoint
 

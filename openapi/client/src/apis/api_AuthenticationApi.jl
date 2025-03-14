@@ -17,7 +17,7 @@ const _returntypes_generate_token_AuthenticationApi = Dict{Regex,Type}(
 )
 
 function _oacinternal_generate_token(_api::AuthenticationApi; _mediaType=nothing)
-    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_generate_token_AuthenticationApi, "/token", [])
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_generate_token_AuthenticationApi, "/generate-token", [])
     OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
     OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
     return _ctx

@@ -4,7 +4,7 @@ All URIs are relative to *http://localhost:8000/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**generate_token**](AuthenticationApi.md#generate_token) | **POST** /token | Generate authentication token
+[**generate_token**](AuthenticationApi.md#generate_token) | **POST** /generate-token | Generate authentication token
 
 
 # **generate_token**

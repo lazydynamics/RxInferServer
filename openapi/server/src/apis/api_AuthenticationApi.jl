@@ -30,6 +30,6 @@ end
 
 
 function registerAuthenticationApi(router::HTTP.Router, impl; path_prefix::String="", optional_middlewares...)
-    HTTP.register!(router, "POST", path_prefix * "/token", OpenAPI.Servers.middleware(impl, generate_token_read, generate_token_validate, generate_token_invoke; optional_middlewares...))
+    HTTP.register!(router, "POST", path_prefix * "/generate-token", OpenAPI.Servers.middleware(impl, generate_token_read, generate_token_validate, generate_token_invoke; optional_middlewares...))
     return router
 end

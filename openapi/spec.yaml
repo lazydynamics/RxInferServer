@@ -55,7 +55,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 error: "Unauthorized"
-                message: "The request requires authentication, generate a token using the /token endpoint"
+                message: "The request requires authentication, generate a token using the /generate-token endpoint"
   /ping:
     get:
       tags:
@@ -74,7 +74,7 @@ paths:
                 $ref: '#/components/schemas/PingResponse'
               example:
                 status: "ok"
-  /token:
+  /generate-token:
     post:
       tags:
         - Authentication
@@ -161,4 +161,4 @@ components:
           description: Additional message providing details about the failure
       example:
         error: "Unauthorized"
-        message: "The request requires authentication, generate a token using the /token endpoint"
+        message: "The request requires authentication, generate a token using the /generate-token endpoint"

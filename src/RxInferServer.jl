@@ -102,10 +102,10 @@ function serve(; show_banner::Bool = true)
     # We create a TeeLogger that writes to the terminal and to a series of files
     format_logger = "{[{timestamp}] {level}:func}: {message} {{module}@{basename}:{line}:light_black}"
     kwargs_logger = (
-        format   = format_logger,              # see above
+        format = format_logger,              # see above
         dtformat = dateformat"mm-dd HH:MM:SS", # do not print year
         errlevel = Logging.AboveMaxLevel,      # to include errors in the log file
-        append   = true,                       # append to the log file, don't overwrite
+        append = true,                       # append to the log file, don't overwrite
         message_mode = :notransformations      # do not transform the message
     )
     server_logger = LoggingExtras.TeeLogger(
@@ -136,7 +136,7 @@ function serve(; show_banner::Bool = true)
                 
                 API Documentation: https://api.rxinfer.com
                 RxInfer Documentation: https://docs.rxinfer.com
-    
+
                 Logs are collected in `$SERVER_LOGS_LOCATION`
                 
                 Type 'q' or 'quit' and hit ENTER to quit the server

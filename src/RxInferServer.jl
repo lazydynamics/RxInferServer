@@ -198,7 +198,7 @@ function serve(; show_banner::Bool = true)
 
         @info "Starting server on port $PORT"
 
-        server  = Sockets.listen(ip"0.0.0.0", PORT)
+        server = Sockets.listen(ip"0.0.0.0", PORT)
         server_instantiated = Base.Threads.Event()
 
         # Start HTTP server on port `PORT`

@@ -7,3 +7,6 @@
 /docs/src/openapi/
 /scripts/Manifest.toml
 .server-logs/
+
+/openapi/client/Manifest.toml
+/openapi/server/Manifest.toml

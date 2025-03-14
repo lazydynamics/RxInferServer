@@ -20,6 +20,27 @@ ENV["RXINFER_SERVER_PORT"] = 9000
 RxInferServer.serve()
 ```
 
+#### Logging Configuration
+
+The server implements a comprehensive logging system that writes logs both to the terminal and to files. Logs are organized by functional groups (e.g., Server, Authentication) and stored in separate files.
+
+The log files location can be configured using the `RXINFER_SERVER_LOGS_LOCATION` environment variable:
+
+```julia
+# Set logs directory via environment variable
+ENV["RXINFER_SERVER_LOGS_LOCATION"] = "/path/to/logs"
+RxInferServer.serve()
+```
+
+By default, logs are stored in the `.server-logs` directory relative to the current working directory. The server automatically creates this directory if it doesn't exist.
+
+The logging system uses:
+- Terminal output with formatted, human-readable logs
+- File-based logging with separate files for different functional groups
+
+!!! note
+    For production deployments, consider setting a persistent, absolute path for your log files to ensure they are preserved and easily accessible for monitoring and debugging.
+
 #### MongoDB Configuration
 
 The MongoDB connection can be configured using the following environment variables:

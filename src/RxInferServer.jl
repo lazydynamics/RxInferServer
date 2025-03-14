@@ -3,7 +3,7 @@ module RxInferServer
 # Core dependencies for API server, hot reloading, and preferences
 using RxInfer
 using HTTP, Sockets, JSON, RxInferServerOpenAPI
-using Revise, Preferences, Dates
+using Revise, Preferences, Dates, Pkg
 
 include("database.jl")
 
@@ -43,8 +43,21 @@ function is_hot_reload_enabled()
     return @load_preference(HOT_RELOAD_PREF_KEY, true)
 end
 
+import Logging, MiniLoggers, LoggingExtras
+
+function LoggerFilterByGroup(group)
+    return function (logger)
+        return LoggingExtras.EarlyFilteredLogger(logger) do log
+            return log.group == group
+        end
+    end
+end
+
+# Logging configuration, logs are written to the terminal and to a series of files
+const SERVER_LOGS_LOCATION = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
+
 """
-    serve() -> HTTP.Server
+    serve(; kwargs...) -> HTTP.Server
 
 Start the RxInfer API server with the configured settings.
 
@@ -58,6 +71,9 @@ This is a blocking operation that runs until interrupted (e.g., with Ctrl+C).
 - Configurable port via the `RXINFER_SERVER_PORT` environment variable (default: 8000)
 - Hot reloading support that can be enabled/disabled via preferences
 - Graceful shutdown with proper resource cleanup when interrupted
+
+# Keyword Arguments
+- `show_banner::Bool = true`: Whether to print the welcome banner
 
 # Returns
 - An `HTTP.Server` instance that is actively serving requests
@@ -77,76 +93,176 @@ RxInferServer.serve()
 - [`RxInferServer.set_hot_reload`](@ref): Enable or disable hot reloading
 - [`RxInferServer.is_hot_reload_enabled`](@ref): Check if hot reloading is enabled
 """
-function serve()
-    # Initialize HTTP router for handling API endpoints
-    router = HTTP.Router(cors404, cors405)
-    server_running = Ref(true)
-
-    # Create temp file to track server state and trigger file watchers
-    server_pid_file = tempname()
-    open(server_pid_file, "w") do f
-        print(f, "server started at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+function serve(; show_banner::Bool = true)
+    # Prepare logging folder if it doesn't exist
+    if !isdir(SERVER_LOGS_LOCATION)
+        mkpath(SERVER_LOGS_LOCATION)
     end
 
-    # Register all API endpoints defined in OpenAPI spec
-    RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
+    # We create a TeeLogger that writes to the terminal and to a series of files
+    format_logger = "{[{timestamp}] {level}:func}: {message} {{module}@{basename}:{line}:light_black}"
+    kwargs_logger = (
+        format   = format_logger,              # see above
+        dtformat = dateformat"mm-dd HH:MM:SS", # do not print year
+        errlevel = Logging.AboveMaxLevel,      # to include errors in the log file
+        append   = true,                       # append to the log file, don't overwrite
+        message_mode = :notransformations      # do not transform the message
+    )
+    server_logger = LoggingExtras.TeeLogger(
+        # The terminal logger is a MiniLogger that formats the log message in a human-readable way
+        MiniLoggers.MiniLogger(; kwargs_logger...),
 
-    # Conditionally start hot reloading based on preference
-    hot_reload = if is_hot_reload_enabled()
-        @info "[$(Dates.format(now(), "HH:MM:SS"))] Hot reload is enabled. Starting hot reload task..."
-        Threads.@spawn begin
-            run_hot_reload_loop = true
-            while run_hot_reload_loop
-                try
-                    @info "[$(Dates.format(now(), "HH:MM:SS"))] Starting hot reload..."
-                    # Watch for changes in server code and automatically update endpoints
-                    Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone = true) do
-                        @info "[$(Dates.format(now(), "HH:MM:SS"))] Hot reloading server..."
-                        if server_running[]
-                            RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
-                        else
-                            @info "[$(Dates.format(now(), "HH:MM:SS"))] Exiting hot reload task..."
-                            throw(InterruptException())
+        # The file loggers are EarlyFilteredLoggers that filter the log messages by group
+        # and write them to a series of files in the SERVER_LOGS_LOCATION directory
+        # - .log is the default log file with all messages
+        # - *Name*.log is a file for each group of messages, clustered for each individual tag in the tags/ folder
+        MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, ".log"), kwargs_logger...),
+        MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, "Server.log"), kwargs_logger...) |> LoggerFilterByGroup(:Server),
+        MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, "Authentification.log"), kwargs_logger...) |> LoggerFilterByGroup(:Authentification)
+    )
+
+    if show_banner
+        println("""
+
+
+                ██████╗ ██╗  ██╗██╗███╗   ██╗███████╗███████╗██████╗ 
+                ██╔══██╗╚██╗██╔╝██║████╗  ██║██╔════╝██╔════╝██╔══██╗
+                ██████╔╝ ╚███╔╝ ██║██╔██╗ ██║█████╗  █████╗  ██████╔╝
+                ██╔══██╗ ██╔██╗ ██║██║╚██╗██║██╔══╝  ██╔══╝  ██╔══██╗
+                ██║  ██║██╔╝ ██╗██║██║ ╚████║██║     ███████╗██║  ██║
+                ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝╚═╝     ╚══════╝╚═╝  ╚═╝
+                
+                Welcome to RxInfer Server! (version: $(pkgversion(RxInferServer)))
+                
+                API Documentation: https://api.rxinfer.com
+                RxInfer Documentation: https://docs.rxinfer.com
+    
+                Logs are collected in `$SERVER_LOGS_LOCATION`
+                
+                Type 'q' or 'quit' and hit ENTER to quit the server
+                $(isinteractive() ? "Alternatively use Ctrl-C to quit." : "(Running in non-interactive mode, Ctrl-C may not work properly)")
+
+        """)
+    end
+
+    Logging.with_logger(server_logger) do
+
+        # Initialize HTTP router for handling API endpoints
+        router = HTTP.Router(cors404, cors405)
+        server_running = Threads.Atomic{Bool}(true)
+
+        # Create temp file to track server state and trigger file watchers
+        server_pid_file = tempname()
+        open(server_pid_file, "w") do f
+            print(f, "server started at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+        end
+
+        # Register all API endpoints defined in OpenAPI spec
+        RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
+
+        # Conditionally start hot reloading based on preference
+        hot_reload = if is_hot_reload_enabled()
+            @info "Hot reload is enabled. Starting hot reload task..."
+            Threads.@spawn begin
+                while server_running[]
+                    try
+                        @info "Starting hot reload..."
+                        # Watch for changes in server code and automatically update endpoints
+                        Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone = true) do
+                            @info "Hot reloading server..."
+                            if server_running[]
+                                io = IOBuffer()
+                                Logging.with_logger(Logging.SimpleLogger(io)) do
+                                    RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
+                                end
+                                if occursin("replacing existing registered route", String(take!(io)))
+                                    @info "Successfully replaced existing registered route"
+                                end
+                            else
+                                throw(InterruptException())
+                            end
                         end
-                    end
-                catch e
-                    if e isa InterruptException
-                        run_hot_reload_loop = false
-                        @info "[$(Dates.format(now(), "HH:MM:SS"))] Hot reload task exited."
-                    else
-                        @error "[$(Dates.format(now(), "HH:MM:SS"))] Hot reload task encountered an error: $e"
+                    catch e
+                        if server_running[]
+                            @error "Hot reload task encountered an error: $e"
+                        else
+                            @info "Exiting hot reload task..."
+                        end
                     end
                 end
             end
-        end
-    else
-        @info "[$(Dates.format(now(), "HH:MM:SS"))] Hot reload is disabled. Use RxInferServer.set_hot_reload(true) to enable it."
-        nothing
-    end
-
-    # Define shutdown procedure to clean up resources
-    function on_shutdown()
-        @info "[$(Dates.format(now(), "HH:MM:SS"))] Shutting down server..."
-
-        server_running[] = false
-
-        # Update server state file to trigger file watcher
-        # This would also trigger the hot reload task
-        # Which checks the `server_running` variable and exits if it is false
-        open(server_pid_file, "w") do f
-            println(f, "server stopped at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+        else
+            @info "Hot reload is disabled. Use `RxInferServer.set_hot_reload(true)` and restart Julia to enable it."
+            nothing
         end
 
-        # Wait for hot reload task to complete if it was running
-        if !isnothing(hot_reload)
-            @info "[$(Dates.format(now(), "HH:MM:SS"))] Closing hot reload task..."
-            wait(hot_reload)
-        end
-    end
+        @info "Starting server on port $PORT"
 
-    # Start HTTP server on port `PORT`
-    Database.with_connection() do
-        HTTP.serve(router, ip"0.0.0.0", PORT, on_shutdown = on_shutdown)
+        server = Sockets.listen(ip"0.0.0.0", PORT)
+
+        # Start HTTP server on port `PORT`
+        server_task = Threads.@spawn begin
+            try
+                Database.with_connection() do
+                    HTTP.serve($router, ip"0.0.0.0", PORT, server = $server)
+                end
+            catch e
+                @error "Server task encountered an error: $e"
+            end
+        end
+
+        function shutdown()
+            @info "Initiating graceful shutdown..."
+
+            server_running[] = false
+
+            close(server)
+
+            # Update server state file to trigger file watcher
+            # This would also trigger the hot reload task
+            # Which checks the `server_running` variable and exits if it is false
+            open(server_pid_file, "w") do f
+                println(f, "server stopped at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+            end
+
+            # Wait for hot reload task to complete if it was running
+            if !isnothing(hot_reload)
+                @info "Waiting for hot reload task to stop..."
+                wait(hot_reload)
+            end
+
+            # Wait for the server task to complete
+            wait(server_task)
+
+            @info "Server shutdown complete."
+
+            exit(0)
+        end
+
+        # If the server is not running in an interactive session, 
+        # we need to register the shutdown function to be called when the program exits
+        # see https://docs.julialang.org/en/v1/manual/faq/#catch-ctrl-c
+        if !isinteractive()
+            Base.atexit(shutdown)
+        end
+
+        # Running a loop to wait for the user to quit the server
+        try
+            while server_running[]
+                yield()
+                input = readline()
+                if input == "q" || input == "quit"
+                    throw(InterruptException())
+                end
+                @warn "Unknown command: $input. Use 'q' or 'quit' and hit ENTER to quit."
+            end
+        catch e
+            if e isa InterruptException
+                shutdown()
+            else
+                @error "Server encountered an error: $e"
+            end
+        end
     end
 end
 

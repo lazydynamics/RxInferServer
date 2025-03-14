@@ -1,6 +1,6 @@
 # RxInferServer.jl Makefile
 
-.PHONY: help docs docs-serve docs-clean docs-build deps test clean openapi-endpoints format check-format
+.PHONY: help docs docs-serve docs-clean docs-build deps test clean openapi-endpoints format check-format generate-client generate-server generate-all
 
 # Colors for terminal output
 GREEN  := $(shell tput -Txterm setaf 2)
@@ -25,7 +25,13 @@ help:
 	@echo '${GREEN}Development commands:${RESET}'
 	@echo '  ${YELLOW}deps${RESET}                 Install project dependencies'
 	@echo '  ${YELLOW}test${RESET}                 Run project tests'
+	@echo '  ${YELLOW}serve${RESET}                Run the server'
+	@echo '  ${YELLOW}docker-start${RESET}         Start the docker compose environment'
+	@echo '  ${YELLOW}docker-stop${RESET}          Stop the docker compose environment'
 	@echo '  ${YELLOW}openapi-endpoints${RESET}    Show RxInferServerOpenAPI module documentation'
+	@echo '  ${YELLOW}generate-client${RESET}      Generate OpenAPI client code'
+	@echo '  ${YELLOW}generate-server${RESET}      Generate OpenAPI server code'
+	@echo '  ${YELLOW}generate-all${RESET}         Generate both OpenAPI client and server code'
 	@echo '  ${YELLOW}clean${RESET}                Clean all generated files'
 	@echo ''
 	@echo '${GREEN}Formatting commands:${RESET}'
@@ -53,13 +59,32 @@ docs-clean: ## Clean the documentation build directory
 
 ## Development commands:
 deps: ## Install project dependencies
-	julia -e 'using Pkg; Pkg.instantiate()'
+	julia --project -e 'using Pkg; Pkg.instantiate()'
 
-test: ## Run project tests
-	julia -e 'using Pkg; Pkg.activate("."); Pkg.test()'
+test: deps ## Run project tests
+	julia --project -e 'using Pkg; Pkg.test()'
 
-openapi-endpoints: ## Show RxInferServerOpenAPI module documentation (methods to implement)
-	julia -e 'using Pkg; Pkg.activate("."); using RxInferServer; println(@doc(RxInferServer.RxInferServerOpenAPI))'
+serve: deps ## Run the server
+	julia --project -e 'using RxInferServer; RxInferServer.serve()'
+
+docker: docker-start ## Starts the docker compose environment
+
+docker-start: ## Starts the docker compose environment
+	docker compose up -d --build --wait --wait-timeout 240 || (docker compose logs && exit 1)
+
+docker-stop: ## Stops the docker compose environment
+	docker compose down
+
+openapi-endpoints: deps ## Show RxInferServerOpenAPI module documentation (methods to implement)
+	julia --project -e 'using RxInferServer; println(@doc(RxInferServer.RxInferServerOpenAPI))'
+
+generate-client: ## Generate OpenAPI client code
+	./generate-client.sh
+
+generate-server: ## Generate OpenAPI server code
+	./generate-server.sh
+
+generate-all: generate-client generate-server ## Generate both OpenAPI client and server code
 
 clean: docs-clean ## Clean all generated files
 

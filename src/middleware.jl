@@ -73,10 +73,10 @@ Returns true if the token is the development token. Returns false if the develop
 
 See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref)
 """
-is_dev_token(token::String) = is_dev_token_enabled() && token == DEV_TOKEN
+is_dev_token(token) = is_dev_token_enabled() && token == DEV_TOKEN
 
 # List of URL paths that are exempt from authentication
-const AUTH_EXEMPT_PATHS = [string(API_PATH_PREFIX, "/token")]
+const AUTH_EXEMPT_PATHS = [string(API_PATH_PREFIX, "/token"), string(API_PATH_PREFIX, "/ping")]
 
 """
     should_bypass_auth(req::HTTP.Request)::Bool
@@ -89,31 +89,48 @@ function should_bypass_auth(req::HTTP.Request)::Bool
     return request_path in AUTH_EXEMPT_PATHS
 end
 
-function middleware_check_token(req::HTTP.Request)::Bool
+function middleware_extract_token(req::HTTP.Request, cache = nothing)::Tuple{Union{Nothing, String}, Bool}
     token = HTTP.header(req, "Authorization")
     if isnothing(token)
-        return false
+        return nothing, false
     end
     # Extract token after "Bearer " prefix
     if !startswith(token, "Bearer ")
-        return false
+        return nothing, false
     end
     token = token[8:end]
 
     # In development, accept the dev token (unless set to "disabled")
     if is_dev_token_enabled() && is_dev_token(token)
-        return true
+        return token, true
     end
 
-    # Add your production token validation logic here
-    # For now, always return false until production validation is implemented
-    return false
+    # Check if the token is in the cache set already
+    cached_valid = isnothing(cache) ? false : token ∈ cache
+
+    # If the token is in the cache set already, just return true 
+    # and avoid calling the database
+    if cached_valid
+        return token, true
+    end
+
+    # If the token is not in the cache set already, check if it exists in the database
+    collection = Database.collection("tokens")
+    query      = Mongoc.BSON("token" => token)
+    result     = Mongoc.find_one(collection, query)
+
+    if !isnothing(result) && !isnothing(cache)
+        push!(cache, token)
+    end
+
+    return !isnothing(result) ? (token, true) : (nothing, false)
 end
 
 const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
     HTTP.Response(
         401,
-        RxInferServerOpenAPI.UnauthorizedResponse(
+        RxInferServerOpenAPI.ErrorResponse(
+            error = "Unauthorized",
             message = ifelse(
                 is_dev_token_enabled(),
                 "The request requires authentication, generate a token using the /token endpoint or use the development token `$(DEV_TOKEN)`",
@@ -123,7 +140,15 @@ const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
     )
 )
 
+using Base.ScopedValues
+
+const _current_token = ScopedValue{Union{Nothing, String}}(nothing)
+
+is_authorized()::Bool = !isnothing(_current_token[])
+current_token()::String = _current_token[]::String
+
 function middleware_check_token(handler::F) where {F}
+    cache = Set{String}()
     return function (req::HTTP.Request)
         # First check if this request should bypass 
         # authentication entirely
@@ -131,11 +156,15 @@ function middleware_check_token(handler::F) where {F}
             return handler(req)
         end
 
-        if !middleware_check_token(req)
+        token, is_valid = middleware_extract_token(req, cache)
+
+        if !is_valid
             return UNAUTHORIZED_RESPONSE
         end
 
         # Request is authenticated, proceed to the handler
-        return handler(req)
+        with(_current_token => token::String) do
+            return handler(req)
+        end
     end
 end

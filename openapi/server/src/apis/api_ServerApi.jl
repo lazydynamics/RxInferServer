@@ -28,8 +28,35 @@ function get_server_info_invoke(impl; post_invoke=nothing)
     end
 end
 
+function ping_server_read(handler)
+    function ping_server_read_handler(req::HTTP.Request)
+        openapi_params = Dict{String,Any}()
+        req.context[:openapi_params] = openapi_params
+
+        return handler(req)
+    end
+end
+
+function ping_server_validate(handler)
+    function ping_server_validate_handler(req::HTTP.Request)
+        openapi_params = req.context[:openapi_params]
+        
+        return handler(req)
+    end
+end
+
+function ping_server_invoke(impl; post_invoke=nothing)
+    function ping_server_invoke_handler(req::HTTP.Request)
+        openapi_params = req.context[:openapi_params]
+        ret = impl.ping_server(req::HTTP.Request;)
+        resp = OpenAPI.Servers.server_response(ret)
+        return (post_invoke === nothing) ? resp : post_invoke(req, resp)
+    end
+end
+
 
 function registerServerApi(router::HTTP.Router, impl; path_prefix::String="", optional_middlewares...)
     HTTP.register!(router, "GET", path_prefix * "/info", OpenAPI.Servers.middleware(impl, get_server_info_read, get_server_info_validate, get_server_info_invoke; optional_middlewares...))
+    HTTP.register!(router, "GET", path_prefix * "/ping", OpenAPI.Servers.middleware(impl, ping_server_read, ping_server_validate, ping_server_invoke; optional_middlewares...))
     return router
 end

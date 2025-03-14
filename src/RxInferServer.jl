@@ -2,12 +2,20 @@ module RxInferServer
 
 # Core dependencies for API server, hot reloading, and preferences
 using RxInfer
-using HTTP, Sockets, JSON3, RxInferServerOpenAPI
+using HTTP, Sockets, JSON, RxInferServerOpenAPI
 using Revise, Preferences, Dates
+
+include("database.jl")
 
 # API configuration
 const API_PATH_PREFIX = "/v1"
 const PORT = parse(Int, get(ENV, "RXINFER_SERVER_PORT", "8000"))
+
+include("middleware.jl")
+
+function middleware_pre_validation(handler::F) where {F}
+    return handler |> middleware_check_token |> middleware_cors
+end
 
 include("tags/Server.jl")
 include("tags/Authentification.jl")
@@ -33,12 +41,6 @@ Check if hot reloading is enabled.
 """
 function is_hot_reload_enabled()
     return @load_preference(HOT_RELOAD_PREF_KEY, true)
-end
-
-include("middleware.jl")
-
-function middleware_pre_validation(handler::F) where {F}
-    return handler |> middleware_check_token |> middleware_cors
 end
 
 """
@@ -143,8 +145,9 @@ function serve()
     end
 
     # Start HTTP server on port `PORT`
-    server = HTTP.serve(router, ip"0.0.0.0", PORT, on_shutdown = on_shutdown)
-    return server
+    Database.with_connection() do
+        HTTP.serve(router, ip"0.0.0.0", PORT, on_shutdown = on_shutdown)
+    end
 end
 
 module OldImplementation

@@ -52,7 +52,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized"
+                message: "The request requires authentication, generate a token using the /token endpoint"
+  /ping:
+    get:
+      tags:
+        - Server
+      summary: Health check endpoint
+      operationId: pingServer
+      description: Simple endpoint to check if the server is alive and running
+      # This endpoint doesn't require authentication
+      security: []
+      responses:
+        '200':
+          description: Successfully pinged the server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PingResponse'
+              example:
+                status: "ok"
   /token:
     post:
       tags:
@@ -69,6 +90,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Unable to generate token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Bad Request"
+                message: "Unable to generate token due to internal error"
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -109,19 +139,26 @@ components:
         token:
           type: string
           description: The token to use in the Authorization header with the format "Bearer {token}"
-    UnauthorizedResponse:
+    PingResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: Status of the server
+          default: "ok"
+    ErrorResponse:
       type: object
       required:
         - error
       properties:
         error:
           type: string
-          description: Error message explaining the authentication failure
-          default: "Unauthorized"
+          description: Error message explaining the failure
         message:
           type: string
-          description: Additional message explaining the authentication failure
-          default: "The request requires authentication, generate a token using the /token endpoint"
+          description: Additional message providing details about the failure
       example:
         error: "Unauthorized"
         message: "The request requires authentication, generate a token using the /token endpoint"

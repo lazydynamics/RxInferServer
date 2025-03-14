@@ -20,6 +20,34 @@ ENV["RXINFER_SERVER_PORT"] = 9000
 RxInferServer.serve()
 ```
 
+#### MongoDB Configuration
+
+The MongoDB connection can be configured using the `RXINFER_MONGODB_URL` environment variable:
+
+```julia
+# Set MongoDB connection URL via environment variable
+ENV["RXINFER_MONGODB_URL"] = "mongodb://localhost:27017"
+RxInferServer.serve()
+```
+
+The default connection URL for the Docker development environment is `mongodb://database:27017`, which connects to the MongoDB Atlas Local instance running in the Docker Compose environment.
+
+When deploying to production, you should set this to your actual MongoDB Atlas connection string or other MongoDB instance:
+
+```julia
+ENV["RXINFER_MONGODB_URL"] = "mongodb+srv://username:password@your-cluster.mongodb.net/your-database"
+```
+
+##### Using MongoDB Compass
+
+If you're using [MongoDB Compass](https://www.mongodb.com/products/compass) to connect to and manage your MongoDB database during development:
+
+1. Always connect to `localhost:27017` from your host machine (except when using the `RXINFER_MONGODB_URL` environment variable)
+2. This is because Docker maps the container's port 27017 to your host's port 27017
+3. No authentication is required for the development database by default
+
+For production MongoDB Atlas connections in Compass, you would use the standard Atlas connection string format.
+
 #### CORS Configuration
 
 The server supports CORS configuration. The following environment variables can be set to configure the CORS settings:

@@ -22,9 +22,12 @@ To start the server with default settings:
 ```julia
 using RxInferServer
 
-# This will block until interrupted with Ctrl+C
+# This will block until stopped manually
 RxInferServer.serve()
 ```
+
+!!! note
+    When running the server from script, e.g. `make serve`, Ctrl-C might not work properly. See [How do I catch CTRL-C in a script?](https://docs.julialang.org/en/v1/manual/faq/#catch-ctrl-c) for more information.
 
 To start the server in the background:
 
@@ -40,6 +43,6 @@ Read more about the `@async` and `Threads.@spawn` macros in the [Julia Documenta
 
 ### Where to go next?
 
-Read more about the different configuration options in the [Configuration](./configuration.md) section.
+Read more about the different configuration options in the [Configuration](@ref configuration) section.
 
-If you want to contribute to the project, read more about the [Development](./development.md) section.
+If you want to contribute to the project, read more about the [Development](@ref development) section.

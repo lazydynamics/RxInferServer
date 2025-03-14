@@ -1,4 +1,4 @@
-# Configuration 
+# [Configuration](@id configuration)
 
 This section describes the configuration options for the RxInferServer.jl package.
 `RxInferServer` exposes two different configuration mechanisms:

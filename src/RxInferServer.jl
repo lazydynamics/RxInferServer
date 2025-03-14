@@ -199,15 +199,23 @@ function serve(; show_banner::Bool = true)
         @info "Starting server on port $PORT"
 
         server = Sockets.listen(ip"0.0.0.0", PORT)
+        server_instantiated = Base.Threads.Event()
 
         # Start HTTP server on port `PORT`
         server_task = Threads.@spawn begin
             try
                 Database.with_connection() do
-                    HTTP.serve($router, ip"0.0.0.0", PORT, server = $server)
+                    # Start the HTTP server in non-blocking mode in order to trigger the `server_instantiated` event
+                    s = HTTP.serve!($router, ip"0.0.0.0", PORT, server = $server)
+                    # Notify the main thread that the server has been instantiated
+                    notify(server_instantiated)
+                    # Wait for the server to be closed from the main thread
+                    wait(s)
                 end
             catch e
                 @error "Server task encountered an error: $e"
+                server_running[] = false
+                notify(server_instantiated)
             end
         end
 
@@ -246,10 +254,12 @@ function serve(; show_banner::Bool = true)
             Base.atexit(shutdown)
         end
 
+        yield()
+
         # Running a loop to wait for the user to quit the server
         try
-            while server_running[]
-                yield()
+            wait(server_instantiated)
+            while server_running[] && !istaskdone(server_task) && !istaskfailed(server_task)
                 input = readline()
                 if input == "q" || input == "quit"
                     throw(InterruptException())
@@ -257,12 +267,9 @@ function serve(; show_banner::Bool = true)
                 @warn "Unknown command: $input. Use 'q' or 'quit' and hit ENTER to quit."
             end
         catch e
-            if e isa InterruptException
-                shutdown()
-            else
-                @error "Server encountered an error: $e"
-            end
         end
+
+        shutdown()
     end
 end
 

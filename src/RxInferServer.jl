@@ -19,6 +19,7 @@ end
 
 include("tags/Server.jl")
 include("tags/Authentification.jl")
+include("tags/Models.jl")
 
 const HOT_RELOAD_PREF_KEY = "enable_hot_reload"
 
@@ -55,6 +56,13 @@ end
 
 # Logging configuration, logs are written to the terminal and to a series of files
 const SERVER_LOGS_LOCATION = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
+
+# Models configuration 
+const MODELS_LOCATION = get(ENV, "RXINFER_SERVER_MODELS_LOCATION", "models")
+
+# This is NOT a file with model definitions, but a file that functions to
+# load models from the `MODELS_LOCATION` directory
+include("models/models.jl")
 
 """
     serve(; kwargs...) -> HTTP.Server
@@ -118,7 +126,8 @@ function serve(; show_banner::Bool = true)
         # - *Name*.log is a file for each group of messages, clustered for each individual tag in the tags/ folder
         MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, ".log"), kwargs_logger...),
         MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, "Server.log"), kwargs_logger...) |> LoggerFilterByGroup(:Server),
-        MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, "Authentification.log"), kwargs_logger...) |> LoggerFilterByGroup(:Authentification)
+        MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, "Authentification.log"), kwargs_logger...) |> LoggerFilterByGroup(:Authentification),
+        MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, "Models.log"), kwargs_logger...) |> LoggerFilterByGroup(:Models)
     )
 
     if show_banner
@@ -204,13 +213,15 @@ function serve(; show_banner::Bool = true)
         # Start HTTP server on port `PORT`
         server_task = Threads.@spawn begin
             try
-                Database.with_connection() do
-                    # Start the HTTP server in non-blocking mode in order to trigger the `server_instantiated` event
-                    s = HTTP.serve!($router, ip"0.0.0.0", PORT, server = $server)
-                    # Notify the main thread that the server has been instantiated
-                    notify(server_instantiated)
-                    # Wait for the server to be closed from the main thread
-                    wait(s)
+                Models.with_models(MODELS_LOCATION) do
+                    Database.with_connection() do
+                        # Start the HTTP server in non-blocking mode in order to trigger the `server_instantiated` event
+                        s = HTTP.serve!($router, ip"0.0.0.0", PORT, server = $server)
+                        # Notify the main thread that the server has been instantiated
+                        notify(server_instantiated)
+                        # Wait for the server to be closed from the main thread
+                        wait(s)
+                    end
                 end
             catch e
                 @error "Server task encountered an error: $e"

@@ -12,6 +12,7 @@ const API_VERSION = "1.0.0"
 include("modelincludes.jl")
 
 include("apis/api_AuthenticationApi.jl")
+include("apis/api_ModelsApi.jl")
 include("apis/api_ServerApi.jl")
 
 end # module RxInferClientOpenAPI

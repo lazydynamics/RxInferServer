@@ -44,6 +44,7 @@ The following server methods must be implemented:
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token) | **POST** /generate-token | Generate authentication token
+*ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models) | **GET** /models | Get models
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info) | **GET** /info | Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server) | **GET** /ping | Health check endpoint
 
@@ -52,6 +53,8 @@ Class | Method | HTTP request | Description
 ## Models
 
  - [ErrorResponse](docs/ErrorResponse.md)
+ - [LightweightModelInfo](docs/LightweightModelInfo.md)
+ - [ModelList](docs/ModelList.md)
  - [PingResponse](docs/PingResponse.md)
  - [ServerInfo](docs/ServerInfo.md)
  - [TokenResponse](docs/TokenResponse.md)

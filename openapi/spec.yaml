@@ -14,6 +14,8 @@ tags:
     description: Server management endpoints
   - name: Authentication
     description: Authentication related endpoints
+  - name: Models
+    description: Model management endpoints
 # Global security - apply to all endpoints by default
 security:
   - ApiKeyAuth: []
@@ -47,6 +49,40 @@ paths:
                     server_edition: "CommunityEdition"
                     julia_version: "1.11.3"
                     api_version: "v1"
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized"
+                message: "The request requires authentication, generate a token using the /generate-token endpoint"
+  /models:
+    get:
+      tags:
+        - Models
+      summary: Get models
+      operationId: getModels
+      description: Retrieve the list of available models. Note that some access tokens might not have access to all models.
+      responses:
+        '200':
+          description: Successfully retrieved list of models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelList'
+              example:
+                models:
+                  - name: "CoinToss"
+                    version: "1.0.0"
+                    description: "A simple coin toss model"
+                  - name: "LinearRegression"
+                    version: "1.2.0"
+                    description: "A simple linear regression model"
+                  - name: "GaussianMixture"
+                    version: "2.1.0"
+                    description: "A simple Gaussian mixture model"
         '401':
           description: Access token is missing or invalid
           content:
@@ -162,3 +198,29 @@ components:
       example:
         error: "Unauthorized"
         message: "The request requires authentication, generate a token using the /generate-token endpoint"
+    ModelList:
+      type: object
+      required:
+        - models
+      properties:
+        models:
+          type: array
+          description: List of available models
+          items:
+            $ref: '#/components/schemas/LightweightModelInfo'
+    LightweightModelInfo:
+      type: object
+      required:
+        - name
+        - version
+        - description
+      properties:
+        name:
+          type: string
+          description: Name of the model
+        version:
+          type: string
+          description: Version of the model
+        description:
+          type: string
+          description: Brief description of the model

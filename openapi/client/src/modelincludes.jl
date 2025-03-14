@@ -2,6 +2,8 @@
 # Do not modify this file directly. Modify the OpenAPI specification instead.
 
 include("models/model_ErrorResponse.jl")
+include("models/model_LightweightModelInfo.jl")
+include("models/model_ModelList.jl")
 include("models/model_PingResponse.jl")
 include("models/model_ServerInfo.jl")
 include("models/model_TokenResponse.jl")

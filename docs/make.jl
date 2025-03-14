@@ -154,7 +154,10 @@ makedocs(;
         "Home" => "index.md",
         "Getting Started" => "getting-started.md",
         "Configuration" => "configuration.md",
-        "Development" => "development.md",
+        "Implementation" => [
+            "Database" => "database.md",
+            "Developers guide" => "development.md",
+        ],
         "Design proposal" => "api/design-proposal.md",
         "OpenAPI Specification" => openapi_pages,
     ],

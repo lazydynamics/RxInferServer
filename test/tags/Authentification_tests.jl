@@ -16,6 +16,14 @@
 
     @test info.status == 200
 
+    # It should return the same token if we call the endpoint again but authorized
+    authorized_client = TestUtils.TestClient(authorized = true, token = token)
+    authorized_api = TestUtils.RxInferClientOpenAPI.AuthenticationApi(authorized_client)
+    response, info = TestUtils.RxInferClientOpenAPI.generate_token(authorized_api)
+
+    @test info.status == 200
+    @test response.token == token
+
     # Drop the token from the database
     RxInferServer.Database.with_connection() do
         collection = RxInferServer.Database.collection("tokens")

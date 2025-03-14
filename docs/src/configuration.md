@@ -22,21 +22,20 @@ RxInferServer.serve()
 
 #### MongoDB Configuration
 
-The MongoDB connection can be configured using the `RXINFER_MONGODB_URL` environment variable:
+The MongoDB connection can be configured using the following environment variables:
+
+- `RXINFER_MONGODB_URL`: Sets the MongoDB connection URL
+- `RXINFER_MONGODB_DATABASE`: Sets the MongoDB database name (defaults to "rxinferserver")
 
 ```julia
 # Set MongoDB connection URL via environment variable
 ENV["RXINFER_MONGODB_URL"] = "mongodb://localhost:27017"
+# Set MongoDB database name
+ENV["RXINFER_MONGODB_DATABASE"] = "rxinferserver"
 RxInferServer.serve()
 ```
 
-The default connection URL for the Docker development environment is `mongodb://database:27017`, which connects to the MongoDB Atlas Local instance running in the Docker Compose environment.
-
-When deploying to production, you should set this to your actual MongoDB Atlas connection string or other MongoDB instance:
-
-```julia
-ENV["RXINFER_MONGODB_URL"] = "mongodb+srv://username:password@your-cluster.mongodb.net/your-database"
-```
+The default connection URL for the Docker development environment is `mongodb://database:27017`, which connects to the MongoDB Atlas Local instance running in the Docker Compose environment. When deploying to production, you should set this to your actual MongoDB Atlas connection string or other MongoDB instance.
 
 ##### Using MongoDB Compass
 
@@ -103,7 +102,7 @@ The server edition can be configured using the `RXINFER_SERVER_EDITION` environm
 ENV["RXINFER_SERVER_EDITION"] = "CommunityEdition"
 ```
 
-This setting has no real effect on the server functionality, and is only used to identify the server edition.
+This setting is used to identify the server edition in the server information endpoint and has no functional impact on server behavior. The default value is "CommunityEdition".
 
 ## Preferences 
 

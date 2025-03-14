@@ -1,6 +1,13 @@
 using Mongoc, UUIDs
 
 function generate_token(req::HTTP.Request)::RxInferServerOpenAPI.TokenResponse
+    # Check if the token is already in the database
+    token = HTTP.header(req, "Authorization", nothing)
+    if !isnothing(token)
+        token = replace(token, "Bearer " => "")
+        return RxInferServerOpenAPI.TokenResponse(token = token)
+    end
+    
     token = string(UUIDs.uuid4())
     document = Mongoc.BSON("token" => token, "created_at" => Dates.now(), "role" => "user")
     collection = Database.collection("tokens")

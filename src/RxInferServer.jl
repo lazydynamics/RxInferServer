@@ -206,11 +206,11 @@ function serve(; show_banner::Bool = true)
             try
                 Database.with_connection() do
                     # Start the HTTP server in non-blocking mode in order to trigger the `server_instantiated` event
-                    HTTP.serve!($router, ip"0.0.0.0", PORT, server = $server)
+                    s = HTTP.serve!($router, ip"0.0.0.0", PORT, server = $server)
                     # Notify the main thread that the server has been instantiated
                     notify(server_instantiated)
                     # Wait for the server to be closed from the main thread
-                    wait(server)
+                    wait(s)
                 end
             catch e
                 @error "Server task encountered an error: $e"

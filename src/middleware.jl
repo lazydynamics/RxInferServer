@@ -87,11 +87,14 @@ function middleware_cors(handler::F) where {F}
     end
 end
 
+const DEFAULT_DEV_TOKEN_ROLES = ["user", "admin", "test"]
+
 """
 The development authentication token.
 This can be configured using the `RXINFER_SERVER_DEV_TOKEN` environment variable.
 Defaults to "dev-token" if not specified.
 Set to "disabled" to disable development token authentication (production mode).
+The development token has `$(DEFAULT_DEV_TOKEN_ROLES)` roles by default.
 
 ```julia
 # Use a specific development token
@@ -149,41 +152,48 @@ function should_bypass_auth(req::HTTP.Request)::Bool
     return request_path in AUTH_EXEMPT_PATHS
 end
 
-function middleware_extract_token(req::HTTP.Request, cache = nothing)::Tuple{Union{Nothing, String}, Bool}
+# Extract the token from the request and return it and the roles
+# Returns nothing if the token is not found or if the token is invalid
+# `cache` must be a Dict{String, Vector{String}} 
+#   - the token is automatically valid if it is present in the cache
+#   - the roles are added to the cache if the token is valid
+function middleware_extract_token(req::HTTP.Request, cache = nothing)::Union{Nothing, Tuple{String, Vector{String}}}
     token = HTTP.header(req, "Authorization")
     if isnothing(token)
-        return nothing, false
+        return nothing
     end
     # Extract token after "Bearer " prefix
     if !startswith(token, "Bearer ")
-        return nothing, false
+        return nothing
     end
     token = replace(token, "Bearer " => "")
 
     # In development, accept the dev token (unless set to "disabled")
     if is_dev_token_enabled() && is_dev_token(token)
-        return token, true
+        return token, DEFAULT_DEV_TOKEN_ROLES
     end
 
     # Check if the token is in the cache set already
-    cached_valid = isnothing(cache) ? false : token ∈ cache
+    cached_valid = isnothing(cache) ? false : haskey(cache, token)
 
     # If the token is in the cache set already, just return true 
     # and avoid calling the database
     if cached_valid
-        return token, true
+        return token, cache[token]
     end
 
     # If the token is not in the cache set already, check if it exists in the database
     collection = Database.collection("tokens")
     query      = Mongoc.BSON("token" => token)
     result     = Mongoc.find_one(collection, query)
+    roles      = collect(split(result["role"], ","))
 
     if !isnothing(result) && !isnothing(cache)
-        push!(cache, token)
+        cache[token] = roles
+        @debug "Cached token $(token) with roles $(roles)"
     end
 
-    return !isnothing(result) ? (token, true) : (nothing, false)
+    return !isnothing(result) ? (token, roles) : nothing
 end
 
 const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
@@ -202,13 +212,54 @@ const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
 
 using Base.ScopedValues
 
-const _current_token = ScopedValue{Union{Nothing, String}}(nothing)
+const _current_token = ScopedValue{String}()
+const _current_roles = ScopedValue{Vector{String}}()
 
-is_authorized()::Bool = !isnothing(_current_token[])
-current_token()::String = _current_token[]::String
+"""
+    is_authorized()::Bool
+
+Checks if the current request is authenticated.
+Returns `true` if a token is available in the current scope, `false` otherwise.
+
+See also: [`current_token`](@ref), [`current_roles`](@ref)
+"""
+function is_authorized()::Bool
+    token = Base.ScopedValues.get(_current_token)
+    return !isnothing(token)
+end
+
+"""
+    current_token()::String
+
+Returns the current authenticated user's token string.
+This function should only be called within endpoints that require authentication.
+
+See also: [`is_authorized`](@ref), [`current_roles`](@ref)
+"""
+function current_token()
+    token = Base.ScopedValues.get(_current_token)
+    return @something token error(
+        "Current token is not set. Call `is_authorized()` to check if the request is authorized."
+    )
+end
+
+"""
+    current_roles()::Vector{String}
+
+Returns the roles assigned to the current authenticated user as a vector of strings.
+This function should only be called within endpoints that require authentication.
+
+See also: [`is_authorized`](@ref), [`current_token`](@ref)
+"""
+function current_roles()
+    roles = Base.ScopedValues.get(_current_roles)
+    return @something roles error(
+        "Current roles are not set. Call `is_authorized()` to check if the request is authorized."
+    )
+end
 
 function middleware_check_token(handler::F) where {F}
-    cache = Set{String}()
+    cache = Dict{String, Vector{String}}()
     return function (req::HTTP.Request)
         # First check if this request should bypass 
         # authentication entirely
@@ -216,14 +267,16 @@ function middleware_check_token(handler::F) where {F}
             return handler(req)
         end
 
-        token, is_valid = middleware_extract_token(req, cache)
+        extracted = middleware_extract_token(req, cache)
 
-        if !is_valid
+        if isnothing(extracted)
             return UNAUTHORIZED_RESPONSE
         end
 
+        token, roles = extracted
+
         # Request is authenticated, proceed to the handler
-        with(_current_token => token::String) do
+        with(_current_token => token::String, _current_roles => roles) do
             return handler(req)
         end
     end

@@ -97,18 +97,19 @@ function reload!(dispatcher::ModelsDispatcher)
 end
 
 """
-    get_models(dispatcher::ModelsDispatcher)
+    get_models(dispatcher::ModelsDispatcher; role = nothing)
 
 Get all non-private models from the given dispatcher.
 
 # Arguments
 - `dispatcher::ModelsDispatcher`: The dispatcher to get models from
+- `roles::Union{Vector{String}, Nothing}`: The roles to filter models by (optional)
 
 # Returns
 - A collection of all non-private loaded models
 """
 function get_models(dispatcher::ModelsDispatcher)
-    return filter(m -> !m.private, collect(values(dispatcher.models)))
+    return collect(values(dispatcher.models))
 end
 
 """

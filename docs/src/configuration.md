@@ -95,7 +95,7 @@ Authorization: Bearer dev-token
 RxInferServer.is_dev_token_enabled
 RxInferServer.is_dev_token_disabled
 RxInferServer.is_dev_token
-``` 
+```
 
 # [Server Edition](@id server-edition-configuration)
 

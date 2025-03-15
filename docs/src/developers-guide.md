@@ -309,3 +309,68 @@ Failing to regenerate the code after changes to the OpenAPI specification will r
 - [OpenAPI Generator](https://openapi-generator.tech/)
 - [Julia Server Template](https://openapi-generator.tech/docs/generators/julia-server)
 - [Julia Client Template](https://openapi-generator.tech/docs/generators/julia)
+
+### Working with Authorization in Endpoints
+
+Most endpoints in RxInferServer require authentication. The middleware automatically handles token validation, but your endpoint implementation often needs to access the current user's token or roles for authorization decisions.
+
+```@docs
+RxInferServer.is_authorized
+RxInferServer.current_token
+RxInferServer.current_roles
+```
+
+#### Using `current_token()` and `current_roles()`
+
+RxInferServer provides two helper functions for accessing the authenticated user's information:
+
+- `current_token()`: Returns the authenticated user's token string
+- `current_roles()`: Returns a vector of role strings assigned to the current user
+
+Here's how to implement an endpoint that requires authorization:
+
+```julia
+function get_protected_resource(req::HTTP.Request)::HTTP.Response
+    # The middleware has already verified that the request is authenticated
+    
+    # If you need the token for any reason (e.g., logging, user-specific resources)
+    token = current_token()
+    
+    # If you need to check roles for authorization
+    roles = current_roles()
+    
+    # Example: Filter resources based on user roles
+    if "admin" in roles
+        # Return admin-level resources
+    else
+        # Return regular user resources
+    end
+    
+    return HTTP.Response(200, your_response_data)
+end
+```
+
+#### Example: Role-Based Resource Filtering
+
+Here's a real example from the `get_models` endpoint that filters models based on user roles:
+
+```julia
+function get_models(req::HTTP.Request)::HTTP.Response
+    # Get models from storage
+    models = Models.get_models()
+
+    # Get current user's roles
+    roles = current_roles()
+
+    # Filter models by checking if any of the model's roles
+    # match any of the user's roles
+    filtered_models = filter(models) do model
+        return any(r -> r in roles, model.roles)
+    end
+
+    # rest of the implementation...
+end
+```
+
+!!! note
+    These functions will throw an error if called in a non-authenticated context. Always ensure they are only called in endpoints protected by the authentication middleware.

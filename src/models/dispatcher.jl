@@ -51,7 +51,8 @@ Load models from the specified locations into the models dictionary.
 function load_models!(models, locations)
     for location in locations
         if !isdir(location)
-            error("Cannot create `ModelsDispatcher` from `$location` because it does not exist or is not a directory")
+            @warn "Cannot load models from `$location` because it does not exist or is not a directory"
+            continue
         end
         for directory in readdir(location)
             potential_model_dir = joinpath(location, directory)

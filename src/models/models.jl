@@ -13,14 +13,16 @@ using YAML, Base.ScopedValues
 
 The directories where the models are stored. Colon-separated list of directories.
 This can be configured using the `RXINFER_SERVER_MODELS_LOCATIONS` environment variable.
-Defaults to `"models"` if not specified.
+Defaults to `"models:custom_models"` if not specified. 
+Note that the `custom_models` directory is git-ignored by default.
+Use the `custom_models` directory to experiment with custom models without committing them to the repository.
 
 ```julia
 ENV["RXINFER_SERVER_MODELS_LOCATIONS"] = "/path/to/models1:/path/to/models2"
 RxInferServer.serve()
 ```
 """
-RXINFER_SERVER_MODELS_LOCATIONS() = split(get(ENV, "RXINFER_SERVER_MODELS_LOCATIONS", "models"), ':')
+RXINFER_SERVER_MODELS_LOCATIONS() = split(get(ENV, "RXINFER_SERVER_MODELS_LOCATIONS", "models:custom_models"), ':')
 
 include("loaded_model.jl")
 include("dispatcher.jl")

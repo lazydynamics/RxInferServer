@@ -1,3 +1,17 @@
+"""
+    LoadedModel
+
+Represents a loaded RxInfer probabilistic model with its metadata and implementation.
+
+# Fields
+- `path::String`: Path to the model directory
+- `name::String`: Name of the model
+- `description::String`: Description of the model's purpose and functionality
+- `author::String`: Author or organization that created the model
+- `private::Bool`: Whether the model is private (not listed in API responses)
+- `config::Dict{String, Any}`: Configuration parameters for the model
+- `mod::Module`: Julia module containing the model's implementation
+"""
 Base.@kwdef struct LoadedModel
     path::String
     name::String
@@ -8,6 +22,31 @@ Base.@kwdef struct LoadedModel
     mod::Module
 end
 
+"""
+    LoadedModel(path::String)::LoadedModel
+
+Load a model from the specified directory path.
+
+# Arguments
+- `path::String`: Path to the directory containing model.jl and config.yaml
+
+# Returns
+- `LoadedModel`: The loaded model with all its metadata and implementation
+
+# Throws
+- `ErrorException`: If model.jl or config.yaml is missing, or if required config fields are missing
+
+# Implementation Notes
+The model directory must contain:
+1. `model.jl`: Julia code implementing the model
+2. `config.yaml`: Configuration file with required fields:
+   - `name`: Model name
+   - `description`: Model description
+   - `author`: Model author
+   - `private`: Boolean indicating if model is private
+
+The model code is loaded into a separate module to isolate its namespace.
+"""
 function LoadedModel(path::String)::LoadedModel
     potential_model_file = joinpath(path, "model.jl")
     potential_model_config = joinpath(path, "config.yaml")

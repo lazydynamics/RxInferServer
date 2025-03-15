@@ -1,3 +1,9 @@
+"""
+    Models
+
+Module responsible for loading, managing, and accessing RxInfer probabilistic models in the server.
+Handles model discovery, loading, and provides access to models through a dispatcher.
+"""
 module Models
 
 using YAML, Base.ScopedValues
@@ -21,12 +27,33 @@ include("dispatcher.jl")
 
 const models_dispatcher = ScopedValue{ModelsDispatcher}()
 
+"""
+    with_models(f::Function; locations = RXINFER_SERVER_MODELS_LOCATIONS())
+
+Execute function `f` with an initialized models dispatcher for the given locations.
+Creates a scoped context where models can be accessed via the dispatcher.
+
+# Arguments
+- `f::Function`: The function to execute within the models context
+- `locations`: The locations to scan for models, defaults to `RXINFER_SERVER_MODELS_LOCATIONS()`
+"""
 function with_models(f::F; locations = RXINFER_SERVER_MODELS_LOCATIONS()) where {F}
     with(models_dispatcher => ModelsDispatcher(locations)) do
         f()
     end
 end
 
+"""
+    get_models_dispatcher()::ModelsDispatcher
+
+Get the current active models dispatcher. Must be called within a `with_models` context.
+
+# Returns
+- `ModelsDispatcher`: The active models dispatcher
+
+# Throws
+- `ErrorException`: If called outside of a `with_models` context
+"""
 function get_models_dispatcher()::ModelsDispatcher
     dispatcher = @inline Base.ScopedValues.get(models_dispatcher)
     return @something dispatcher error("Models dispatcher is not initialized. Use `with_models` to initialize it.")
@@ -35,14 +62,23 @@ end
 """
     get_models()
 
-Get all non-private models using the current dispatcher
+Get all non-private models using the current dispatcher.
+
+# Returns
+- A collection of all non-private loaded models
 """
 get_models() = get_models(get_models_dispatcher())
 
 """
     get_model(model_name::String)
 
-Get a model from the current dispatcher
+Get a specific model by name from the current dispatcher.
+
+# Arguments
+- `model_name::String`: The name of the model to retrieve
+
+# Returns
+- `LoadedModel` or `nothing`: The requested model if found, otherwise `nothing`
 """
 get_model(model_name::String) = get_model(get_models_dispatcher(), model_name)
 

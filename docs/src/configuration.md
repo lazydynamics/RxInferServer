@@ -4,94 +4,71 @@ This section describes the configuration options for the RxInferServer.jl packag
 `RxInferServer` exposes two different configuration mechanisms:
 
 - Environment variables: for setting runtime settings, which do not require recompilation of the project
-- Preferences: for setting preferences persistent across Julia sessions, which are usually compile-time settings, changes in these settings require recompilation of the project
+- Preferences: for setting preferences persistent across Julia sessions, which are usually compile-time settings. These settings persist across Julia sessions and require a restart of the server and re-compilation of the project to take effect. You could also manually modify the `LocalPreferences.toml` file to change these settings.
 
-## Environment Variables
+# [Port Configuration](@id port-configuration)
 
-This section describes the environment variables that can be set to configure the server.
+The server port can be configured using the following environment variable:
 
-#### Port Configuration
-
-The server port can be configured using the `RXINFER_SERVER_PORT` environment variable:
-
-```julia
-# Set port via environment variable
-ENV["RXINFER_SERVER_PORT"] = 9000
-RxInferServer.serve()
+```@docs
+RxInferServer.RXINFER_SERVER_PORT
 ```
 
-#### Logging Configuration
+# [Logging Configuration](@id logging-configuration)
 
-The server implements a comprehensive logging system that writes logs both to the terminal and to files. Logs are organized by functional groups (e.g., Server, Authentication) and stored in separate files.
+The server implements a comprehensive logging system that writes logs both to the terminal and to files. Logs are organized by functional groups (e.g., Server, Authentication) and stored in separate files. The configurable options include:
 
-The log files location can be configured using the `RXINFER_SERVER_LOGS_LOCATION` environment variable:
-
-```julia
-# Set logs directory via environment variable
-ENV["RXINFER_SERVER_LOGS_LOCATION"] = "/path/to/logs"
-RxInferServer.serve()
+```@docs
+RxInferServer.Logging.RXINFER_SERVER_LOGS_LOCATION
+RxInferServer.Logging.RXINFER_SERVER_ENABLE_DEBUG_LOGGING
+RxInferServer.Logging.is_debug_logging_enabled
 ```
-
-By default, logs are stored in the `.server-logs` directory relative to the current working directory. The server automatically creates this directory if it doesn't exist.
-
-The logging system uses:
-- Terminal output with formatted, human-readable logs
-- File-based logging with separate files for different functional groups
 
 !!! note
     For production deployments, consider setting a persistent, absolute path for your log files to ensure they are preserved and easily accessible for monitoring and debugging.
 
-#### MongoDB Configuration
+!!! note
+    `make serve` command runs the server with debug logging enabled.
+
+# [MongoDB Configuration](@id mongodb-configuration)
 
 The MongoDB connection can be configured using the following environment variables:
 
-- `RXINFER_MONGODB_URL`: Sets the MongoDB connection URL
-- `RXINFER_MONGODB_DATABASE`: Sets the MongoDB database name (defaults to "rxinferserver")
-
-```julia
-# Set MongoDB connection URL via environment variable
-ENV["RXINFER_MONGODB_URL"] = "mongodb://localhost:27017"
-# Set MongoDB database name
-ENV["RXINFER_MONGODB_DATABASE"] = "rxinferserver"
-RxInferServer.serve()
+```@docs
+RxInferServer.Database.RXINFER_SERVER_MONGODB_URL
+RxInferServer.Database.RXINFER_SERVER_MONGODB_DATABASE
 ```
 
 The default connection URL for the Docker development environment is `mongodb://database:27017`, which connects to the MongoDB Atlas Local instance running in the Docker Compose environment. When deploying to production, you should set this to your actual MongoDB Atlas connection string or other MongoDB instance.
 
-##### Using MongoDB Compass
+## Using MongoDB Compass
 
 If you're using [MongoDB Compass](https://www.mongodb.com/products/compass) to connect to and manage your MongoDB database during development:
 
-1. Always connect to `localhost:27017` from your host machine (except when using the `RXINFER_MONGODB_URL` environment variable)
+1. Always connect to `localhost:27017` from your host machine (except when using the [`RxInferServer.Database.RXINFER_SERVER_MONGODB_URL`](@ref) environment variable)
 2. This is because Docker maps the container's port 27017 to your host's port 27017
 3. No authentication is required for the development database by default
 
 For production MongoDB Atlas connections in Compass, you would use the standard Atlas connection string format.
 
-#### CORS Configuration
+# [CORS Configuration](@id cors-configuration)
 
 The server supports CORS configuration. The following environment variables can be set to configure the CORS settings:
 
-- `RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN`: The allowed origins for CORS requests.
-- `RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS`: The allowed methods for CORS requests.
-- `RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS`: The allowed headers for CORS requests.
+```@docs
+RxInferServer.RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN
+RxInferServer.RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS
+RxInferServer.RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS
+```
 
-#### Authentication Configuration
+# [Authentication Configuration](@id authentication-configuration)
 
 The server implements standard Bearer token authentication using the HTTP `Authorization` header. Most of the endpoints except for `/generate-token` and `/ping` require authentication by default.
 
-Authentication for development can be configured through the `RXINFER_SERVER_DEV_TOKEN` environment variable:
+Authentication for development can be configured through the environment variable:
 
-- Default value: `dev-token` (allows authentication with this value during development)
-- Special values:
-  - `disabled`: Disables the development token, requiring proper production tokens for all authentication
-  
-```julia
-# Use a specific development token
-ENV["RXINFER_SERVER_DEV_TOKEN"] = "my-custom-token"
-
-# Disable development token (production mode)
-ENV["RXINFER_SERVER_DEV_TOKEN"] = "disabled"
+```@docs
+RxInferServer.RXINFER_SERVER_DEV_TOKEN
 ```
 
 When implementing client applications, you must include the token in the `Authorization` header with the `Bearer` prefix:
@@ -110,41 +87,23 @@ Authorization: Bearer dev-token
 RxInferServer.is_dev_token_enabled
 RxInferServer.is_dev_token_disabled
 RxInferServer.is_dev_token
+``` 
+
+# [Server Edition](@id server-edition-configuration)
+
+The server edition can be configured using the following environment variable:
+
+```@docs
+RxInferServer.RXINFER_SERVER_EDITION
 ```
 
-!!! note
-    In production environments, you should set `RXINFER_SERVER_DEV_TOKEN=disabled` and implement proper token validation logic.
+# [Hot Reloading](@id hot-reloading-configuration)
 
-#### Server Edition
-
-The server edition can be configured using the `RXINFER_SERVER_EDITION` environment variable:
-
-```julia
-ENV["RXINFER_SERVER_EDITION"] = "CommunityEdition"
-```
-
-This setting is used to identify the server edition in the server information endpoint and has no functional impact on server behavior. The default value is "CommunityEdition".
-
-## Preferences 
-
-This section describes the preferences that can be set to configure the server. These settings persist across Julia sessions and require a restart of the server to take effect. You could also manually modify the `LocalPreferences.toml` file to change these settings.
-
-#### Hot Reloading
-
-The server supports hot reloading, which automatically updates endpoints when code changes are detected. This feature is enabled by default but can be disabled:
-
-```julia
-# Check current setting
-RxInferServer.is_hot_reload_enabled()  # Returns true by default
-
-# Disable hot reloading
-RxInferServer.set_hot_reload(false)
-
-# Enable hot reloading
-RxInferServer.set_hot_reload(true)
-```
+The server supports hot reloading, which automatically updates endpoints when code changes are detected. 
+This feature is enabled by default but can be disabled using preferences:
 
 ```@docs
 RxInferServer.is_hot_reload_enabled
 RxInferServer.set_hot_reload
+RxInferServer.HOT_RELOAD_PREF_KEY
 ```

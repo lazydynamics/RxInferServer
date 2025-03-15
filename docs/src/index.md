@@ -13,9 +13,9 @@ Documentation for [RxInferServer](https://github.com/lazydynamics/RxInferServer.
 
 RxInferServer provides a REST API server for [RxInfer.jl](https://github.com/biaslab/RxInfer.jl), enabling remote access to inference capabilities through HTTP endpoints. The server is built on top of HTTP.jl and follows OpenAPI specifications.
 
-```@index
-```
+## Development and implementation details
 
-```@autodocs
-Modules = [RxInferServer]
+See the [Development](@ref developers-guide) section for more details on the development process and implementation details.
+
+```@index
 ```

@@ -4,7 +4,7 @@ using HTTP, Dates
 Aqua.test_all(RxInferServer; ambiguities = false, piracies = false, deps_compat = (; check_extras = false, check_weakdeps = true))
 
 # Check if the server is running by pinging it with timeout
-function wait_for_server(; host = "localhost", port = 8000, timeout_seconds = 600, retry_interval = 5)
+function wait_for_server(; host = "localhost", port = RxInferServer.RXINFER_SERVER_PORT, timeout_seconds = 600, retry_interval = 5)
     @info "Waiting for server to start..."
     endpoint = "http://$(host):$(port)/v1/ping"
     start_time = now()

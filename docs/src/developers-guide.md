@@ -1,4 +1,4 @@
-# [Development](@id development)
+# [Developers guide](@id developers-guide)
 
 This section describes the development process for the RxInferServer.jl project and how to setup the development environment.
 
@@ -67,6 +67,9 @@ curl -f localhost:8000/v1/ping
 ```
 
 If the server is running correctly, this should return a successful response.
+
+!!! note
+    Server supports hot-reloading, which automatically updates endpoints when code changes are detected. This feature is enabled by default but can be disabled using preferences. See [Hot Reloading](@ref hot-reloading-configuration) for more details.
 
 ### Development Workflow with Makefile
 

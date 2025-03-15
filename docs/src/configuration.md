@@ -20,10 +20,14 @@ The server implements a comprehensive logging system that writes logs both to th
 
 ```@docs
 RxInferServer.Logging.RXINFER_SERVER_LOGS_LOCATION
+RxInferServer.Logging.RXINFER_SERVER_ENABLE_DEBUG_LOGGING
 ```
 
 !!! note
     For production deployments, consider setting a persistent, absolute path for your log files to ensure they are preserved and easily accessible for monitoring and debugging.
+
+!!! note
+    `make serve` command runs the server with debug logging enabled.
 
 # [MongoDB Configuration](@id mongodb-configuration)
 

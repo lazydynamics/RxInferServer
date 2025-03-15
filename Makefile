@@ -25,7 +25,7 @@ help:
 	@echo '${GREEN}Development commands:${RESET}'
 	@echo '  ${YELLOW}deps${RESET}                 Install project dependencies'
 	@echo '  ${YELLOW}test${RESET}                 Run project tests'
-	@echo '  ${YELLOW}serve${RESET}                Run the server'
+	@echo '  ${YELLOW}serve${RESET}                Run the server (with debug logging enabled)'
 	@echo '  ${YELLOW}docker-start${RESET}         Start the docker compose environment'
 	@echo '  ${YELLOW}docker-stop${RESET}          Stop the docker compose environment'
 	@echo '  ${YELLOW}openapi-endpoints${RESET}    Show RxInferServerOpenAPI module documentation'
@@ -65,7 +65,7 @@ test: deps ## Run project tests
 	julia --startup-file=no --project -e 'using Pkg; Pkg.test()'
 
 serve: deps ## Run the server
-	julia --startup-file=no --project -e 'using RxInferServer; RxInferServer.serve()'
+	RXINFER_SERVER_ENABLE_DEBUG_LOGGING=true julia --startup-file=no --project -e 'using RxInferServer; RxInferServer.serve()'
 
 docker: docker-start ## Starts the docker compose environment
 

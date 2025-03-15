@@ -24,6 +24,19 @@ RxInferServer.serve()
 const RXINFER_SERVER_LOGS_LOCATION = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
 
 """
+Whether to enable debug logging.
+This can be configured using the `RXINFER_SERVER_ENABLE_DEBUG_LOGGING` environment variable.
+Defaults to `"false"` if not specified. Note that this is a string variable, not a boolean.
+If enabled, writes to `debug.log` in the RXINFER_SERVER_LOGS_LOCATION directory.
+
+```julia
+ENV["RXINFER_SERVER_ENABLE_DEBUG_LOGGING"] = "true"
+RxInferServer.serve()
+```
+"""
+const RXINFER_SERVER_ENABLE_DEBUG_LOGGING = get(ENV, "RXINFER_SERVER_ENABLE_DEBUG_LOGGING", "false")
+
+"""
     filter_by_group(group)
 
 Creates a logger filter function that only allows log messages with the specified group tag.
@@ -51,7 +64,7 @@ Creates a TeeLogger that writes to:
 1. Terminal with human-readable formatting
 2. A main log file (.log) with all messages
 3. Separate files for each functional group (Server.log, Authentification.log, etc.)
-
+4. A debug log file (debug.log) if debug logging is enabled, see [`RxInferServer.Logging.RXINFER_SERVER_ENABLE_DEBUG_LOGGING`](@ref)
 # Arguments
 - `f`: The function to execute with the configured logger
 
@@ -82,7 +95,7 @@ function with_logger(f::F) where {F}
     )
     
     # Create a TeeLogger that writes to terminal and files
-    server_logger = LoggingExtras.TeeLogger(
+    server_loggers = [
         # The terminal logger is a MiniLogger that formats the log message in a human-readable way
         MiniLoggers.MiniLogger(; kwargs_logger...),
 
@@ -93,7 +106,15 @@ function with_logger(f::F) where {F}
         MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, ".log"), kwargs_logger...),
         MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "Server.log"), kwargs_logger...) |> filter_by_group(:Server),
         MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "Authentification.log"), kwargs_logger...) |> filter_by_group(:Authentification)
-    )
+    ]
+
+    # If debug logging is enabled, add a debug logger that writes to the terminal
+    if RXINFER_SERVER_ENABLE_DEBUG_LOGGING == "true"
+        push!(server_loggers, MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "debug.log"), minlevel = BaseLogging.Debug, kwargs_logger...))
+    end
+
+    # `TeeLogger` does not accept an array of loggers, so we need to convert it to a tuple
+    server_logger = LoggingExtras.TeeLogger(Tuple(server_loggers))
     
     # Execute the provided function with the configured logger
     BaseLogging.with_logger(server_logger) do

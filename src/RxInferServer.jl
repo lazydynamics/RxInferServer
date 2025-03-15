@@ -215,31 +215,31 @@ function serve(; show_banner::Bool = true)
         end
 
         function shutdown()
-            @info "Initiating graceful shutdown..."
+            # Atomic operation to set the server running flag to false
+            # Returns the old value of the flag, e.g. true if the server was actually running
+            if Base.Threads.atomic_xchg!(server_running, false)
+                @info "Initiating graceful shutdown..."
 
-            server_running[] = false
+                close(server)
 
-            close(server)
+                # Update server state file to trigger file watcher
+                # This would also trigger the hot reload task
+                # Which checks the `server_running` variable and exits if it is false
+                open(server_pid_file, "w") do f
+                    println(f, "server stopped at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+                end
 
-            # Update server state file to trigger file watcher
-            # This would also trigger the hot reload task
-            # Which checks the `server_running` variable and exits if it is false
-            open(server_pid_file, "w") do f
-                println(f, "server stopped at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+                # Wait for hot reload task to complete if it was running
+                if !isnothing(hot_reload)
+                    @info "Waiting for hot reload task to stop..."
+                    wait(hot_reload)
+                end
+
+                # Wait for the server task to complete
+                wait(server_task)
+
+                @info "Server shutdown complete."
             end
-
-            # Wait for hot reload task to complete if it was running
-            if !isnothing(hot_reload)
-                @info "Waiting for hot reload task to stop..."
-                wait(hot_reload)
-            end
-
-            # Wait for the server task to complete
-            wait(server_task)
-
-            @info "Server shutdown complete."
-
-            exit(0)
         end
 
         # If the server is not running in an interactive session, 

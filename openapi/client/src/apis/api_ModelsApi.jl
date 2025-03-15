@@ -11,6 +11,39 @@ This can be used to construct the `OpenAPI.Clients.Client` instance.
 """
 basepath(::Type{ ModelsApi }) = "http://localhost:8000/v1"
 
+const _returntypes_get_model_info_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => ModelInfo,
+    Regex("^" * replace("401", "x"=>".") * "\$") => ErrorResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => ErrorResponse,
+)
+
+function _oacinternal_get_model_info(_api::ModelsApi, model_name::String; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_model_info_ModelsApi, "/models/{model_name}/info", ["ApiKeyAuth", ])
+    OpenAPI.Clients.set_param(_ctx.path, "model_name", model_name)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Get model information
+
+Retrieve detailed information about a specific model
+
+Params:
+- model_name::String (required)
+
+Return: ModelInfo, OpenAPI.Clients.ApiResponse
+"""
+function get_model_info(_api::ModelsApi, model_name::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_info(_api, model_name; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function get_model_info(_api::ModelsApi, response_stream::Channel, model_name::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_info(_api, model_name; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_get_models_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => ModelList,
     Regex("^" * replace("401", "x"=>".") * "\$") => ErrorResponse,
@@ -41,4 +74,5 @@ function get_models(_api::ModelsApi, response_stream::Channel; _mediaType=nothin
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+export get_model_info
 export get_models

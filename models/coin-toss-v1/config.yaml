@@ -1,6 +1,5 @@
 
-name: CoinToss
-version: 1.0.0
+name: CoinToss-v1
 description: A simple coin toss model
 author: Lazy Dynamics
 private: false

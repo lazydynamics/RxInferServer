@@ -74,14 +74,11 @@ paths:
                 $ref: '#/components/schemas/ModelList'
               example:
                 models:
-                  - name: "CoinToss"
-                    version: "1.0.0"
+                  - name: "CoinToss-v1"
                     description: "A simple coin toss model"
-                  - name: "LinearRegression"
-                    version: "1.2.0"
+                  - name: "LinearRegression-v1"
                     description: "A simple linear regression model"
-                  - name: "GaussianMixture"
-                    version: "2.1.0"
+                  - name: "GaussianMixture-v2"
                     description: "A simple Gaussian mixture model"
         '401':
           description: Access token is missing or invalid
@@ -92,6 +89,46 @@ paths:
               example:
                 error: "Unauthorized"
                 message: "The request requires authentication, generate a token using the /generate-token endpoint"
+  /models/{model_name}/info:
+    get:
+      tags:
+        - Models
+      summary: Get model information
+      operationId: getModelInfo
+      description: Retrieve detailed information about a specific model
+      parameters:
+        - name: model_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the model to retrieve information for (including version identifier if applicable, e.g. "CoinToss-v1")
+      responses:
+        '200':
+          description: Successfully retrieved model information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelInfo'
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized"
+                message: "The request requires authentication, generate a token using the /generate-token endpoint"
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Not Found"
+                message: "The requested model could not be found"
+                
   /ping:
     get:
       tags:
@@ -208,19 +245,28 @@ components:
           description: List of available models
           items:
             $ref: '#/components/schemas/LightweightModelInfo'
+    ModelInfo:
+      type: object
+      required:
+        - info
+        - config
+      properties:
+        info:
+          $ref: '#/components/schemas/LightweightModelInfo'
+          description: Basic model information
+        config:
+          type: object
+          description: Model-specific configuration
+          additionalProperties: true
     LightweightModelInfo:
       type: object
       required:
         - name
-        - version
         - description
       properties:
         name:
           type: string
-          description: Name of the model
-        version:
-          type: string
-          description: Version of the model
+          description: Name of the model (including version identifier, e.g. "CoinToss-v1")
         description:
           type: string
           description: Brief description of the model

@@ -6,39 +6,33 @@
 
     LightweightModelInfo(;
         name=nothing,
-        version=nothing,
         description=nothing,
     )
 
-    - name::String : Name of the model
-    - version::String : Version of the model
+    - name::String : Name of the model (including version identifier, e.g. \&quot;CoinToss-v1\&quot;)
     - description::String : Brief description of the model
 """
 Base.@kwdef mutable struct LightweightModelInfo <: OpenAPI.APIModel
     name::Union{Nothing, String} = nothing
-    version::Union{Nothing, String} = nothing
     description::Union{Nothing, String} = nothing
 
-    function LightweightModelInfo(name, version, description, )
+    function LightweightModelInfo(name, description, )
         OpenAPI.validate_property(LightweightModelInfo, Symbol("name"), name)
-        OpenAPI.validate_property(LightweightModelInfo, Symbol("version"), version)
         OpenAPI.validate_property(LightweightModelInfo, Symbol("description"), description)
-        return new(name, version, description, )
+        return new(name, description, )
     end
 end # type LightweightModelInfo
 
-const _property_types_LightweightModelInfo = Dict{Symbol,String}(Symbol("name")=>"String", Symbol("version")=>"String", Symbol("description")=>"String", )
+const _property_types_LightweightModelInfo = Dict{Symbol,String}(Symbol("name")=>"String", Symbol("description")=>"String", )
 OpenAPI.property_type(::Type{ LightweightModelInfo }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_LightweightModelInfo[name]))}
 
 function check_required(o::LightweightModelInfo)
     o.name === nothing && (return false)
-    o.version === nothing && (return false)
     o.description === nothing && (return false)
     true
 end
 
 function OpenAPI.validate_property(::Type{ LightweightModelInfo }, name::Symbol, val)
-
 
 
 end

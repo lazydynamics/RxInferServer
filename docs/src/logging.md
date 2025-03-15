@@ -39,6 +39,7 @@ RxInferServer.Logging.with_logger
 RxInferServer.Logging.with_simple_logger
 RxInferServer.Logging.filter_by_group
 RxInferServer.Logging.filter_by_module
+RxInferServer.Logging.filter_by_level
 ```
 
 ## Adding New OpenAPI Tags

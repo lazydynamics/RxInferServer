@@ -1,71 +1,61 @@
-struct ModelsDispatcher
-    models::Dict{String, VersionedModel}
+
+Base.@kwdef struct ModelsDispatcher{L, M}
+    locations::L
+    models::M
 end
 
-function scan_models(path)::ModelsDispatcher
-    if !isdir(path)
-        error("Cannot scan models in $path because it does not exist or is not a directory")
-    end
+function ModelsDispatcher(locations)::ModelsDispatcher
+    models = Dict{String, LoadedModel}()
 
-    models = Dict{String, VersionedModel}()
+    @debug "Attempt to load models from `$locations`"
+    load_models!(models, locations)
 
-    for directory in readdir(path)
-        potential_model_dir = joinpath(path, directory)
+    return ModelsDispatcher(locations = locations, models = models)
+end
 
-        if isdir(potential_model_dir)
-            model = scan_potential_model(potential_model_dir)
-            if !isnothing(model)
+function load_models!(models, locations)
+    for location in locations
+        if !isdir(location)
+            error("Cannot create `ModelsDispatcher` from `$location` because it does not exist or is not a directory")
+        end
+        for directory in readdir(location)
+            potential_model_dir = joinpath(location, directory)
+            if isdir(potential_model_dir)
+                @debug "Found potential model's directory `$directory`"
+                model = LoadedModel(potential_model_dir)
+                if haskey(models, model.name)
+                    error(
+                        "Cannot create `ModelsDispatcher` from `$location` because it contains multiple models with the same name: `$(model.name)`. The first one has already been loaded from `$(models[model.name].path)`."
+                    )
+                end
                 models[model.name] = model
+                @debug "Model `$(model.name)` has been loaded successfully from `$(model.path)`"
             end
         end
     end
-
-    return ModelsDispatcher(models)
 end
 
-function scan_potential_model(path)::Union{VersionedModel, Nothing}
-    potential_model_file = joinpath(path, "model.jl")
-    potential_model_config = joinpath(path, "config.yaml")
-
-    if !isfile(potential_model_file)
-        @warn "Directory $path does not have a model.jl file. Skipping..."
-        return nothing
-    end
-
-    if !isfile(potential_model_config)
-        @warn "Directory $path does not have a config.yaml file. Skipping..."
-        return nothing
-    end
-
-    try
-        config = YAML.load_file(potential_model_config)
-
-        name = config["name"]
-        version = config["version"]
-        description = config["description"]
-        author = config["author"]
-        private = config["private"]
-
-        mod = Module(Symbol(name, version))
-
-        Base.include(mod, potential_model_file)
-
-        return VersionedModel(name, version, description, author, private, mod)
-    catch e
-        @warn "Error loading config.yaml file for model $path: $e"
-        return nothing
-    end
+function reload!(dispatcher::ModelsDispatcher)
+    @debug "Reloading models from `$(dispatcher.locations)`"
+    # Empty the models dictionary and reload the models
+    load_models!(empty!(dispatcher.models), dispatcher.locations)
+    @debug "Models have been reloaded"
 end
 
-const models_dispatcher = ScopedValue{ModelsDispatcher}()
+"""
+    get_models(dispatcher::ModelsDispatcher)
 
-function with_models(f::F, path) where {F}
-    with(models_dispatcher => scan_models(path)) do
-        f()
-    end
+Get all non-private models from the given dispatcher
+"""
+function get_models(dispatcher::ModelsDispatcher)
+    return filter(m -> !m.private, collect(values(dispatcher.models)))
 end
 
-function get_models_dispatcher()
-    dispatcher = @inline Base.ScopedValues.get(models_dispatcher)
-    return @something dispatcher error("Models dispatcher is not initialized. Use `with_models` to initialize it.")
+"""
+    get_model(dispatcher::ModelsDispatcher, model_name::String)
+
+Get a model from the given dispatcher
+"""
+function get_model(dispatcher::ModelsDispatcher, model_name::String)
+    return dispatcher.models[model_name]
 end

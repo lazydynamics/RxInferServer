@@ -1,3 +1,3 @@
-module CoinToss 
+module CoinToss
 
 end

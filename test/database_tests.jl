@@ -37,7 +37,9 @@ end
     @test_throws "Invalid URI Schema" RxInferServer.Database.with_connection(url = "non-existing-url") do
         @test false
     end
-    @test_throws "No suitable servers found" RxInferServer.Database.with_connection(url = "mongodb://non-existing-host:27017") do
+    @test_throws "No suitable servers found" RxInferServer.Database.with_connection(
+        url = "mongodb://non-existing-host:27017"
+    ) do
         @test false
     end
 end

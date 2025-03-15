@@ -16,7 +16,12 @@ function generate_token(req::HTTP.Request)::HTTP.Response
 
     if insert_result.reply["insertedCount"] != 1
         @error "Unable to generate token due to internal error"
-        return HTTP.Response(400, RxInferServerOpenAPI.ErrorResponse(error = "Bad Request", message = "Unable to generate token due to internal error"))
+        return HTTP.Response(
+            400,
+            RxInferServerOpenAPI.ErrorResponse(
+                error = "Bad Request", message = "Unable to generate token due to internal error"
+            )
+        )
     end
 
     @debug "New token generated" token

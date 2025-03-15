@@ -36,7 +36,14 @@ Add a new endpoint that serves a RxInfer model.
   - `initialization`: Model initialization (optional)
   - Default inference parameters (e.g., iterations, free_energy)
 """
-function add_model(server::RxInferModelServer, path::String, model_spec::GraphPPL.ModelGenerator, output_vars::Vector{Symbol}; method::String = "POST", kwargs...)
+function add_model(
+    server::RxInferModelServer,
+    path::String,
+    model_spec::GraphPPL.ModelGenerator,
+    output_vars::Vector{Symbol};
+    method::String = "POST",
+    kwargs...
+)
 
     # Extract model configuration from kwargs
     model_kwargs = Dict{Symbol, Any}()
@@ -51,7 +58,9 @@ function add_model(server::RxInferModelServer, path::String, model_spec::GraphPP
     end
 
     # Create deployable model with optional constraints and initialization
-    deployable = DeployableRxInferModel(model_spec, get(model_kwargs, :constraints, nothing), get(model_kwargs, :initialization, nothing))
+    deployable = DeployableRxInferModel(
+        model_spec, get(model_kwargs, :constraints, nothing), get(model_kwargs, :initialization, nothing)
+    )
 
     function handler(req::HTTP.Request)
         # Parse the JSON request body
@@ -59,7 +68,12 @@ function add_model(server::RxInferModelServer, path::String, model_spec::GraphPP
 
         # Extract data and any inference parameters from request
         if !haskey(body, :data)
-            return HTTP.Response(400, JSON3.write(Dict("error" => "Missing data field", "message" => "Request body must contain a 'data' field")))
+            return HTTP.Response(
+                400,
+                JSON3.write(
+                    Dict("error" => "Missing data field", "message" => "Request body must contain a 'data' field")
+                )
+            )
         end
         # Convert data to NamedTuple
         data = (; (k => v for (k, v) in pairs(body.data))...)
@@ -88,7 +102,9 @@ function add_model(server::RxInferModelServer, path::String, model_spec::GraphPP
 
             return HTTP.Response(200, JSON3.write(result))
         catch e
-            return HTTP.Response(400, JSON3.write(Dict("error" => "Inference failed", "message" => sprint(showerror, e))))
+            return HTTP.Response(
+                400, JSON3.write(Dict("error" => "Inference failed", "message" => sprint(showerror, e)))
+            )
         end
     end
 

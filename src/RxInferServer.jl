@@ -162,7 +162,9 @@ function serve(; show_banner::Bool = true)
 
         Models.with_models() do
             # Register all API endpoints defined in OpenAPI spec
-            RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
+            RxInferServerOpenAPI.register(
+                router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation
+            )
 
             if !is_hot_reload_enabled()
                 @info "Hot reload is disabled. Use `RxInferServer.set_hot_reload(true)` and restart Julia to enable it."
@@ -192,7 +194,8 @@ function serve(; show_banner::Bool = true)
                                 end
                             catch e
                                 if server_running[]
-                                    @error "[HOT-RELOAD] Hot reload task for the $(name) encountered an error: $e" _id = :hot_reload
+                                    @error "[HOT-RELOAD] Hot reload task for the $(name) encountered an error: $e" _id =
+                                        :hot_reload
                                 else
                                     @info "[HOT-RELOAD] Exiting hot reload task for the $(name)..." _id = :hot_reload
                                 end
@@ -204,24 +207,33 @@ function serve(; show_banner::Bool = true)
 
             # Conditionally start hot reloading of the source code based on preference
             # There is a separate task for hot reloading models defined below
-            hot_reload_source_code = hot_reload_task("source code", [server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; all = true) do
-                io = IOBuffer()
-                # The register function prints a lot of annoying warnings with routes being replaced
-                # But this is the actual purpose of the hot reload task, so we suppress the warnings
-                Logging.with_simple_logger(io) do
-                    RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
+            hot_reload_source_code =
+                hot_reload_task("source code", [server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; all = true) do
+                    io = IOBuffer()
+                    # The register function prints a lot of annoying warnings with routes being replaced
+                    # But this is the actual purpose of the hot reload task, so we suppress the warnings
+                    Logging.with_simple_logger(io) do
+                        RxInferServerOpenAPI.register(
+                            router,
+                            @__MODULE__;
+                            path_prefix = API_PATH_PREFIX,
+                            pre_validation = middleware_pre_validation
+                        )
+                    end
+                    if occursin("replacing existing registered route", String(take!(io)))
+                        @warn "[HOT-RELOAD] Successfully replaced existing registered route" _id = :hot_reload
+                    end
                 end
-                if occursin("replacing existing registered route", String(take!(io)))
-                    @warn "[HOT-RELOAD] Successfully replaced existing registered route" _id = :hot_reload
-                end
-            end
 
             # We instantiate a separate task for hot reloading models
             # Because it is slower than the source code hot reloading and does not need to be done all the time
             # Collect server pid file and all files from model locations recursively
             hot_reload_models_locations = vcat(
                 [server_pid_file],
-                [joinpath(root, file) for location in Models.RXINFER_SERVER_MODELS_LOCATIONS() for (root, _, files) in walkdir(location) if isdir(location) for file in files]
+                [
+                    joinpath(root, file) for location in Models.RXINFER_SERVER_MODELS_LOCATIONS() for
+                    (root, _, files) in walkdir(location) if isdir(location) for file in files
+                ]
             )
             hot_reload_models = hot_reload_task("models", hot_reload_models_locations, []; all = false) do
                 Models.reload!(Models.get_models_dispatcher())

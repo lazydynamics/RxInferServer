@@ -54,7 +54,12 @@ end
 
 See also [`RxInferServer.Database.client`](@ref), [`RxInferServer.Database.database`](@ref), [`RxInferServer.Database.collection`](@ref).
 """
-function with_connection(f::F; url::String = RXINFER_SERVER_MONGODB_URL(), database::String = RXINFER_SERVER_MONGODB_DATABASE(), check_connection::Bool = true) where {F}
+function with_connection(
+    f::F;
+    url::String = RXINFER_SERVER_MONGODB_URL(),
+    database::String = RXINFER_SERVER_MONGODB_DATABASE(),
+    check_connection::Bool = true
+) where {F}
     _client = Mongoc.Client(url)::Mongoc.Client
     _database = _client[database]::Mongoc.Database
     if check_connection
@@ -84,7 +89,9 @@ See also [`RxInferServer.Database.with_connection`](@ref), [`RxInferServer.Datab
 """
 function client()::Mongoc.Client
     client = @inline Base.ScopedValues.get(MONGODB_CLIENT)
-    return @something client error("Database connection not established. Use `with_connection` to establish a connection.")
+    return @something client error(
+        "Database connection not established. Use `with_connection` to establish a connection."
+    )
 end
 
 """

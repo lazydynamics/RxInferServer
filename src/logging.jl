@@ -152,23 +152,31 @@ function with_logger(f::F) where {F}
         # - .log is the default log file with all messages
         # - *Name*.log is a file for each group of messages, clustered for each individual tag in the tags/ folder
         MiniLoggers.MiniLogger(; io = joinpath(logs_location, ".log"), kwargs_logger...),
-        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Server.log"), kwargs_logger...) |> filter_by_group(:Server),
-        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Authentification.log"), kwargs_logger...) |> filter_by_group(:Authentification),
-        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Models.log"), kwargs_logger...) |> filter_by_group(:Models)
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Server.log"), kwargs_logger...) |>
+        filter_by_group(:Server),
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Authentification.log"), kwargs_logger...) |>
+        filter_by_group(:Authentification),
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Models.log"), kwargs_logger...) |>
+        filter_by_group(:Models)
     ]
 
     # If debug logging is enabled, add a debug logger that writes to the terminal
     if is_debug_logging_enabled()
         # Do not append to the debug log file, overwrite it each time the server is restarted
         debug_kwargs = merge(kwargs_logger, (append = false, minlevel = BaseLogging.Debug))
-        debug_logger = MiniLoggers.MiniLogger(; io = joinpath(logs_location, "debug.log"), debug_kwargs...) |> filter_by_module("RxInferServer")
+        debug_logger =
+            MiniLoggers.MiniLogger(; io = joinpath(logs_location, "debug.log"), debug_kwargs...) |>
+            filter_by_module("RxInferServer")
         push!(server_loggers, debug_logger)
 
         # Add a debug logger that writes to the terminal, 
         # but only for the RxInferServer module and only for debug messages
         # because all other messages (info, warn, error, etc.) are already present in the main logger
         debug_console_kwargs = merge(debug_kwargs, (minlevel = BaseLogging.Debug,))
-        debug_console_logger = MiniLoggers.MiniLogger(; debug_console_kwargs...) |> filter_by_module("RxInferServer") |> filter_by_level(BaseLogging.Debug, BaseLogging.Info - 1)
+        debug_console_logger =
+            MiniLoggers.MiniLogger(; debug_console_kwargs...) |>
+            filter_by_module("RxInferServer") |>
+            filter_by_level(BaseLogging.Debug, BaseLogging.Info - 1)
         push!(server_loggers, debug_console_logger)
     end
 

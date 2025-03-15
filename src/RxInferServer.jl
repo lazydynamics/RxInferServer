@@ -7,9 +7,21 @@ using Revise, Preferences, Dates, Pkg
 
 include("database.jl")
 
-# API configuration
+# API configuration, this is not configurable and baked into the current implementation
 const API_PATH_PREFIX = "/v1"
-const PORT = parse(Int, get(ENV, "RXINFER_SERVER_PORT", "8000"))
+
+"""
+The port on which the RxInfer server will run. 
+This can be configured using the `RXINFER_SERVER_PORT` environment variable.
+Defaults to 8000 if not specified.
+
+```julia
+# Set port via environment variable
+ENV["RXINFER_SERVER_PORT"] = 9000
+RxInferServer.serve()
+```
+"""
+const RXINFER_SERVER_PORT = parse(Int, get(ENV, "RXINFER_SERVER_PORT", "8000"))
 
 include("middleware.jl")
 
@@ -20,6 +32,11 @@ end
 include("tags/Server.jl")
 include("tags/Authentification.jl")
 
+"""
+The preference key used to store the hot reload setting.
+Used with Preferences.jl to persist the hot reload setting across Julia sessions.
+Do not use this value directly, use [`RxInferServer.set_hot_reload`](@ref) and [`RxInferServer.is_hot_reload_enabled`](@ref) instead.
+"""
 const HOT_RELOAD_PREF_KEY = "enable_hot_reload"
 
 """
@@ -27,6 +44,16 @@ const HOT_RELOAD_PREF_KEY = "enable_hot_reload"
 
 Enable or disable hot reloading for the server.
 This setting is stored in the package preferences and persists across Julia sessions.
+
+```julia
+# Disable hot reloading
+RxInferServer.set_hot_reload(false)
+
+# Enable hot reloading
+RxInferServer.set_hot_reload(true)
+```
+
+See also: [`RxInferServer.is_hot_reload_enabled`](@ref)
 """
 function set_hot_reload(enable::Bool)
     @set_preferences!(HOT_RELOAD_PREF_KEY => enable)
@@ -38,6 +65,13 @@ end
     is_hot_reload_enabled()
 
 Check if hot reloading is enabled.
+
+```julia
+# Check current setting
+RxInferServer.is_hot_reload_enabled() 
+```
+
+See also: [`RxInferServer.set_hot_reload`](@ref)
 """
 function is_hot_reload_enabled()
     return @load_preference(HOT_RELOAD_PREF_KEY, true)
@@ -54,7 +88,23 @@ function LoggerFilterByGroup(group)
 end
 
 # Logging configuration, logs are written to the terminal and to a series of files
-const SERVER_LOGS_LOCATION = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
+"""
+The directory where server logs will be stored.
+This can be configured using the `RXINFER_SERVER_LOGS_LOCATION` environment variable.
+Defaults to ".server-logs" in the current working directory if not specified.
+The server automatically creates this directory if it doesn't exist.
+
+The logging system uses:
+- Terminal output with formatted, human-readable logs
+- File-based logging with separate files for different functional groups
+
+```julia
+# Set logs directory via environment variable
+ENV["RXINFER_SERVER_LOGS_LOCATION"] = "/path/to/logs"
+RxInferServer.serve()
+```
+"""
+const RXINFER_SERVER_LOGS_LOCATION = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
 
 """
     serve(; kwargs...) -> HTTP.Server
@@ -95,8 +145,8 @@ RxInferServer.serve()
 """
 function serve(; show_banner::Bool = true)
     # Prepare logging folder if it doesn't exist
-    if !isdir(SERVER_LOGS_LOCATION)
-        mkpath(SERVER_LOGS_LOCATION)
+    if !isdir(RXINFER_SERVER_LOGS_LOCATION)
+        mkpath(RXINFER_SERVER_LOGS_LOCATION)
     end
 
     # We create a TeeLogger that writes to the terminal and to a series of files
@@ -113,12 +163,12 @@ function serve(; show_banner::Bool = true)
         MiniLoggers.MiniLogger(; kwargs_logger...),
 
         # The file loggers are EarlyFilteredLoggers that filter the log messages by group
-        # and write them to a series of files in the SERVER_LOGS_LOCATION directory
+        # and write them to a series of files in the RXINFER_SERVER_LOGS_LOCATION directory
         # - .log is the default log file with all messages
         # - *Name*.log is a file for each group of messages, clustered for each individual tag in the tags/ folder
-        MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, ".log"), kwargs_logger...),
-        MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, "Server.log"), kwargs_logger...) |> LoggerFilterByGroup(:Server),
-        MiniLoggers.MiniLogger(; io = joinpath(SERVER_LOGS_LOCATION, "Authentification.log"), kwargs_logger...) |> LoggerFilterByGroup(:Authentification)
+        MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, ".log"), kwargs_logger...),
+        MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "Server.log"), kwargs_logger...) |> LoggerFilterByGroup(:Server),
+        MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "Authentification.log"), kwargs_logger...) |> LoggerFilterByGroup(:Authentification)
     )
 
     if show_banner
@@ -137,7 +187,7 @@ function serve(; show_banner::Bool = true)
                 API Documentation: https://api.rxinfer.com
                 RxInfer Documentation: https://docs.rxinfer.com
 
-                Logs are collected in `$SERVER_LOGS_LOCATION`
+                Logs are collected in `$RXINFER_SERVER_LOGS_LOCATION`
                 
                 Type 'q' or 'quit' and hit ENTER to quit the server
                 $(isinteractive() ? "Alternatively use Ctrl-C to quit." : "(Running in non-interactive mode, Ctrl-C may not work properly)")
@@ -196,17 +246,17 @@ function serve(; show_banner::Bool = true)
             nothing
         end
 
-        @info "Starting server on port $PORT"
+        @info "Starting server on port $RXINFER_SERVER_PORT"
 
-        server = Sockets.listen(ip"0.0.0.0", PORT)
+        server = Sockets.listen(ip"0.0.0.0", RXINFER_SERVER_PORT)
         server_instantiated = Base.Threads.Event()
 
-        # Start HTTP server on port `PORT`
+        # Start HTTP server on port `RXINFER_SERVER_PORT`
         server_task = Threads.@spawn begin
             try
                 Database.with_connection() do
                     # Start the HTTP server in non-blocking mode in order to trigger the `server_instantiated` event
-                    s = HTTP.serve!($router, ip"0.0.0.0", PORT, server = $server)
+                    s = HTTP.serve!($router, ip"0.0.0.0", RXINFER_SERVER_PORT, server = $server)
                     # Notify the main thread that the server has been instantiated
                     notify(server_instantiated)
                     # Wait for the server to be closed from the main thread

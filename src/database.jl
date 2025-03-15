@@ -3,14 +3,37 @@ module Database
 using Mongoc
 using Base.ScopedValues
 
-const MONGODB_URL = get(ENV, "RXINFER_MONGODB_URL", "mongodb://localhost:27017")
-const MONGODB_DATABASE_NAME = get(ENV, "RXINFER_MONGODB_DATABASE", "rxinferserver")
+"""
+The MongoDB connection URL.
+This can be configured using the `RXINFER_SERVER_MONGODB_URL` environment variable.
+Defaults to "mongodb://localhost:27017" if not specified.
+
+```julia
+# Set MongoDB connection URL via environment variable
+ENV["RXINFER_SERVER_MONGODB_URL"] = "mongodb://localhost:27017"
+RxInferServer.serve()
+```
+"""
+const RXINFER_SERVER_MONGODB_URL = get(ENV, "RXINFER_SERVER_MONGODB_URL", "mongodb://localhost:27017")
+
+"""
+The name of the MongoDB database to use.
+This can be configured using the `RXINFER_SERVER_MONGODB_DATABASE` environment variable.
+Defaults to "rxinferserver" if not specified.
+
+```julia
+# Set MongoDB database name
+ENV["RXINFER_SERVER_MONGODB_DATABASE"] = "rxinferserver"
+RxInferServer.serve()
+```
+"""
+const RXINFER_SERVER_MONGODB_DATABASE = get(ENV, "RXINFER_SERVER_MONGODB_DATABASE", "rxinferserver")
 
 const MONGODB_CLIENT = ScopedValue{Mongoc.Client}()
 const MONGODB_DATABASE = ScopedValue{Mongoc.Database}()
 
 """
-    with_connection(f::F; url::String = MONGODB_URL, database::String = MONGODB_DATABASE_NAME, check_connection::Bool = true) where {F}
+    with_connection(f::F; url::String = RXINFER_SERVER_MONGODB_URL, database::String = RXINFER_SERVER_MONGODB_DATABASE, check_connection::Bool = true) where {F}
 
 Establishes a connection to the MongoDB database and executes the given function with the connection and database scoped.
 This function automatically handles cleanup of MongoDB resources by destroying the client when the provided function completes.
@@ -21,7 +44,7 @@ This function automatically handles cleanup of MongoDB resources by destroying t
 - `database::String`: The name of the database to use.
 
 ```julia
-with_connection(f; url = MONGODB_URL, database = MONGODB_DATABASE_NAME, check_connection = true) do 
+with_connection(f; url = RXINFER_SERVER_MONGODB_URL, database = RXINFER_SERVER_MONGODB_DATABASE, check_connection = true) do 
     # Your code here
     client = Database.client()
     database = Database.database()
@@ -31,7 +54,7 @@ end
 
 See also [`RxInferServer.Database.client`](@ref), [`RxInferServer.Database.database`](@ref), [`RxInferServer.Database.collection`](@ref).
 """
-function with_connection(f::F; url::String = MONGODB_URL, database::String = MONGODB_DATABASE_NAME, check_connection::Bool = true) where {F}
+function with_connection(f::F; url::String = RXINFER_SERVER_MONGODB_URL, database::String = RXINFER_SERVER_MONGODB_DATABASE, check_connection::Bool = true) where {F}
     _client = Mongoc.Client(url)::Mongoc.Client
     _database = _client[database]::Mongoc.Database
     if check_connection

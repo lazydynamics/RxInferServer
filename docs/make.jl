@@ -140,6 +140,7 @@ openapi_pages = copy_openapi_docs()
 
 makedocs(;
     modules=[RxInferServer],
+    warnonly = false,
     authors="Lazy Dynamics <info@lazydynamics.com>",
     sitename="RxInferServer.jl",
     format=Documenter.HTML(;

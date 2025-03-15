@@ -1,0 +1,9 @@
+
+# Ignore all log files
+/**/*.log
+
+# Ignore documentation build files
+docs/build/
+
+# Ignore .git folder
+.git/

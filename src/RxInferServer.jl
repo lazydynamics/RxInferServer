@@ -309,12 +309,17 @@ function serve()
                         @info "Waiting for hot reload tasks to stop..."
 
                         open(server_pid_file, "w") do f
-                            println(f, "stopping hot reload for source code at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+                            println(
+                                f,
+                                "stopping hot reload for source code at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));"
+                            )
                         end
                         wait(hot_reload_source_code)
 
                         open(server_pid_file, "w") do f
-                            println(f, "stopping hot reload for models at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+                            println(
+                                f, "stopping hot reload for models at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));"
+                            )
                         end
                         wait(hot_reload_models)
                     end

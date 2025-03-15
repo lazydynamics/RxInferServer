@@ -105,6 +105,13 @@ The server edition can be configured using the following environment variable:
 RxInferServer.RXINFER_SERVER_EDITION
 ```
 
+# [Other Configuration](@id other-configuration)
+
+```@docs
+RxInferServer.RXINFER_SERVER_SHOW_BANNER
+```
+
+
 # [Hot Reloading](@id hot-reloading-configuration)
 
 The server supports hot reloading, which automatically updates endpoints when code changes are detected. 

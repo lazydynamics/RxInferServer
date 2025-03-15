@@ -84,6 +84,31 @@ function is_hot_reload_enabled()
 end
 
 """
+Whether to show the welcome banner.
+This can be configured using the `RXINFER_SERVER_SHOW_BANNER` environment variable.
+Defaults to `"true"` if not specified.
+
+```julia
+ENV["RXINFER_SERVER_SHOW_BANNER"] = "false"
+RxInferServer.serve()
+```
+"""
+RXINFER_SERVER_SHOW_BANNER() = get(ENV, "RXINFER_SERVER_SHOW_BANNER", "true") == "true"
+
+"""
+Whether to listen for keyboard input to quit the server.
+This can be configured using the `RXINFER_SERVER_LISTEN_KEYBOARD` environment variable.
+Defaults to `"true"` if not specified. Defaults to `"false"` if "CI" environment variable is set to "true".
+
+```julia
+ENV["RXINFER_SERVER_LISTEN_KEYBOARD"] = "false"
+RxInferServer.serve()
+```
+"""
+RXINFER_SERVER_LISTEN_KEYBOARD() =
+    get(ENV, "RXINFER_SERVER_LISTEN_KEYBOARD", "true") == "true" && get(ENV, "CI", nothing) != "true"
+
+"""
     serve(; kwargs...) -> HTTP.Server
 
 Start the RxInfer API server with the configured settings.
@@ -98,9 +123,6 @@ This is a blocking operation that runs until interrupted (e.g., with Ctrl+C).
 - Configurable port via the `RXINFER_SERVER_PORT` environment variable (default: 8000)
 - Hot reloading support that can be enabled/disabled via preferences
 - Graceful shutdown with proper resource cleanup when interrupted
-
-# Keyword Arguments
-- `show_banner::Bool = true`: Whether to print the welcome banner
 
 # Returns
 - An `HTTP.Server` instance that is actively serving requests
@@ -119,9 +141,11 @@ RxInferServer.serve()
 # See Also
 - [`RxInferServer.set_hot_reload`](@ref): Enable or disable hot reloading
 - [`RxInferServer.is_hot_reload_enabled`](@ref): Check if hot reloading is enabled
+- [`RXINFER_SERVER_SHOW_BANNER`](@ref): Whether to show the welcome banner
+- [`RXINFER_SERVER_LISTEN_KEYBOARD`](@ref): Whether to listen for keyboard input to quit the server
 """
-function serve(; show_banner::Bool = true)
-    if show_banner
+function serve()
+    if RXINFER_SERVER_SHOW_BANNER()
         banner = """
 
 
@@ -140,7 +164,7 @@ function serve(; show_banner::Bool = true)
                 Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())`
                 $(Logging.is_debug_logging_enabled() ? "Debug level logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())/debug.log`" : "")
                 
-                Type 'q' or 'quit' and hit ENTER to quit the server
+                $(RXINFER_SERVER_LISTEN_KEYBOARD() ? "Type 'q' or 'quit' and hit ENTER to quit the server" : "Server is not listening for keyboard input")
                 $(isinteractive() ? "Alternatively use Ctrl-C to quit." : "(Running in non-interactive mode, Ctrl-C may not work properly)")
 
         """
@@ -299,7 +323,7 @@ function serve(; show_banner::Bool = true)
             # we need to register the shutdown function to be called when the program exits
             # see https://docs.julialang.org/en/v1/manual/faq/#catch-ctrl-c
             if !isinteractive()
-                Base.atexit() do 
+                Base.atexit() do
                     shutdown()
                     if server_errored[]
                         exit(1)
@@ -315,11 +339,16 @@ function serve(; show_banner::Bool = true)
             try
                 wait(server_instantiated)
                 while server_running[] && !istaskdone(server_task) && !istaskfailed(server_task)
-                    input = readline()
-                    if input == "q" || input == "quit"
-                        throw(InterruptException())
+                    if RXINFER_SERVER_LISTEN_KEYBOARD()
+                        input = readline()
+                        if input == "q" || input == "quit"
+                            throw(InterruptException())
+                        end
+                        @warn "Unknown command: $input. Use 'q' or 'quit' and hit ENTER to quit."
+                    else
+                        @info "Server is not listening for keyboard input."
+                        wait(server_task)
                     end
-                    @warn "Unknown command: $input. Use 'q' or 'quit' and hit ENTER to quit."
                 end
             catch e
             end

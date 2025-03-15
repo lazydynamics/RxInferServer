@@ -298,22 +298,33 @@ function serve()
 
                     close(server)
 
-                    # Update server state file to trigger file watcher
-                    # This would also trigger the hot reload task
-                    # Which checks the `server_running` variable and exits if it is false
+                    # Update server state file to trigger file watcher for hot reloading task 
+                    # We do it again though before waiting for each hot reload task to complete
                     open(server_pid_file, "w") do f
-                        println(f, "server stopped at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+                        println(f, "server shutting down at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
                     end
 
                     # Wait for hot reload task to complete if it was running
                     if is_hot_reload_enabled()
                         @info "Waiting for hot reload tasks to stop..."
+
+                        open(server_pid_file, "w") do f
+                            println(f, "stopping hot reload for source code at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+                        end
                         wait(hot_reload_source_code)
+
+                        open(server_pid_file, "w") do f
+                            println(f, "stopping hot reload for models at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+                        end
                         wait(hot_reload_models)
                     end
 
                     # Wait for the server task to complete
                     wait(server_task)
+
+                    open(server_pid_file, "w") do f
+                        println(f, "server stopped at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
+                    end
 
                     @info "Server shutdown complete."
                 end

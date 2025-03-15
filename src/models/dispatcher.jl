@@ -57,14 +57,19 @@ function load_models!(models, locations)
             potential_model_dir = joinpath(location, directory)
             if isdir(potential_model_dir)
                 @debug "Found potential model's directory `$directory`"
-                model = LoadedModel(potential_model_dir)
-                if haskey(models, model.name)
-                    error(
-                        "Cannot create `ModelsDispatcher` from `$location` because it contains multiple models with the same name: `$(model.name)`. The first one has already been loaded from `$(models[model.name].path)`."
-                    )
+                try
+                    model = LoadedModel(potential_model_dir)
+                    if haskey(models, model.name)
+                        error(
+                            "Cannot create `ModelsDispatcher` from `$location` because it contains multiple models with the same name: `$(model.name)`. The first one has already been loaded from `$(models[model.name].path)`."
+                        )
+                    end
+                    models[model.name] = model
+                    @debug "Model `$(model.name)` has been added to the dispatcher"
+                catch e
+                    @error "Error loading model from `$potential_model_dir`. Check debug logs for more details."
+                    @debug "Error loading model from `$potential_model_dir`" exception = (e, catch_backtrace())
                 end
-                models[model.name] = model
-                @debug "Model `$(model.name)` has been added to the dispatcher"
             end
         end
     end

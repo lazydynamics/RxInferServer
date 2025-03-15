@@ -199,9 +199,12 @@ function serve(; show_banner::Bool = true)
             nothing
         end
 
-        @info "Starting server on port `$(RXINFER_SERVER_PORT())`"
+        server_ip = ip"0.0.0.0"
+        server_port = RXINFER_SERVER_PORT()
 
-        server = Sockets.listen(ip"0.0.0.0", RXINFER_SERVER_PORT())
+        @info "Starting server on port `$(server_port)`"
+
+        server = Sockets.listen(server_ip, server_port)
         server_instantiated = Base.Threads.Event()
 
         # Start HTTP server on port `RXINFER_SERVER_PORT`
@@ -210,7 +213,7 @@ function serve(; show_banner::Bool = true)
                 Models.with_models(MODELS_LOCATION) do
                     Database.with_connection() do
                         # Start the HTTP server in non-blocking mode in order to trigger the `server_instantiated` event
-                        s = HTTP.serve!($router, ip"0.0.0.0", PORT, server = $server)
+                        s = HTTP.serve!($router, server_ip, server_port, server = $server)
                         # Notify the main thread that the server has been instantiated
                         notify(server_instantiated)
                         # Wait for the server to be closed from the main thread

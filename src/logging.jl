@@ -133,7 +133,8 @@ function with_logger(f::F) where {F}
         # - *Name*.log is a file for each group of messages, clustered for each individual tag in the tags/ folder
         MiniLoggers.MiniLogger(; io = joinpath(logs_location, ".log"), kwargs_logger...),
         MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Server.log"), kwargs_logger...) |> filter_by_group(:Server),
-        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Authentification.log"), kwargs_logger...) |> filter_by_group(:Authentification)
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Authentification.log"), kwargs_logger...) |> filter_by_group(:Authentification),
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Models.log"), kwargs_logger...) |> filter_by_group(:Models)
     ]
 
     # If debug logging is enabled, add a debug logger that writes to the terminal

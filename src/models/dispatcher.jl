@@ -56,6 +56,9 @@ end
 
 Get a model from the given dispatcher
 """
-function get_model(dispatcher::ModelsDispatcher, model_name::String)
+function get_model(dispatcher::ModelsDispatcher, model_name::String)::Union{LoadedModel, Nothing}
+    if !haskey(dispatcher.models, model_name)
+        return nothing
+    end
     return dispatcher.models[model_name]
 end

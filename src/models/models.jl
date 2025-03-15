@@ -44,6 +44,6 @@ get_models() = get_models(get_models_dispatcher())
 
 Get a model from the current dispatcher
 """
-get_model(model_name::String) = get_model(get_models_dispatcher(), model_name, model_version)
+get_model(model_name::String) = get_model(get_models_dispatcher(), model_name)
 
 end

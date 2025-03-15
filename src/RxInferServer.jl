@@ -270,7 +270,7 @@ function serve(; show_banner::Bool = true)
                     end
 
                     # Wait for hot reload task to complete if it was running
-                    if !isnothing(hot_reload)
+                    if is_hot_reload_enabled()
                         @info "Waiting for hot reload tasks to stop..."
                         wait(hot_reload_source_code)
                         wait(hot_reload_models)

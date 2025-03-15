@@ -71,6 +71,28 @@ If the server is running correctly, this should return a successful response.
 !!! note
     Server supports hot-reloading, which automatically updates endpoints when code changes are detected. This feature is enabled by default but can be disabled using preferences. See [Hot Reloading](@ref hot-reloading-configuration) for more details.
 
+### Hot-Reloading
+
+RxInferServer includes built-in hot-reloading that automatically applies code changes without requiring server restarts.
+
+#### Overview
+
+The server uses two separate hot-reloading mechanisms:
+- **Source Code Hot-Reloading**: Updates API endpoints and server code
+- **Models Hot-Reloading**: Refreshes models when their files change
+
+Both mechanisms monitor files for changes using `Revise.jl` and automatically apply updates when detected. Console logs with the `[HOT-RELOAD]` prefix indicate reloading activity.
+
+#### Controlling Hot-Reloading
+
+See [Hot Reloading](@ref hot-reloading-configuration) for more details.
+
+#### Best Practices and Troubleshooting
+
+- Hot-reloading works best for typical code changes but complex structural changes may require server restart
+- Disable hot-reloading in production environments
+- If issues occur, check logs for `[HOT-RELOAD]` errors and verify files are in monitored directories
+
 ### Development Workflow with Makefile
 
 The project includes a Makefile with various commands to streamline common development tasks. Here are some of the most useful commands:
@@ -82,7 +104,7 @@ make docker-start
 # Stop the Docker environment
 make docker-stop
 
-# Start the RxInferServer
+# Start the RxInferServer, with debug logs enabled
 make serve
 
 # Run the test suite

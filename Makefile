@@ -25,7 +25,7 @@ help:
 	@echo '${GREEN}Development commands:${RESET}'
 	@echo '  ${YELLOW}deps${RESET}                 Install project dependencies'
 	@echo '  ${YELLOW}test${RESET}                 Run project tests'
-	@echo '  ${YELLOW}serve${RESET}                Run the server'
+	@echo '  ${YELLOW}serve${RESET}                Run the server (with debug logging enabled)'
 	@echo '  ${YELLOW}docker-start${RESET}         Start the docker compose environment'
 	@echo '  ${YELLOW}docker-stop${RESET}          Stop the docker compose environment'
 	@echo '  ${YELLOW}openapi-endpoints${RESET}    Show RxInferServerOpenAPI module documentation'
@@ -46,12 +46,12 @@ help:
 docs: docs-build ## Build the documentation (same as docs-build)
 
 docs-build: ## Build the documentation
-	julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
-	julia --project=docs docs/make.jl
+	julia --startup-file=no --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+	julia --startup-file=no --project=docs docs/make.jl
 
 docs-serve: ## Serve documentation locally for preview in browser (requires LiveServer.jl installed globally)
-	julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
-	julia --project=docs -e 'using LiveServer; servedocs()'
+	julia --startup-file=no --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+	julia --startup-file=no --project=docs -e 'using LiveServer; servedocs()'
 
 docs-clean: ## Clean the documentation build directory
 	rm -rf docs/build/
@@ -59,13 +59,13 @@ docs-clean: ## Clean the documentation build directory
 
 ## Development commands:
 deps: ## Install project dependencies
-	julia --project -e 'using Pkg; Pkg.instantiate()'
+	julia --startup-file=no --project -e 'using Pkg; Pkg.instantiate()'
 
 test: deps ## Run project tests
-	julia --project -e 'using Pkg; Pkg.test()'
+	julia --startup-file=no --project -e 'using Pkg; Pkg.test()'
 
 serve: deps ## Run the server
-	julia --project -e 'using RxInferServer; RxInferServer.serve()'
+	RXINFER_SERVER_ENABLE_DEBUG_LOGGING=true julia --startup-file=no --project -e 'using RxInferServer; RxInferServer.serve()'
 
 docker: docker-start ## Starts the docker compose environment
 
@@ -76,7 +76,7 @@ docker-stop: ## Stops the docker compose environment
 	docker compose down
 
 openapi-endpoints: deps ## Show RxInferServerOpenAPI module documentation (methods to implement)
-	julia --project -e 'using RxInferServer; println(@doc(RxInferServer.RxInferServerOpenAPI))'
+	julia --startup-file=no --project -e 'using RxInferServer; println(@doc(RxInferServer.RxInferServerOpenAPI))'
 
 generate-client: ## Generate OpenAPI client code
 	./generate-client.sh
@@ -90,10 +90,13 @@ clean: docs-clean ## Clean all generated files
 
 # Formatting commands:
 scripts-deps: ## Install dependencies for the scripts
-	julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
+	julia --startup-file=no --project=scripts -e 'using Pkg; Pkg.instantiate()'
 
 format: scripts-deps ## Format Julia code
-	julia --project=scripts scripts/formatter.jl --overwrite
+	julia --startup-file=no --project=scripts scripts/formatter.jl --overwrite
 
 check-format: scripts-deps ## Check Julia code formatting
-	julia --project=scripts scripts/formatter.jl
+	julia --startup-file=no --project=scripts scripts/formatter.jl
+
+debug-env: deps ## Debug environment variables
+	RXINFER_SERVER_ENABLE_DEBUG_LOGGING=true julia --startup-file=no --project -e 'using RxInferServer; println("Debug logging enabled: $(RxInferServer.is_debug_logging_enabled())"); println("Debug env var value: $(RxInferServer.RXINFER_SERVER_ENABLE_DEBUG_LOGGING())")'

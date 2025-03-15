@@ -8,7 +8,7 @@ This module uses the [Mongoc.jl](https://github.com/felipenoris/Mongoc.jl) packa
 
 ### Configuration
 
-Read more about the configuration of the database in the [Configuration](@ref configuration) section.
+Read more about the configuration of the database in the [Database Configuration](@ref mongodb-configuration) section.
 
 ## Core Functions
 

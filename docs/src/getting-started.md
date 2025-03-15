@@ -45,4 +45,4 @@ Read more about the `@async` and `Threads.@spawn` macros in the [Julia Documenta
 
 Read more about the different configuration options in the [Configuration](@ref configuration) section.
 
-If you want to contribute to the project, read more about the [Development](@ref development) section.
+If you want to contribute to the project, read more about the [Development](@ref developers-guide) section.

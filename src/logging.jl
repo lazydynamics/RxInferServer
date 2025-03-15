@@ -1,8 +1,9 @@
 module Logging
 
-import Base.Logging
+using Dates
+
+import Logging as BaseLogging
 import MiniLoggers, LoggingExtras
-import Dates
 
 """
 The directory where server logs will be stored.
@@ -73,10 +74,10 @@ function with_logger(f::F) where {F}
     # Configure logger format and options
     format_logger = "{[{timestamp}] {level}:func}: {message} {{module}@{basename}:{line}:light_black}"
     kwargs_logger = (
-        format = format_logger,              # see above
+        format   = format_logger,              # see above
         dtformat = dateformat"mm-dd HH:MM:SS", # do not print year
-        errlevel = Logging.AboveMaxLevel,      # to include errors in the log file
-        append = true,                       # append to the log file, don't overwrite
+        errlevel = BaseLogging.AboveMaxLevel, # to include errors in the log file
+        append = true,                         # append to the log file, don't overwrite
         message_mode = :notransformations      # do not transform the message
     )
     
@@ -95,7 +96,26 @@ function with_logger(f::F) where {F}
     )
     
     # Execute the provided function with the configured logger
-    Base.Logging.with_logger(server_logger) do
+    BaseLogging.with_logger(server_logger) do
+        return f()
+    end
+end
+
+"""
+    with_simple_logger(f, io::IO)
+
+Sets up the logging system and executes the provided function with the configured logger.
+Creates a SimpleLogger that writes to the specified IO stream.
+
+# Arguments
+- `f`: The function to execute with the configured logger
+- `io`: The IO stream to write the logs to
+
+# Returns
+- The return value of the provided function
+"""
+function with_simple_logger(f::F, io::IO) where {F}
+    return BaseLogging.with_logger(BaseLogging.SimpleLogger(io)) do
         return f()
     end
 end

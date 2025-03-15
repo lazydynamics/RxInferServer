@@ -1,4 +1,4 @@
-# [Development](@id development)
+# [Developers guide](@id developers-guide)
 
 This section describes the development process for the RxInferServer.jl project and how to setup the development environment.
 

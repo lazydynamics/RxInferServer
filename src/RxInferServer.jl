@@ -166,7 +166,7 @@ function serve(; show_banner::Bool = true)
                             @info "Hot reloading server..."
                             if server_running[]
                                 io = IOBuffer()
-                                Base.Logging.with_logger(Base.Logging.SimpleLogger(io)) do
+                                Logging.with_simple_logger(io) do
                                     RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
                                 end
                                 if occursin("replacing existing registered route", String(take!(io)))

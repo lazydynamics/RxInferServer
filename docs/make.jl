@@ -154,13 +154,11 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Getting Started" => "getting-started.md",
+        "API design" => "api/design-proposal.md",
         "Configuration" => "configuration.md",
-        "Implementation" => [
-            "Database" => "implementation/database.md",
-            "Logging" => "implementation/logging.md",
-            "Developers guide" => "implementation/development.md",
-        ],
-        "Design proposal" => "api/design-proposal.md",
+        "Developers guide" => "developers-guide.md",
+        "Database" => "database.md",
+        "Logging" => "logging.md",
         "OpenAPI Specification" => openapi_pages,
     ],
 )

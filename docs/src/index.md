@@ -15,7 +15,7 @@ RxInferServer provides a REST API server for [RxInfer.jl](https://github.com/bia
 
 ## Development and implementation details
 
-See the [Development](@ref development) section for more details on the development process and implementation details.
+See the [Development](@ref developers-guide) section for more details on the development process and implementation details.
 
 ```@index
 ```

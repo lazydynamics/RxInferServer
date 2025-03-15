@@ -6,6 +6,7 @@ using HTTP, Sockets, JSON, RxInferServerOpenAPI
 using Revise, Preferences, Dates, Pkg
 
 include("database.jl")
+include("logging.jl")
 
 # API configuration, this is not configurable and baked into the current implementation
 const API_PATH_PREFIX = "/v1"
@@ -77,35 +78,6 @@ function is_hot_reload_enabled()
     return @load_preference(HOT_RELOAD_PREF_KEY, true)
 end
 
-import Logging, MiniLoggers, LoggingExtras
-
-function LoggerFilterByGroup(group)
-    return function (logger)
-        return LoggingExtras.EarlyFilteredLogger(logger) do log
-            return log.group == group
-        end
-    end
-end
-
-# Logging configuration, logs are written to the terminal and to a series of files
-"""
-The directory where server logs will be stored.
-This can be configured using the `RXINFER_SERVER_LOGS_LOCATION` environment variable.
-Defaults to ".server-logs" in the current working directory if not specified.
-The server automatically creates this directory if it doesn't exist.
-
-The logging system uses:
-- Terminal output with formatted, human-readable logs
-- File-based logging with separate files for different functional groups
-
-```julia
-# Set logs directory via environment variable
-ENV["RXINFER_SERVER_LOGS_LOCATION"] = "/path/to/logs"
-RxInferServer.serve()
-```
-"""
-const RXINFER_SERVER_LOGS_LOCATION = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
-
 """
     serve(; kwargs...) -> HTTP.Server
 
@@ -144,33 +116,6 @@ RxInferServer.serve()
 - [`RxInferServer.is_hot_reload_enabled`](@ref): Check if hot reloading is enabled
 """
 function serve(; show_banner::Bool = true)
-    # Prepare logging folder if it doesn't exist
-    if !isdir(RXINFER_SERVER_LOGS_LOCATION)
-        mkpath(RXINFER_SERVER_LOGS_LOCATION)
-    end
-
-    # We create a TeeLogger that writes to the terminal and to a series of files
-    format_logger = "{[{timestamp}] {level}:func}: {message} {{module}@{basename}:{line}:light_black}"
-    kwargs_logger = (
-        format = format_logger,              # see above
-        dtformat = dateformat"mm-dd HH:MM:SS", # do not print year
-        errlevel = Logging.AboveMaxLevel,      # to include errors in the log file
-        append = true,                       # append to the log file, don't overwrite
-        message_mode = :notransformations      # do not transform the message
-    )
-    server_logger = LoggingExtras.TeeLogger(
-        # The terminal logger is a MiniLogger that formats the log message in a human-readable way
-        MiniLoggers.MiniLogger(; kwargs_logger...),
-
-        # The file loggers are EarlyFilteredLoggers that filter the log messages by group
-        # and write them to a series of files in the RXINFER_SERVER_LOGS_LOCATION directory
-        # - .log is the default log file with all messages
-        # - *Name*.log is a file for each group of messages, clustered for each individual tag in the tags/ folder
-        MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, ".log"), kwargs_logger...),
-        MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "Server.log"), kwargs_logger...) |> LoggerFilterByGroup(:Server),
-        MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "Authentification.log"), kwargs_logger...) |> LoggerFilterByGroup(:Authentification)
-    )
-
     if show_banner
         println("""
 
@@ -187,7 +132,7 @@ function serve(; show_banner::Bool = true)
                 API Documentation: https://api.rxinfer.com
                 RxInfer Documentation: https://docs.rxinfer.com
 
-                Logs are collected in `$RXINFER_SERVER_LOGS_LOCATION`
+                Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION)`
                 
                 Type 'q' or 'quit' and hit ENTER to quit the server
                 $(isinteractive() ? "Alternatively use Ctrl-C to quit." : "(Running in non-interactive mode, Ctrl-C may not work properly)")
@@ -195,8 +140,7 @@ function serve(; show_banner::Bool = true)
         """)
     end
 
-    Logging.with_logger(server_logger) do
-
+    return Logging.with_logger() do
         # Initialize HTTP router for handling API endpoints
         router = HTTP.Router(cors404, cors405)
         server_running = Threads.Atomic{Bool}(true)
@@ -222,7 +166,7 @@ function serve(; show_banner::Bool = true)
                             @info "Hot reloading server..."
                             if server_running[]
                                 io = IOBuffer()
-                                Logging.with_logger(Logging.SimpleLogger(io)) do
+                                Base.Logging.with_logger(Base.Logging.SimpleLogger(io)) do
                                     RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
                                 end
                                 if occursin("replacing existing registered route", String(take!(io)))

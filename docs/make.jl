@@ -157,6 +157,7 @@ makedocs(;
         "Configuration" => "configuration.md",
         "Implementation" => [
             "Database" => "implementation/database.md",
+            "Logging" => "implementation/logging.md",
             "Developers guide" => "implementation/development.md",
         ],
         "Design proposal" => "api/design-proposal.md",

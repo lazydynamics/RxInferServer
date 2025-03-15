@@ -19,7 +19,7 @@ RxInferServer.RXINFER_SERVER_PORT
 The server implements a comprehensive logging system that writes logs both to the terminal and to files. Logs are organized by functional groups (e.g., Server, Authentication) and stored in separate files. The configurable options include:
 
 ```@docs
-RxInferServer.RXINFER_SERVER_LOGS_LOCATION
+RxInferServer.Logging.RXINFER_SERVER_LOGS_LOCATION
 ```
 
 !!! note

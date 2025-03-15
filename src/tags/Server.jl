@@ -21,7 +21,7 @@ function get_server_info(req::HTTP.Request)::RxInferServerOpenAPI.ServerInfo
     return RxInferServerOpenAPI.ServerInfo(
         rxinfer_version = string(pkgversion(RxInfer)),
         server_version = string(pkgversion(RxInferServer)),
-        server_edition = SERVER_EDITION,
+        server_edition = RXINFER_SERVER_EDITION,
         julia_version = string(VERSION),
         api_version = "v1"
     )

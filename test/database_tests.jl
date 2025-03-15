@@ -1,7 +1,7 @@
-@testitem "Test database connection (indirect, only with MONGODB_URL)" begin
+@testitem "Test database connection (indirect, only with RXINFER_SERVER_MONGODB_URL)" begin
     using Mongoc
     # This test only ensures that the database connection is working
-    client = Mongoc.Client(RxInferServer.Database.MONGODB_URL)
+    client = Mongoc.Client(RxInferServer.Database.RXINFER_SERVER_MONGODB_URL)
     ping = Mongoc.ping(client)
     @test isone(ping["ok"])
 end
@@ -50,7 +50,7 @@ end
     using Mongoc
     RxInferServer.Database.with_connection() do
         client = RxInferServer.Database.client()
-        database_env = RxInferServer.Database.MONGODB_DATABASE_NAME
+        database_env = RxInferServer.Database.RXINFER_SERVER_MONGODB_DATABASE
         @test client[database_env].name == RxInferServer.Database.database().name
     end
 end

@@ -299,7 +299,7 @@ function serve(; show_banner::Bool = true)
             # we need to register the shutdown function to be called when the program exits
             # see https://docs.julialang.org/en/v1/manual/faq/#catch-ctrl-c
             if !isinteractive()
-                Base.atexit() do 
+                Base.atexit() do
                     shutdown()
                     if server_errored[]
                         exit(1)

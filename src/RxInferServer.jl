@@ -164,8 +164,8 @@ function serve(; show_banner::Bool = true)
                         @info "Starting hot reload..." _id = :hot_reload
                         # Watch for changes in server code and automatically update endpoints
                         Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone = true) do
-                            @info "Hot reloading server..." _id = :hot_reload
                             if server_running[]
+                                @info "Hot reloading server..." _id = :hot_reload
                                 io = IOBuffer()
                                 Logging.with_simple_logger(io) do
                                     RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)

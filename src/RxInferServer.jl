@@ -125,7 +125,7 @@ RxInferServer.serve()
 """
 function serve(; show_banner::Bool = true)
     if show_banner
-        println("""
+        banner = """
 
 
                 ██████╗ ██╗  ██╗██╗███╗   ██╗███████╗███████╗██████╗ 
@@ -146,13 +146,16 @@ function serve(; show_banner::Bool = true)
                 Type 'q' or 'quit' and hit ENTER to quit the server
                 $(isinteractive() ? "Alternatively use Ctrl-C to quit." : "(Running in non-interactive mode, Ctrl-C may not work properly)")
 
-        """)
+        """
+        println(banner)
     end
 
     return Logging.with_logger() do
         # Initialize HTTP router for handling API endpoints
         router = HTTP.Router(cors404, cors405)
         server_running = Threads.Atomic{Bool}(true)
+        server_errored = Threads.Atomic{Bool}(false)
+        server_instantiated = Base.Threads.Event()
 
         # Create temp file to track server state and trigger file watchers
         server_pid_file = tempname()
@@ -165,31 +168,36 @@ function serve(; show_banner::Bool = true)
 
         # Conditionally start hot reloading based on preference
         hot_reload = if is_hot_reload_enabled()
-            @info "Hot reload is enabled. Starting hot reload task..." _id = :hot_reload
             Threads.@spawn begin
-                while server_running[]
-                    try
-                        @info "Starting hot reload..." _id = :hot_reload
-                        # Watch for changes in server code and automatically update endpoints
-                        Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone = true) do
-                            if server_running[]
-                                @info "Hot reloading server..." _id = :hot_reload
-                                io = IOBuffer()
-                                Logging.with_simple_logger(io) do
-                                    RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
+                wait(server_instantiated)
+                # If the server is not running, do not start the hot reload task
+                # This might happen for example if the server failed to start, due to database connection issues
+                if server_running[] 
+                    @info "[HOT-RELOAD] Starting hot reload task..." _id = :hot_reload
+                    while server_running[]
+                        try
+                            # Watch for changes in server code and automatically update endpoints
+                            Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone = true) do
+                                if server_running[]
+                                    io = IOBuffer()
+                                    # The register function prints a lot of annoying warnings with routes being replaced
+                                    # But this is the actual purpose of the hot reload task, so we suppress the warnings
+                                    Logging.with_simple_logger(io) do
+                                        RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
+                                    end
+                                    if occursin("replacing existing registered route", String(take!(io)))
+                                        @info "[HOT-RELOAD] Successfully replaced existing registered route" _id = :hot_reload
+                                    end
+                                else
+                                    throw(InterruptException())
                                 end
-                                if occursin("replacing existing registered route", String(take!(io)))
-                                    @info "Successfully replaced existing registered route" _id = :hot_reload
-                                end
-                            else
-                                throw(InterruptException())
                             end
-                        end
-                    catch e
-                        if server_running[]
-                            @error "Hot reload task encountered an error: $e" _id = :hot_reload
-                        else
-                            @info "Exiting hot reload task..." _id = :hot_reload
+                        catch e
+                            if server_running[]
+                                @error "[HOT-RELOAD] Hot reload task encountered an error: $e" _id = :hot_reload
+                            else
+                                @info "[HOT-RELOAD] Exiting hot reload task..." _id = :hot_reload
+                            end
                         end
                     end
                 end
@@ -205,7 +213,6 @@ function serve(; show_banner::Bool = true)
         @info "Starting server on port `$(server_port)`"
 
         server = Sockets.listen(server_ip, server_port)
-        server_instantiated = Base.Threads.Event()
 
         # Start HTTP server on port `RXINFER_SERVER_PORT`
         server_task = Threads.@spawn begin
@@ -223,6 +230,7 @@ function serve(; show_banner::Bool = true)
             catch e
                 @error "Server task encountered an error: $e"
                 server_running[] = false
+                server_errored[] = true
                 notify(server_instantiated)
             end
         end
@@ -278,6 +286,10 @@ function serve(; show_banner::Bool = true)
         end
 
         shutdown()
+
+        if server_errored[]
+            exit(1)
+        end
     end
 end
 

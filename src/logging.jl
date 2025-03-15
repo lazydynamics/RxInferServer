@@ -115,9 +115,9 @@ function with_logger(f::F) where {F}
     # Configure logger format and options
     format_logger = "{[{timestamp}] {level}:func}: {message} {{module}@{basename}:{line}:light_black}"
     kwargs_logger = (
-        format = format_logger,              # see above
+        format = format_logger,                # see above
         dtformat = dateformat"mm-dd HH:MM:SS", # do not print year
-        errlevel = BaseLogging.AboveMaxLevel, # to include errors in the log file
+        errlevel = BaseLogging.AboveMaxLevel,  # to include errors in the log file
         append = true,                         # append to the log file, don't overwrite
         message_mode = :notransformations      # do not transform the message
     )

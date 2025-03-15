@@ -157,21 +157,21 @@ function serve(; show_banner::Bool = true)
 
         # Conditionally start hot reloading based on preference
         hot_reload = if is_hot_reload_enabled()
-            @info "Hot reload is enabled. Starting hot reload task..."
+            @info "Hot reload is enabled. Starting hot reload task..." _id = :hot_reload
             Threads.@spawn begin
                 while server_running[]
                     try
-                        @info "Starting hot reload..."
+                        @info "Starting hot reload..." _id = :hot_reload
                         # Watch for changes in server code and automatically update endpoints
                         Revise.entr([server_pid_file], [RxInferServerOpenAPI, @__MODULE__]; postpone = true) do
-                            @info "Hot reloading server..."
+                            @info "Hot reloading server..." _id = :hot_reload
                             if server_running[]
                                 io = IOBuffer()
                                 Logging.with_simple_logger(io) do
                                     RxInferServerOpenAPI.register(router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation)
                                 end
                                 if occursin("replacing existing registered route", String(take!(io)))
-                                    @info "Successfully replaced existing registered route"
+                                    @info "Successfully replaced existing registered route" _id = :hot_reload
                                 end
                             else
                                 throw(InterruptException())
@@ -179,9 +179,9 @@ function serve(; show_banner::Bool = true)
                         end
                     catch e
                         if server_running[]
-                            @error "Hot reload task encountered an error: $e"
+                            @error "Hot reload task encountered an error: $e" _id = :hot_reload
                         else
-                            @info "Exiting hot reload task..."
+                            @info "Exiting hot reload task..." _id = :hot_reload
                         end
                     end
                 end

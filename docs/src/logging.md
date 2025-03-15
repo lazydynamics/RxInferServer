@@ -38,6 +38,7 @@ For logging configuration options, see [Logging Configuration](@ref logging-conf
 RxInferServer.Logging.with_logger
 RxInferServer.Logging.with_simple_logger
 RxInferServer.Logging.filter_by_group
+RxInferServer.Logging.filter_by_module
 ```
 
 ## Adding New OpenAPI Tags

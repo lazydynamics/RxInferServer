@@ -28,6 +28,7 @@ Whether to enable debug logging.
 This can be configured using the `RXINFER_SERVER_ENABLE_DEBUG_LOGGING` environment variable.
 Defaults to `"false"` if not specified. Note that this is a string variable, not a boolean.
 If enabled, writes to `debug.log` in the RXINFER_SERVER_LOGS_LOCATION directory.
+Note that the debug logs are overwritten each time the server is restarted.
 
 ```julia
 ENV["RXINFER_SERVER_ENABLE_DEBUG_LOGGING"] = "true"
@@ -57,6 +58,26 @@ function filter_by_group(group)
     return function (logger)
         return LoggingExtras.EarlyFilteredLogger(logger) do log
             return log.group == group
+        end
+    end
+end
+
+"""
+    filter_by_module(_module)
+
+Creates a logger filter function that only allows log messages from the specified module.
+Used to separate logs by their source module.
+
+# Arguments
+- `_module`: The module name to filter by (e.g., `"RxInferServer"`), must be a string
+
+# Returns
+- A function that takes a logger and returns an EarlyFilteredLogger that filters by the specified module
+"""
+function filter_by_module(_module)
+    return function (logger)
+        return LoggingExtras.EarlyFilteredLogger(logger) do log
+            return string(log._module) == string(_module)
         end
     end
 end
@@ -94,13 +115,13 @@ function with_logger(f::F) where {F}
     # Configure logger format and options
     format_logger = "{[{timestamp}] {level}:func}: {message} {{module}@{basename}:{line}:light_black}"
     kwargs_logger = (
-        format   = format_logger,              # see above
+        format = format_logger,              # see above
         dtformat = dateformat"mm-dd HH:MM:SS", # do not print year
         errlevel = BaseLogging.AboveMaxLevel, # to include errors in the log file
         append = true,                         # append to the log file, don't overwrite
         message_mode = :notransformations      # do not transform the message
     )
-    
+
     # Create a TeeLogger that writes to terminal and files
     server_loggers = [
         # The terminal logger is a MiniLogger that formats the log message in a human-readable way
@@ -117,12 +138,15 @@ function with_logger(f::F) where {F}
 
     # If debug logging is enabled, add a debug logger that writes to the terminal
     if is_debug_logging_enabled()
-        push!(server_loggers, MiniLoggers.MiniLogger(; io = joinpath(logs_location, "debug.log"), minlevel = BaseLogging.Debug, kwargs_logger...))
+        # Do not append to the debug log file, overwrite it each time the server is restarted
+        debug_kwargs = merge(kwargs_logger, (append = false, minlevel = BaseLogging.Debug))
+        debug_logger = MiniLoggers.MiniLogger(; io = joinpath(logs_location, "debug.log"), debug_kwargs...) |> filter_by_module("RxInferServer")
+        push!(server_loggers, debug_logger)
     end
 
     # `TeeLogger` does not accept an array of loggers, so we need to convert it to a tuple
     server_logger = LoggingExtras.TeeLogger(Tuple(server_loggers))
-    
+
     # Execute the provided function with the configured logger
     BaseLogging.with_logger(server_logger) do
         if is_debug_logging_enabled()

@@ -7,7 +7,7 @@ Aqua.test_all(
 
 # Check if the server is running by pinging it with timeout
 function wait_for_server(;
-    host = "localhost", port = RxInferServer.RXINFER_SERVER_PORT, timeout_seconds = 600, retry_interval = 5
+    host = "localhost", port = RxInferServer.RXINFER_SERVER_PORT(), timeout_seconds = 600, retry_interval = 5
 )
     @info "Waiting for server to start..."
     endpoint = "http://$(host):$(port)/v1/ping"
@@ -39,4 +39,4 @@ end
 # Verify that the server is running before proceeding with tests
 wait_for_server()
 
-TestItemRunner.@run_package_tests()
+TestItemRunner.@run_package_tests(verbose = true)

@@ -40,6 +40,9 @@ jobs:
         run: |
           # Start the docker compose environment
           make docker-start
+
+          # Precompile deps before running the server and tests 
+          make deps
           
           # Start the Julia server in the background
           make serve &

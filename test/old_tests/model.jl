@@ -129,9 +129,20 @@ end
     server = RxInferModelServer(8084)
 
     # Add endpoints with different settings
-    add_model(server, "/coin-single", coin_model(a = 4.0, b = 8.0), [:θ], constraints = constraints, initialization = init)
+    add_model(
+        server, "/coin-single", coin_model(a = 4.0, b = 8.0), [:θ], constraints = constraints, initialization = init
+    )
 
-    add_model(server, "/coin-history", coin_model(a = 4.0, b = 8.0), [:θ], constraints = constraints, initialization = init, returnvars = (θ = KeepEach(),), iterations = 30)
+    add_model(
+        server,
+        "/coin-history",
+        coin_model(a = 4.0, b = 8.0),
+        [:θ],
+        constraints = constraints,
+        initialization = init,
+        returnvars = (θ = KeepEach(),),
+        iterations = 30
+    )
 
     # Start server
     @async start(server)
@@ -139,7 +150,11 @@ end
 
     try
         # Test single distribution response with default settings
-        response = HTTP.post("http://localhost:8084/coin-single", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => dataset))))
+        response = HTTP.post(
+            "http://localhost:8084/coin-single",
+            ["Content-Type" => "application/json"],
+            JSON3.write(Dict("data" => Dict("y" => dataset)))
+        )
 
         @test response.status == 200
         result = JSON3.read(response.body)
@@ -169,7 +184,11 @@ end
         @test length(free_energy) == 50
 
         # Test history response
-        response_history = HTTP.post("http://localhost:8084/coin-history", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => dataset))))
+        response_history = HTTP.post(
+            "http://localhost:8084/coin-history",
+            ["Content-Type" => "application/json"],
+            JSON3.write(Dict("data" => Dict("y" => dataset)))
+        )
 
         @test response_history.status == 200
         result_history = JSON3.read(response_history.body)
@@ -185,15 +204,21 @@ end
         # Test error handling
         # Missing data field
         @test_throws HTTP.ExceptionRequest.StatusError HTTP.post(
-            "http://localhost:8084/coin-single", ["Content-Type" => "application/json"], JSON3.write(Dict("invalid" => "data"))
+            "http://localhost:8084/coin-single",
+            ["Content-Type" => "application/json"],
+            JSON3.write(Dict("invalid" => "data"))
         )
 
         # Malformed JSON
-        @test_throws HTTP.ExceptionRequest.StatusError HTTP.post("http://localhost:8084/coin-single", ["Content-Type" => "application/json"], "invalid json")
+        @test_throws HTTP.ExceptionRequest.StatusError HTTP.post(
+            "http://localhost:8084/coin-single", ["Content-Type" => "application/json"], "invalid json"
+        )
 
         # Wrong data type
         @test_throws HTTP.ExceptionRequest.StatusError HTTP.post(
-            "http://localhost:8084/coin-single", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => "not an array")))
+            "http://localhost:8084/coin-single",
+            ["Content-Type" => "application/json"],
+            JSON3.write(Dict("data" => Dict("y" => "not an array")))
         )
     finally
         stop(server)
@@ -229,7 +254,14 @@ end
     server = RxInferModelServer(8085)
 
     # Add coin model endpoint
-    add_model(server, "/coin", coin_model(a = 1.0, b = 1.0), [:θ], constraints = @constraints(q(θ, y) = q(θ)q(y)), initialization = @initialization(q(θ) = Beta(1.0, 1.0)))
+    add_model(
+        server,
+        "/coin",
+        coin_model(a = 1.0, b = 1.0),
+        [:θ],
+        constraints = @constraints(q(θ, y) = q(θ)q(y)),
+        initialization = @initialization(q(θ) = Beta(1.0, 1.0))
+    )
 
     constraints = @constraints begin
         q(μ, σ, x) = q(μ)q(σ)q(x)
@@ -260,7 +292,11 @@ end
         # Test coin model
         rng = StableRNG(42)
         coin_data = float.(rand(rng, Bernoulli(0.7), 100))
-        coin_response = HTTP.post("http://localhost:8085/coin", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => coin_data))))
+        coin_response = HTTP.post(
+            "http://localhost:8085/coin",
+            ["Content-Type" => "application/json"],
+            JSON3.write(Dict("data" => Dict("y" => coin_data)))
+        )
         @test coin_response.status == 200
         coin_result = JSON3.read(coin_response.body)
         @test haskey(coin_result, "posteriors")
@@ -271,7 +307,11 @@ end
 
         # Test normal model with free energy
         normal_data = randn(rng, 1000) .* 2.0 .+ 1.0  # μ=1.0, σ=2.0
-        normal_response = HTTP.post("http://localhost:8085/normal", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("x" => normal_data))))
+        normal_response = HTTP.post(
+            "http://localhost:8085/normal",
+            ["Content-Type" => "application/json"],
+            JSON3.write(Dict("data" => Dict("x" => normal_data)))
+        )
         @test normal_response.status == 200
         normal_result = JSON3.read(normal_response.body)
 
@@ -340,7 +380,11 @@ end
         # Test coin model
         rng = StableRNG(42)
         coin_data = float.(rand(rng, Bernoulli(0.7), 100))
-        coin_response = HTTP.post("http://localhost:8086/coin", ["Content-Type" => "application/json"], JSON3.write(Dict("data" => Dict("y" => coin_data))))
+        coin_response = HTTP.post(
+            "http://localhost:8086/coin",
+            ["Content-Type" => "application/json"],
+            JSON3.write(Dict("data" => Dict("y" => coin_data)))
+        )
         @test coin_response.status == 200
         coin_result = JSON3.read(coin_response.body)
         @test haskey(coin_result, "posteriors")

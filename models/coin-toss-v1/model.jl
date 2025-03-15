@@ -1,0 +1,3 @@
+module CoinToss
+
+end

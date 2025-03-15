@@ -1,4 +1,6 @@
-@testitem "Generate token should generate a valid token that can be used to access protected endpoints" setup = [TestUtils] begin
+@testitem "Generate token should generate a valid token that can be used to access protected endpoints" setup = [
+    TestUtils
+] begin
     client = TestUtils.TestClient(authorized = false)
     api    = TestUtils.RxInferClientOpenAPI.AuthenticationApi(client)
 

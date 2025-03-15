@@ -66,7 +66,7 @@ end
     filter_by_module(_module)
 
 Creates a logger filter function that only allows log messages from the specified module.
-Used to separate logs by their source module.
+Used to separate logs by their source module. Uses `occursin` to match the module name.
 
 # Arguments
 - `_module`: The module name to filter by (e.g., `"RxInferServer"`), must be a string
@@ -77,7 +77,27 @@ Used to separate logs by their source module.
 function filter_by_module(_module)
     return function (logger)
         return LoggingExtras.EarlyFilteredLogger(logger) do log
-            return string(log._module) == string(_module)
+            return occursin(string(_module), string(log._module))
+        end
+    end
+end
+
+"""
+    filter_by_level(level_range)
+
+Creates a logger filter function that only allows log messages within the specified range of log levels.
+Used to separate logs by their severity level.
+
+# Arguments
+- `level_range`: A range of log levels to include
+
+# Returns
+- A function that takes a logger and returns an EarlyFilteredLogger that filters by the specified level range
+"""
+function filter_by_level(range_min, range_max)
+    return function (logger)
+        return LoggingExtras.EarlyFilteredLogger(logger) do log
+            return range_min <= log.level <= range_max
         end
     end
 end
@@ -115,9 +135,9 @@ function with_logger(f::F) where {F}
     # Configure logger format and options
     format_logger = "{[{timestamp}] {level}:func}: {message} {{module}@{basename}:{line}:light_black}"
     kwargs_logger = (
-        format = format_logger,              # see above
+        format = format_logger,                # see above
         dtformat = dateformat"mm-dd HH:MM:SS", # do not print year
-        errlevel = BaseLogging.AboveMaxLevel, # to include errors in the log file
+        errlevel = BaseLogging.AboveMaxLevel,  # to include errors in the log file
         append = true,                         # append to the log file, don't overwrite
         message_mode = :notransformations      # do not transform the message
     )
@@ -132,16 +152,32 @@ function with_logger(f::F) where {F}
         # - .log is the default log file with all messages
         # - *Name*.log is a file for each group of messages, clustered for each individual tag in the tags/ folder
         MiniLoggers.MiniLogger(; io = joinpath(logs_location, ".log"), kwargs_logger...),
-        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Server.log"), kwargs_logger...) |> filter_by_group(:Server),
-        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Authentification.log"), kwargs_logger...) |> filter_by_group(:Authentification)
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Server.log"), kwargs_logger...) |>
+        filter_by_group(:Server),
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Authentification.log"), kwargs_logger...) |>
+        filter_by_group(:Authentification),
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Models.log"), kwargs_logger...) |>
+        filter_by_group(:Models)
     ]
 
     # If debug logging is enabled, add a debug logger that writes to the terminal
     if is_debug_logging_enabled()
         # Do not append to the debug log file, overwrite it each time the server is restarted
         debug_kwargs = merge(kwargs_logger, (append = false, minlevel = BaseLogging.Debug))
-        debug_logger = MiniLoggers.MiniLogger(; io = joinpath(logs_location, "debug.log"), debug_kwargs...) |> filter_by_module("RxInferServer")
+        debug_logger =
+            MiniLoggers.MiniLogger(; io = joinpath(logs_location, "debug.log"), debug_kwargs...) |>
+            filter_by_module("RxInferServer")
         push!(server_loggers, debug_logger)
+
+        # Add a debug logger that writes to the terminal, 
+        # but only for the RxInferServer module and only for debug messages
+        # because all other messages (info, warn, error, etc.) are already present in the main logger
+        debug_console_kwargs = merge(debug_kwargs, (minlevel = BaseLogging.Debug,))
+        debug_console_logger =
+            MiniLoggers.MiniLogger(; debug_console_kwargs...) |>
+            filter_by_module("RxInferServer") |>
+            filter_by_level(BaseLogging.Debug, BaseLogging.Info - 1)
+        push!(server_loggers, debug_console_logger)
     end
 
     # `TeeLogger` does not accept an array of loggers, so we need to convert it to a tuple

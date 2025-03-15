@@ -14,6 +14,14 @@ The server port can be configured using the following environment variable:
 RxInferServer.RXINFER_SERVER_PORT
 ```
 
+# [Models Configuration](@id models-configuration)
+
+The server supports models configuration. The following environment variables can be set to configure the models:
+
+```@docs
+RxInferServer.Models.RXINFER_SERVER_MODELS_LOCATIONS
+```
+
 # [Logging Configuration](@id logging-configuration)
 
 The server implements a comprehensive logging system that writes logs both to the terminal and to files. Logs are organized by functional groups (e.g., Server, Authentication) and stored in separate files. The configurable options include:
@@ -96,6 +104,14 @@ The server edition can be configured using the following environment variable:
 ```@docs
 RxInferServer.RXINFER_SERVER_EDITION
 ```
+
+# [Other Configuration](@id other-configuration)
+
+```@docs
+RxInferServer.RXINFER_SERVER_SHOW_BANNER
+RxInferServer.RXINFER_SERVER_LISTEN_KEYBOARD
+```
+
 
 # [Hot Reloading](@id hot-reloading-configuration)
 

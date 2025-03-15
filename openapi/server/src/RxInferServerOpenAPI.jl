@@ -10,6 +10,12 @@ The following server methods must be implemented:
 - **generate_token**
     - *invocation:* POST /generate-token
     - *signature:* generate_token(req::HTTP.Request;) -> TokenResponse
+- **get_model_info**
+    - *invocation:* GET /models/{model_name}/info
+    - *signature:* get_model_info(req::HTTP.Request, model_name::String;) -> ModelInfo
+- **get_models**
+    - *invocation:* GET /models
+    - *signature:* get_models(req::HTTP.Request;) -> ModelList
 - **get_server_info**
     - *invocation:* GET /info
     - *signature:* get_server_info(req::HTTP.Request;) -> ServerInfo
@@ -31,6 +37,7 @@ const API_VERSION = "1.0.0"
 include("modelincludes.jl")
 
 include("apis/api_AuthenticationApi.jl")
+include("apis/api_ModelsApi.jl")
 include("apis/api_ServerApi.jl")
 
 """
@@ -55,6 +62,7 @@ The order in which middlewares are invoked are:
 """
 function register(router::HTTP.Router, impl; path_prefix::String="", optional_middlewares...)
     registerAuthenticationApi(router, impl; path_prefix=path_prefix, optional_middlewares...)
+    registerModelsApi(router, impl; path_prefix=path_prefix, optional_middlewares...)
     registerServerApi(router, impl; path_prefix=path_prefix, optional_middlewares...)
     return router
 end

@@ -25,6 +25,7 @@ end
 Log groups are automatically derived from the file basename. For example:
 - Messages from `src/tags/Server.jl` belong to the `:Server` group
 - Messages from `src/tags/Authentification.jl` belong to the `:Authentification` group
+- Messages from `src/tags/Models.jl` belong to the `:Models` group
 
 The system routes logs to the appropriate files based on these groups without requiring explicit group specification.
 
@@ -39,6 +40,7 @@ RxInferServer.Logging.with_logger
 RxInferServer.Logging.with_simple_logger
 RxInferServer.Logging.filter_by_group
 RxInferServer.Logging.filter_by_module
+RxInferServer.Logging.filter_by_level
 ```
 
 ## Adding New OpenAPI Tags

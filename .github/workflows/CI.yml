@@ -40,6 +40,9 @@ jobs:
         run: |
           # Start the docker compose environment
           make docker-start
+
+          # Precompile deps before running the server and tests 
+          make deps
           
           # Start the Julia server in the background
           make serve &
@@ -259,3 +262,10 @@ jobs:
               
               Alternatively, you can run \`make format\` locally and push the changes yourself.`
             });
+      
+      # Fail the job if formatting was needed and applied
+      - name: Fail if formatting was needed
+        if: steps.format_check.outputs.format_needs_fix == 'true'
+        run: |
+          echo "::error::Code formatting issues detected. A PR with fixes has been created, but this check is failing to indicate that formatting needs to be fixed."
+          exit 1

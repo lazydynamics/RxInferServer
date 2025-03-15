@@ -21,7 +21,7 @@ ENV["RXINFER_SERVER_LOGS_LOCATION"] = "/path/to/logs"
 RxInferServer.serve()
 ```
 """
-const RXINFER_SERVER_LOGS_LOCATION = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
+RXINFER_SERVER_LOGS_LOCATION() = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
 
 """
 Whether to enable debug logging.
@@ -34,7 +34,12 @@ ENV["RXINFER_SERVER_ENABLE_DEBUG_LOGGING"] = "true"
 RxInferServer.serve()
 ```
 """
-const RXINFER_SERVER_ENABLE_DEBUG_LOGGING = get(ENV, "RXINFER_SERVER_ENABLE_DEBUG_LOGGING", "false")
+RXINFER_SERVER_ENABLE_DEBUG_LOGGING() = get(ENV, "RXINFER_SERVER_ENABLE_DEBUG_LOGGING", "false")
+
+"""
+Returns `true` if debug logging is enabled, `false` otherwise.
+"""
+is_debug_logging_enabled() = RXINFER_SERVER_ENABLE_DEBUG_LOGGING() == "true"
 
 """
     filter_by_group(group)
@@ -79,9 +84,11 @@ end
 - The return value of the provided function
 """
 function with_logger(f::F) where {F}
+    logs_location = RXINFER_SERVER_LOGS_LOCATION()
+
     # Ensure the logging directory exists
-    if !isdir(RXINFER_SERVER_LOGS_LOCATION)
-        mkpath(RXINFER_SERVER_LOGS_LOCATION)
+    if !isdir(logs_location)
+        mkpath(logs_location)
     end
 
     # Configure logger format and options
@@ -100,17 +107,17 @@ function with_logger(f::F) where {F}
         MiniLoggers.MiniLogger(; kwargs_logger...),
 
         # The file loggers are EarlyFilteredLoggers that filter the log messages by group
-        # and write them to a series of files in the RXINFER_SERVER_LOGS_LOCATION directory
+        # and write them to a series of files in the `RXINFER_SERVER_LOGS_LOCATION` directory
         # - .log is the default log file with all messages
         # - *Name*.log is a file for each group of messages, clustered for each individual tag in the tags/ folder
-        MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, ".log"), kwargs_logger...),
-        MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "Server.log"), kwargs_logger...) |> filter_by_group(:Server),
-        MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "Authentification.log"), kwargs_logger...) |> filter_by_group(:Authentification)
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, ".log"), kwargs_logger...),
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Server.log"), kwargs_logger...) |> filter_by_group(:Server),
+        MiniLoggers.MiniLogger(; io = joinpath(logs_location, "Authentification.log"), kwargs_logger...) |> filter_by_group(:Authentification)
     ]
 
     # If debug logging is enabled, add a debug logger that writes to the terminal
-    if RXINFER_SERVER_ENABLE_DEBUG_LOGGING == "true"
-        push!(server_loggers, MiniLoggers.MiniLogger(; io = joinpath(RXINFER_SERVER_LOGS_LOCATION, "debug.log"), minlevel = BaseLogging.Debug, kwargs_logger...))
+    if is_debug_logging_enabled()
+        push!(server_loggers, MiniLoggers.MiniLogger(; io = joinpath(logs_location, "debug.log"), minlevel = BaseLogging.Debug, kwargs_logger...))
     end
 
     # `TeeLogger` does not accept an array of loggers, so we need to convert it to a tuple
@@ -118,6 +125,9 @@ function with_logger(f::F) where {F}
     
     # Execute the provided function with the configured logger
     BaseLogging.with_logger(server_logger) do
+        if is_debug_logging_enabled()
+            @info "Debug logging is enabled, extra logs will be written to `$(joinpath(logs_location, "debug.log"))`"
+        end
         return f()
     end
 end

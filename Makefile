@@ -97,3 +97,6 @@ format: scripts-deps ## Format Julia code
 
 check-format: scripts-deps ## Check Julia code formatting
 	julia --startup-file=no --project=scripts scripts/formatter.jl
+
+debug-env: deps ## Debug environment variables
+	RXINFER_SERVER_ENABLE_DEBUG_LOGGING=true julia --startup-file=no --project -e 'using RxInferServer; println("Debug logging enabled: $(RxInferServer.is_debug_logging_enabled())"); println("Debug env var value: $(RxInferServer.RXINFER_SERVER_ENABLE_DEBUG_LOGGING())")'

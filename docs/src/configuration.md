@@ -21,6 +21,7 @@ The server implements a comprehensive logging system that writes logs both to th
 ```@docs
 RxInferServer.Logging.RXINFER_SERVER_LOGS_LOCATION
 RxInferServer.Logging.RXINFER_SERVER_ENABLE_DEBUG_LOGGING
+RxInferServer.Logging.is_debug_logging_enabled
 ```
 
 !!! note

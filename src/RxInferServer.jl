@@ -22,7 +22,7 @@ ENV["RXINFER_SERVER_PORT"] = 9000
 RxInferServer.serve()
 ```
 """
-const RXINFER_SERVER_PORT = parse(Int, get(ENV, "RXINFER_SERVER_PORT", "8000"))
+RXINFER_SERVER_PORT() = parse(Int, get(ENV, "RXINFER_SERVER_PORT", "8000"))
 
 include("middleware.jl")
 
@@ -132,7 +132,8 @@ function serve(; show_banner::Bool = true)
                 API Documentation: https://api.rxinfer.com
                 RxInfer Documentation: https://docs.rxinfer.com
 
-                Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION)`
+                Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())`
+                $(Logging.is_debug_logging_enabled() ? "Debug level logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())/debug.log`" : "")
                 
                 Type 'q' or 'quit' and hit ENTER to quit the server
                 $(isinteractive() ? "Alternatively use Ctrl-C to quit." : "(Running in non-interactive mode, Ctrl-C may not work properly)")
@@ -190,9 +191,9 @@ function serve(; show_banner::Bool = true)
             nothing
         end
 
-        @info "Starting server on port $RXINFER_SERVER_PORT"
+        @info "Starting server on port `$(RXINFER_SERVER_PORT())`"
 
-        server = Sockets.listen(ip"0.0.0.0", RXINFER_SERVER_PORT)
+        server = Sockets.listen(ip"0.0.0.0", RXINFER_SERVER_PORT())
         server_instantiated = Base.Threads.Event()
 
         # Start HTTP server on port `RXINFER_SERVER_PORT`
@@ -200,7 +201,7 @@ function serve(; show_banner::Bool = true)
             try
                 Database.with_connection() do
                     # Start the HTTP server in non-blocking mode in order to trigger the `server_instantiated` event
-                    s = HTTP.serve!($router, ip"0.0.0.0", RXINFER_SERVER_PORT, server = $server)
+                    s = HTTP.serve!($router, ip"0.0.0.0", RXINFER_SERVER_PORT(), server = $server)
                     # Notify the main thread that the server has been instantiated
                     notify(server_instantiated)
                     # Wait for the server to be closed from the main thread

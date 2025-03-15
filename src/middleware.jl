@@ -10,7 +10,7 @@ ENV["RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN"] = "https://mydomain.com"
 
 See also: [`RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN`](@ref)
 """
-const RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN = get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN", "*")
+RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN() = get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN", "*")
 
 """
 The allowed methods for CORS requests.
@@ -24,7 +24,7 @@ ENV["RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS"] = "GET, POST, PUT, DELET
 
 See also: [`RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS`](@ref)
 """
-const RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS = get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS", "GET, POST, PUT, DELETE, OPTIONS")
+RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS() = get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS", "GET, POST, PUT, DELETE, OPTIONS")
 
 """
 The allowed headers for CORS requests.
@@ -38,16 +38,18 @@ ENV["RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS"] = "Content-Type, Authori
 
 See also: [`RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS`](@ref)
 """
-const RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS = get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS", "Content-Type, Authorization")
+RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS() = get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS", "Content-Type, Authorization")
 
-const RXINFER_SERVER_CORS_RES_HEADERS = [
-    "Access-Control-Allow-Origin" => RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN,
-    "Access-Control-Allow-Methods" => RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS,
-    "Access-Control-Allow-Headers" => RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS
-]
+function RXINFER_SERVER_CORS_RES_HEADERS()
+    return [
+        "Access-Control-Allow-Origin" => RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_ORIGIN(),
+        "Access-Control-Allow-Methods" => RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS(),
+        "Access-Control-Allow-Headers" => RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS()
+    ]
+end
 
 function middleware_post_invoke_cors(res::HTTP.Response)
-    foreach(RXINFER_SERVER_CORS_RES_HEADERS) do (header, value)
+    foreach(RXINFER_SERVER_CORS_RES_HEADERS()) do (header, value)
         if !HTTP.hasheader(res, header)
             push!(res.headers, header => value)
         end
@@ -55,18 +57,21 @@ function middleware_post_invoke_cors(res::HTTP.Response)
     return res
 end
 
-const RXINFER_SERVER_CORS_OPTIONS_RESPONSE = HTTP.Response(200, RXINFER_SERVER_CORS_RES_HEADERS)
+function RXINFER_SERVER_CORS_OPTIONS_RESPONSE()
+    return HTTP.Response(200, RXINFER_SERVER_CORS_RES_HEADERS())
+end
 
 function cors404(req::HTTP.Request)
     if HTTP.method(req) == "OPTIONS"
-        return RXINFER_SERVER_CORS_OPTIONS_RESPONSE
+        return RXINFER_SERVER_CORS_OPTIONS_RESPONSE()
     end
+
     return HTTP.Response(404)
 end
 
 function cors405(req::HTTP.Request)
     if HTTP.method(req) == "OPTIONS"
-        return RXINFER_SERVER_CORS_OPTIONS_RESPONSE
+        return RXINFER_SERVER_CORS_OPTIONS_RESPONSE()
     end
     return HTTP.Response(405)
 end
@@ -74,7 +79,7 @@ end
 function middleware_cors(handler::F) where {F}
     return function (req::HTTP.Request)
         if HTTP.method(req) == "OPTIONS"
-            return RXINFER_SERVER_CORS_OPTIONS_RESPONSE
+            return RXINFER_SERVER_CORS_OPTIONS_RESPONSE()
         end
         return handler(req) |> middleware_post_invoke_cors
     end
@@ -99,7 +104,7 @@ ENV["RXINFER_SERVER_DEV_TOKEN"] = "disabled"
 
 See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref), [`is_dev_token`](@ref)
 """
-const RXINFER_SERVER_DEV_TOKEN = get(ENV, "RXINFER_SERVER_DEV_TOKEN", "dev-token")
+RXINFER_SERVER_DEV_TOKEN() = get(ENV, "RXINFER_SERVER_DEV_TOKEN", "dev-token")
 
 """
     is_dev_token_enabled()::Bool
@@ -110,7 +115,7 @@ Any other value will enable the development token.
 
 See also: [`is_dev_token_disabled`](@ref), [`is_dev_token`](@ref), [`RXINFER_SERVER_DEV_TOKEN`](@ref)
 """
-is_dev_token_enabled() = RXINFER_SERVER_DEV_TOKEN != "disabled"
+is_dev_token_enabled() = RXINFER_SERVER_DEV_TOKEN() != "disabled"
 
 """
     is_dev_token_disabled()::Bool
@@ -121,7 +126,7 @@ Any other value will enable the development token.
 
 See also: [`is_dev_token_enabled`](@ref), [`is_dev_token`](@ref), [`RXINFER_SERVER_DEV_TOKEN`](@ref)
 """
-is_dev_token_disabled() = RXINFER_SERVER_DEV_TOKEN == "disabled"
+is_dev_token_disabled() = RXINFER_SERVER_DEV_TOKEN() == "disabled"
 
 """
     is_dev_token(token::String)::Bool
@@ -130,7 +135,7 @@ Returns true if the token is the development token. Returns false if the develop
 
 See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref), [`RXINFER_SERVER_DEV_TOKEN`](@ref)
 """
-is_dev_token(token) = is_dev_token_enabled() && token == RXINFER_SERVER_DEV_TOKEN
+is_dev_token(token) = is_dev_token_enabled() && token == RXINFER_SERVER_DEV_TOKEN()
 
 # List of URL paths that are exempt from authentication
 const AUTH_EXEMPT_PATHS = [string(API_PATH_PREFIX, "/generate-token"), string(API_PATH_PREFIX, "/ping")]
@@ -186,7 +191,7 @@ const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
             error = "Unauthorized",
             message = ifelse(
                 is_dev_token_enabled(),
-                "The request requires authentication, generate a token using the /generate-token endpoint or use the development token `$(RXINFER_SERVER_DEV_TOKEN)`",
+                "The request requires authentication, generate a token using the /generate-token endpoint or use the development token `$(RXINFER_SERVER_DEV_TOKEN())`",
                 "The request requires authentication, generate a token using the /generate-token endpoint"
             )
         )

@@ -9,13 +9,14 @@ When changing the configuration related code blocks, always update [configuratio
 The configuration related code blocks include:
 - Using, reading or creating new environment variables, .e.g
 ```julia
-const RXINFER_SERVER_LOGS_LOCATION = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
+RXINFER_SERVER_LOGS_LOCATION() = get(ENV, "RXINFER_SERVER_LOGS_LOCATION", ".server-logs")
 ```
+Make sure to create a _function_ for retrieving this, not `const` blocks because const will be precompiled on package load.
 
 All environment variables/constants must have a concise doc-string and must be included in the @configuration.md in the following pattern 
 
 ```md
-# [Log location title](@id log-configuration)
+# [Log location title](mdc:@id log-configuration)
 
 Text about server logs location
 
@@ -23,7 +24,7 @@ Text about server logs location
 RxInferServer.RXINFER_SERVER_LOGS_LOCATION
 ```
 
-# [Another constant](@id another-constant-configuration)
+# [Another constant](mdc:@id another-constant-configuration)
 
 Text about another constant 
 
@@ -51,7 +52,7 @@ Preferences related variables must have `set_*` method to change them with conci
 
 Keep environment variables and preferences separate.
 
-Reference configuration documentation with [Log configuration](@id log-configuration) where it might be relevant
+Reference configuration documentation with [Log configuration](mdc:@id log-configuration) where it might be relevant
 
 
 

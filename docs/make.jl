@@ -157,6 +157,7 @@ makedocs(;
         "API design" => "api/design-proposal.md",
         "Configuration" => "configuration.md",
         "Developers guide" => "developers-guide.md",
+        "Models" => "models.md",
         "Database" => "database.md",
         "Logging" => "logging.md",
         "OpenAPI Specification" => openapi_pages,

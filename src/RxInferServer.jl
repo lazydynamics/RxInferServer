@@ -169,7 +169,7 @@ function serve(; show_banner::Bool = true)
             if !is_hot_reload_enabled()
                 @info "Hot reload is disabled. Use `RxInferServer.set_hot_reload(true)` and restart Julia to enable it."
             else
-                @info "Hot reload is enabled. Use `RxInferServer.set_hot_reload(false)` and restart Julia to disable it."
+                @warn "Hot reload is enabled. Use `RxInferServer.set_hot_reload(false)` and restart Julia to disable it."
             end
 
             function hot_reload_task(f::F, name::String, files, modules; all = false, postpone = true) where {F}
@@ -181,7 +181,7 @@ function serve(; show_banner::Bool = true)
                     # If the server is not running, do not start the hot reload task
                     # This might happen for example if the server failed to start, due to database connection issues
                     if server_running[]
-                        @info "[HOT-RELOAD] Starting hot reload task for the $(name)..." _id = :hot_reload
+                        @warn "[HOT-RELOAD] Starting hot reload task for the $(name)..." _id = :hot_reload
                         while server_running[]
                             try
                                 # Watch for changes in server code and automatically update endpoints
@@ -299,7 +299,14 @@ function serve(; show_banner::Bool = true)
             # we need to register the shutdown function to be called when the program exits
             # see https://docs.julialang.org/en/v1/manual/faq/#catch-ctrl-c
             if !isinteractive()
-                Base.atexit(shutdown)
+                Base.atexit() do 
+                    shutdown()
+                    if server_errored[]
+                        exit(1)
+                    else
+                        exit(0)
+                    end
+                end
             end
 
             yield()
@@ -320,7 +327,7 @@ function serve(; show_banner::Bool = true)
             shutdown()
 
             if server_errored[]
-                exit(1)
+                error("Server task encountered an error")
             end
         end
     end

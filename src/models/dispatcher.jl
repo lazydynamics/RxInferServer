@@ -64,7 +64,7 @@ function load_models!(models, locations)
                     )
                 end
                 models[model.name] = model
-                @debug "Model `$(model.name)` has been loaded successfully from `$(model.path)`"
+                @debug "Model `$(model.name)` has been added to the dispatcher"
             end
         end
     end

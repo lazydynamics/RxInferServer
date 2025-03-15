@@ -45,7 +45,7 @@ models/
     └── config.yaml    # Model configuration
 ```
 
-The server will automatically scan the directories specified in [`RxInfer.Models.RXINFER_SERVER_MODELS_LOCATIONS`](@ref) for models. By default, it looks in the `models` directory relative to the current working directory. The server also supports multiple locations separated with `:`.
+The server will automatically scan the directories specified in [`RXINFER_SERVER_MODELS_LOCATIONS`](@ref models-configuration) for models. By default, it looks in the `models` directory relative to the current working directory. The server also supports multiple locations separated with `:`.
 
 ### Configuration File of a Model (config.yaml)
 

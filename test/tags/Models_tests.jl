@@ -441,10 +441,9 @@ end
     )
 
     response, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
-    
+
     @test info.status == 200
     @test !isnothing(response)
-    
 
     model_id = response.model_id
 
@@ -491,8 +490,8 @@ end
         @test any(e -> e.name == "new_episode", response)
         @test any(e -> e.name == "default", response)
     end
-    
-    @testset "Check that the default episode cannot be deleted" begin 
+
+    @testset "Check that the default episode cannot be deleted" begin
         response, info = TestUtils.RxInferClientOpenAPI.delete_episode(models_api, model_id, "default")
         @test info.status == 400
         @test response.error == "Bad Request"
@@ -564,5 +563,4 @@ end
         @test !isnothing(response)
         @test response.events == []
     end
-
 end

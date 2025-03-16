@@ -10,6 +10,9 @@ The following server methods must be implemented:
 - **generate_token**
     - *invocation:* POST /generate-token
     - *signature:* generate_token(req::HTTP.Request;) -> TokenResponse
+- **attach_metadata_to_event**
+    - *invocation:* POST /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata
+    - *signature:* attach_metadata_to_event(req::HTTP.Request, model_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest;) -> SuccessResponse
 - **create_episode**
     - *invocation:* POST /models/{model_id}/episodes/{episode_name}/create
     - *signature:* create_episode(req::HTTP.Request, model_id::String, episode_name::String;) -> EpisodeInfo
@@ -23,7 +26,7 @@ The following server methods must be implemented:
     - *invocation:* DELETE /models/{model_id}/delete
     - *signature:* delete_model(req::HTTP.Request, model_id::String;) -> SuccessResponse
 - **get_created_models_info**
-    - *invocation:* GET /models/created/info
+    - *invocation:* GET /models/created
     - *signature:* get_created_models_info(req::HTTP.Request;) -> Vector{CreatedModelInfo}
 - **get_episode_info**
     - *invocation:* GET /models/{model_id}/episodes/{episode_name}
@@ -37,9 +40,18 @@ The following server methods must be implemented:
 - **get_model_info**
     - *invocation:* GET /models/{model_id}/info
     - *signature:* get_model_info(req::HTTP.Request, model_id::String;) -> CreatedModelInfo
+- **get_model_state**
+    - *invocation:* GET /models/{model_id}/state
+    - *signature:* get_model_state(req::HTTP.Request, model_id::String;) -> ModelState
 - **get_models**
     - *invocation:* GET /models
     - *signature:* get_models(req::HTTP.Request;) -> ModelList
+- **run_inference**
+    - *invocation:* POST /models/{model_id}/infer
+    - *signature:* run_inference(req::HTTP.Request, model_id::String, infer_request::InferRequest;) -> InferResponse
+- **run_learning**
+    - *invocation:* POST /models/{model_id}/learn
+    - *signature:* run_learning(req::HTTP.Request, model_id::String, learn_request::LearnRequest;) -> LearnResponse
 - **wipe_episode**
     - *invocation:* POST /models/{model_id}/episodes/{episode_name}/wipe
     - *signature:* wipe_episode(req::HTTP.Request, model_id::String, episode_name::String;) -> SuccessResponse

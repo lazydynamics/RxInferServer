@@ -7,18 +7,24 @@ roles:
 
 arguments:
   - name: prior_a
-    description: The alpha parameter of the prior Beta distribution
+    description: The initial alpha parameter of the prior Beta distribution
     type: int
     required: true
     default: 1
   - name: prior_b
-    description: The beta parameter of the prior Beta distribution
+    description: The initial beta parameter of the prior Beta distribution
     type: int
     required: true
     default: 1
-    
+
+parameters:
+  - name: posterior_a
+    description: The posterior alpha parameter of the Beta distribution
+  - name: posterior_b
+    description: The posterior beta parameter of the Beta distribution
+
 data:
-  - name: observations
-    description: A series of `1` and `0` values indicating the outcome of a Bernoulli trial
-    type: any
+  - name: observation
+    description: A single `1` or `0` value indicating the outcome of a Bernoulli trial
+    type: int
     required: true

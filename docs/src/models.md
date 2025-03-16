@@ -85,5 +85,6 @@ RxInferServer.Models.load_models!
 RxInferServer.Models.reload!
 RxInferServer.Models.with_models
 RxInferServer.Models.get_models_dispatcher
+RxInferServer.Models.parse_default_arguments_from_config
 RxInferServer.Models
 ```

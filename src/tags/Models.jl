@@ -1,5 +1,6 @@
+using UUIDs, Mongoc, TimeZones
 
-function get_models(req::HTTP.Request)::HTTP.Response
+function get_models(req::HTTP.Request)
     # Filter out private models
     models = Models.get_models()
 
@@ -12,36 +13,144 @@ function get_models(req::HTTP.Request)::HTTP.Response
 
     # Create a list of lightweight model info
     model_list = map(filtered_models) do model
-        return RxInferServerOpenAPI.LightweightModelInfo(name = model.name, description = model.description)
+        return RxInferServerOpenAPI.LightweightModelDetails(name = model.name, description = model.description)
     end
 
-    return HTTP.Response(200, RxInferServerOpenAPI.ModelList(model_list))
+    return RxInferServerOpenAPI.ModelList(model_list)
 end
 
-function get_model_info(req::HTTP.Request, model_name::String)::HTTP.Response
+function get_model_details(req::HTTP.Request, model_name::String)
     model = Models.get_model(model_name)
 
     if isnothing(model)
-        return HTTP.Response(
-            404,
-            RxInferServerOpenAPI.ErrorResponse(error = "Not Found", message = "The requested model could not be found")
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
         )
     end
 
     roles = current_roles()
 
     if !any(r -> r in roles, model.roles)
-        return HTTP.Response(
-            404,
-            RxInferServerOpenAPI.ErrorResponse(error = "Not Found", message = "The requested model could not be found")
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
         )
     end
 
-    return HTTP.Response(
-        200,
-        RxInferServerOpenAPI.ModelInfo(
-            info = RxInferServerOpenAPI.LightweightModelInfo(name = model.name, description = model.description),
-            config = model.config
-        )
+    return RxInferServerOpenAPI.ModelDetails(
+        details = RxInferServerOpenAPI.LightweightModelDetails(name = model.name, description = model.description),
+        config = model.config
     )
+end
+
+function create_model(req::HTTP.Request, create_model_request::RxInferServerOpenAPI.CreateModelRequest)
+    model_details = get_model_details(req, create_model_request.model)
+
+    # In this case, the response is probably an error response
+    if !isa(model_details, RxInferServerOpenAPI.ModelDetails)
+        return model_details
+    end
+
+    # Create model in the database
+    model_name = model_details.details.name
+    created_by = current_token()
+
+    # Merge the default arguments with the arguments provided by the user
+    # If user has not provided any arguments merge with the empty dictionary
+    arguments = merge(
+        Models.parse_default_arguments_from_config(model_details.config),
+        @something(create_model_request.arguments, Dict{String, Any}())
+    )
+
+    # If user has not provided a description, use empty description
+    description = @something(create_model_request.description, "")
+
+    @debug "Creating new model in the database" model_name created_by
+    model_id = string(UUIDs.uuid4())
+    document = Mongoc.BSON(
+        "model_id"    => model_id,
+        "model_name"  => model_name,
+        "created_at"  => Dates.now(),
+        "created_by"  => created_by,
+        "arguments"   => arguments,
+        "description" => description,
+        "deleted"     => false
+    )
+    collection = Database.collection("models")
+    insert_result = Mongoc.insert_one(collection, document)
+
+    if insert_result.reply["insertedCount"] != 1
+        @error "Unable to create model due to internal error"
+        return RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request", message = "Unable to create model due to internal error"
+        )
+    end
+
+    @debug "Model created successfully" model_id
+    return RxInferServerOpenAPI.CreateModelResponse(model_id = model_id)
+end
+
+function get_created_models_info(req::HTTP.Request)
+    token = current_token()
+    collection = Database.collection("models")
+    query = Mongoc.BSON("created_by" => token, "deleted" => false)
+    result = Mongoc.find(collection, query)
+
+    return map(result) do model
+        return RxInferServerOpenAPI.CreatedModelInfo(
+            model_id = model["model_id"],
+            model_name = model["model_name"],
+            created_at = ZonedDateTime(model["created_at"], TimeZones.localzone()),
+            description = model["description"],
+            arguments = model["arguments"]
+        )
+    end
+end
+
+function get_model_info(req::HTTP.Request, model_id::String)
+    token = current_token()
+
+    # Query the database for the model
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    result = Mongoc.find_one(collection, query)
+
+    # If no model is found, return `NotFoundResponse`
+    if isnothing(result)
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
+        )
+    end
+
+    # Return the model info
+    return RxInferServerOpenAPI.CreatedModelInfo(
+        model_id = result["model_id"],
+        model_name = result["model_name"],
+        created_at = ZonedDateTime(result["created_at"], TimeZones.localzone()), # OpenAPI eh?
+        description = result["description"],
+        arguments = result["arguments"]
+    )
+end
+
+function delete_model(req::HTTP.Request, model_id::String)
+    token = current_token()
+
+    # Update the model to be deleted
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("deleted" => true))
+    result = Mongoc.update_one(collection, query, update)
+
+    if result["matchedCount"] != 1
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
+        )
+    end
+
+    if result["modifiedCount"] != 1
+        return RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request", message = "Unable to delete model due to internal error"
+        )
+    end
+
+    return RxInferServerOpenAPI.SuccessResponse(message = "Model deleted successfully")
 end

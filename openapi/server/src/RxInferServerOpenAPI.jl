@@ -10,9 +10,21 @@ The following server methods must be implemented:
 - **generate_token**
     - *invocation:* POST /generate-token
     - *signature:* generate_token(req::HTTP.Request;) -> TokenResponse
+- **create_model**
+    - *invocation:* POST /models/create
+    - *signature:* create_model(req::HTTP.Request, create_model_request::CreateModelRequest;) -> CreateModelResponse
+- **delete_model**
+    - *invocation:* DELETE /models/{model_id}/delete
+    - *signature:* delete_model(req::HTTP.Request, model_id::String;) -> SuccessResponse
+- **get_created_models_info**
+    - *invocation:* GET /models/created/info
+    - *signature:* get_created_models_info(req::HTTP.Request;) -> Vector{CreatedModelInfo}
+- **get_model_details**
+    - *invocation:* GET /models/{model_name}/details
+    - *signature:* get_model_details(req::HTTP.Request, model_name::String;) -> ModelDetails
 - **get_model_info**
-    - *invocation:* GET /models/{model_name}/info
-    - *signature:* get_model_info(req::HTTP.Request, model_name::String;) -> ModelInfo
+    - *invocation:* GET /models/{model_id}/info
+    - *signature:* get_model_info(req::HTTP.Request, model_id::String;) -> CreatedModelInfo
 - **get_models**
     - *invocation:* GET /models
     - *signature:* get_models(req::HTTP.Request;) -> ModelList

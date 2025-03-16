@@ -44,7 +44,11 @@ The following server methods must be implemented:
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token) | **POST** /generate-token | Generate authentication token
-*ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info) | **GET** /models/{model_name}/info | Get model information
+*ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model) | **POST** /models/create | Create a new model instance
+*ModelsApi* | [**delete_model**](docs/ModelsApi.md#delete_model) | **DELETE** /models/{model_id}/delete | Delete a model instance
+*ModelsApi* | [**get_created_models_info**](docs/ModelsApi.md#get_created_models_info) | **GET** /models/created/info | Get information about all created models for a specific token
+*ModelsApi* | [**get_model_details**](docs/ModelsApi.md#get_model_details) | **GET** /models/{model_name}/details | Get model details
+*ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info) | **GET** /models/{model_id}/info | Get model information
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models) | **GET** /models | Get models
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info) | **GET** /info | Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server) | **GET** /ping | Health check endpoint
@@ -53,13 +57,20 @@ Class | Method | HTTP request | Description
 
 ## Models
 
+ - [CreateModelRequest](docs/CreateModelRequest.md)
+ - [CreateModelResponse](docs/CreateModelResponse.md)
+ - [CreatedModelInfo](docs/CreatedModelInfo.md)
+ - [DeleteModelRequest](docs/DeleteModelRequest.md)
  - [ErrorResponse](docs/ErrorResponse.md)
- - [LightweightModelInfo](docs/LightweightModelInfo.md)
- - [ModelInfo](docs/ModelInfo.md)
+ - [LightweightModelDetails](docs/LightweightModelDetails.md)
+ - [ModelDetails](docs/ModelDetails.md)
  - [ModelList](docs/ModelList.md)
+ - [NotFoundResponse](docs/NotFoundResponse.md)
  - [PingResponse](docs/PingResponse.md)
  - [ServerInfo](docs/ServerInfo.md)
+ - [SuccessResponse](docs/SuccessResponse.md)
  - [TokenResponse](docs/TokenResponse.md)
+ - [UnauthorizedResponse](docs/UnauthorizedResponse.md)
 
 
 

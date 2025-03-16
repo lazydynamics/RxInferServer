@@ -328,7 +328,7 @@ end
     @testset "`a` is specified but `b` is not" begin
         create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
             model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model", arguments = Dict("prior_a" => 3)
-        )   
+        )
 
         response, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
         @test info.status == 200
@@ -350,7 +350,7 @@ end
         create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
             model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model", arguments = Dict("prior_b" => 3)
         )
-        
+
         response, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
         @test info.status == 200
         @test !isnothing(response)

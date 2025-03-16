@@ -84,7 +84,6 @@ Get a specific model by name from the current dispatcher.
 """
 get_model(model_name::String) = get_model(get_models_dispatcher(), model_name)
 
-
 """
     parse_default_arguments_from_config(config)
 
@@ -103,13 +102,13 @@ function parse_default_arguments_from_config(config)
 
     arguments_specification = config["arguments"]
     default_arguments = Dict{String, Any}()
-    
+
     for arg in arguments_specification
         if haskey(arg, "default")
             default_arguments[arg["name"]] = arg["default"]
         end
     end
-    
+
     return default_arguments
 end
 

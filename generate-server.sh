@@ -11,11 +11,6 @@ if ! docker info > /dev/null 2>&1; then
   exit 1
 fi
 
-# Stop all running Docker Compose services to prevent conflicts
-echo "Stopping all Docker Compose services to prevent code conflicts..."
-docker-compose down
-echo "Services stopped."
-
 echo "Generating Julia server code from OpenAPI specification..."
 
 # Get absolute path to the current directory
@@ -34,8 +29,3 @@ docker run --rm \
 echo "Code generation complete!"
 echo "Generated Julia server code is available in the 'openapi/server' directory."
 echo "Do not modify the generated code. Instead, you should implement the API defined in the 'src/RxInferServerOpenAPI.jl' file."
-echo ""
-echo "IMPORTANT: Docker Compose services were stopped before generating code."
-echo "You will need to restart them manually with: docker-compose up -d"
-echo ""
-echo "You can access the Swagger UI at http://localhost:8080 after restarting services." 

@@ -11,11 +11,6 @@ if ! docker info > /dev/null 2>&1; then
   exit 1
 fi
 
-# Stop all running Docker Compose services to prevent conflicts
-echo "Stopping all Docker Compose services to prevent code conflicts..."
-docker-compose down
-echo "Services stopped."
-
 echo "Generating Julia client code from OpenAPI specification..."
 
 # Get absolute path to the current directory
@@ -33,7 +28,4 @@ docker run --rm \
 
 echo "Client code generation complete!"
 echo "Generated Julia client code is available in the 'openapi/client' directory."
-echo "You can now use this client to interact with the RxInfer API."
-echo ""
-echo "IMPORTANT: Docker Compose services were stopped before generating code."
-echo "You will need to restart them manually with: docker-compose up -d" 
+echo "You can now use this client to interact with the RxInfer API." 

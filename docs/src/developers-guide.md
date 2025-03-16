@@ -231,9 +231,8 @@ To generate Julia server code from the OpenAPI specification, run:
 
 This script will:
 1. Check if Docker is running
-2. Stop all running Docker Compose services to prevent code conflicts
-3. Run the OpenAPI Generator Docker image directly
-4. Generate Julia server code in the `openapi/server` directory
+2. Run the OpenAPI Generator Docker image directly
+3. Generate Julia server code in the `openapi/server` directory
 
 #### Generating Client Code
 
@@ -244,9 +243,6 @@ To generate Julia client code from the OpenAPI specification, run:
 ```
 
 This script follows the same workflow as the server generation script but produces a Julia client instead, placing the output in the `openapi/client` directory. The client code can be used to interact with the RxInfer API from Julia applications.
-
-!!! note
-    Both scripts stop all Docker Compose services before generating code to prevent conflicts. You will need to manually restart the services after generation with `docker-compose up -d`.
 
 !!! note
     After the re-generation of the server code, the initial startup time will be longer due to initial compilation of the generated code.

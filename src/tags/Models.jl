@@ -363,17 +363,14 @@ function attach_metadata_to_event(
     end
 
     # Update the specific event with the metadata
-    update = Mongoc.BSON(
-        "\$set" => Mongoc.BSON("events.\$.metadata" => attach_metadata_to_event_request.metadata)
-    )
-    
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("events.\$.metadata" => attach_metadata_to_event_request.metadata))
+
     result = Mongoc.update_one(collection, query, update)
 
     if result["matchedCount"] != 1
         @debug "Unable to attach metadata to the event due to internal error" model_id episode_name event_id
         return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request",
-            message = "Unable to attach metadata to the event due to internal error"
+            error = "Bad Request", message = "Unable to attach metadata to the event due to internal error"
         )
     end
 

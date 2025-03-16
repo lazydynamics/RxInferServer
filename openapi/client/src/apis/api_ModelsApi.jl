@@ -12,9 +12,9 @@ This can be used to construct the `OpenAPI.Clients.Client` instance.
 basepath(::Type{ ModelsApi }) = "http://localhost:8000/v1"
 
 const _returntypes_create_model_ModelsApi = Dict{Regex,Type}(
-    Regex("^" * replace("201", "x"=>".") * "\$") => CreateModelResponse,
-    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
-    Regex("^" * replace("401", "x"=>".") * "\$") => ErrorResponse,
+    Regex("^" * replace("200", "x"=>".") * "\$") => CreateModelResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
 )
 
 function _oacinternal_create_model(_api::ModelsApi, create_model_request::CreateModelRequest; _mediaType=nothing)
@@ -43,10 +43,43 @@ function create_model(_api::ModelsApi, response_stream::Channel, create_model_re
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_delete_model_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => SuccessResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_delete_model(_api::ModelsApi, model_id::String; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "DELETE", _returntypes_delete_model_ModelsApi, "/models/{model_id}/delete", ["ApiKeyAuth", ])
+    OpenAPI.Clients.set_param(_ctx.path, "model_id", model_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Delete a model instance
+
+Delete a specific model instance by its ID
+
+Params:
+- model_id::String (required)
+
+Return: SuccessResponse, OpenAPI.Clients.ApiResponse
+"""
+function delete_model(_api::ModelsApi, model_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_delete_model(_api, model_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function delete_model(_api::ModelsApi, response_stream::Channel, model_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_delete_model(_api, model_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_get_model_details_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => ModelDetails,
-    Regex("^" * replace("401", "x"=>".") * "\$") => ErrorResponse,
-    Regex("^" * replace("404", "x"=>".") * "\$") => ErrorResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
 )
 
 function _oacinternal_get_model_details(_api::ModelsApi, model_name::String; _mediaType=nothing)
@@ -76,9 +109,42 @@ function get_model_details(_api::ModelsApi, response_stream::Channel, model_name
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_get_model_info_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => CreatedModelInfo,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_get_model_info(_api::ModelsApi, model_id::String; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_model_info_ModelsApi, "/models/{model_id}/info", ["ApiKeyAuth", ])
+    OpenAPI.Clients.set_param(_ctx.path, "model_id", model_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Get model information
+
+Retrieve detailed information about a specific model instance
+
+Params:
+- model_id::String (required)
+
+Return: CreatedModelInfo, OpenAPI.Clients.ApiResponse
+"""
+function get_model_info(_api::ModelsApi, model_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_info(_api, model_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function get_model_info(_api::ModelsApi, response_stream::Channel, model_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_info(_api, model_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_get_models_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => ModelList,
-    Regex("^" * replace("401", "x"=>".") * "\$") => ErrorResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
 )
 
 function _oacinternal_get_models(_api::ModelsApi; _mediaType=nothing)
@@ -107,5 +173,7 @@ function get_models(_api::ModelsApi, response_stream::Channel; _mediaType=nothin
 end
 
 export create_model
+export delete_model
 export get_model_details
+export get_model_info
 export get_models

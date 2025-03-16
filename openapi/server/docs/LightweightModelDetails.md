@@ -4,7 +4,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **String** | Name of the model (including version identifier, e.g. \&quot;CoinToss-v1\&quot;) | [default to nothing]
+**name** | **String** | Name of the model (including version identifier, e.g. \&quot;BetaBernoulli-v1\&quot;) | [default to nothing]
 **description** | **String** | Brief description of the model | [default to nothing]
 
 

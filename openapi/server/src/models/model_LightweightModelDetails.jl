@@ -9,7 +9,7 @@
         description=nothing,
     )
 
-    - name::String : Name of the model (including version identifier, e.g. \&quot;CoinToss-v1\&quot;)
+    - name::String : Name of the model (including version identifier, e.g. \&quot;BetaBernoulli-v1\&quot;)
     - description::String : Brief description of the model
 """
 Base.@kwdef mutable struct LightweightModelDetails <: OpenAPI.APIModel

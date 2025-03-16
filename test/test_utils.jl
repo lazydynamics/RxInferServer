@@ -48,8 +48,8 @@
             update = Mongoc.BSON("\$set" => Mongoc.BSON("role" => role))
             result = Mongoc.update_one(collection, query, update)
 
-            if result["modifiedCount"] != 1
-                error("Failed to update token with role `$role`")
+            if result["matchedCount"] != 1
+                error("Failed to update token with role `$role`", result)
             end
         end
 

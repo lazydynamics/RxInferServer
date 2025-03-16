@@ -10,7 +10,7 @@
         description=nothing,
     )
 
-    - model::String : The name of the model to create (including version identifier if applicable, e.g. \&quot;CoinToss-v1\&quot;)
+    - model::String : The name of the model to create (including version identifier if applicable, e.g. \&quot;BetaBernoulli-v1\&quot;)
     - arguments::Dict{String, Any} : Model-specific configuration arguments
     - description::String : Optional description of the model instance
 """

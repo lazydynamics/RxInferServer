@@ -31,7 +31,11 @@ RXINFER_SERVER_PORT() = parse(Int, get(ENV, "RXINFER_SERVER_PORT", "8000"))
 include("middleware.jl")
 
 function middleware_pre_validation(handler::F) where {F}
-    return handler |> middleware_check_token |> middleware_cors
+    return handler |> middleware_check_token |> middleware_cors_options
+end
+
+function middleware_post_invoke(req::HTTP.Request, res)
+    return res |> middleware_post_invoke_cors
 end
 
 include("tags/Server.jl")
@@ -187,7 +191,11 @@ function serve()
         Models.with_models() do
             # Register all API endpoints defined in OpenAPI spec
             RxInferServerOpenAPI.register(
-                router, @__MODULE__; path_prefix = API_PATH_PREFIX, pre_validation = middleware_pre_validation
+                router,
+                @__MODULE__;
+                path_prefix = API_PATH_PREFIX,
+                pre_validation = middleware_pre_validation,
+                post_invoke = middleware_post_invoke
             )
 
             if !is_hot_reload_enabled()
@@ -241,7 +249,8 @@ function serve()
                             router,
                             @__MODULE__;
                             path_prefix = API_PATH_PREFIX,
-                            pre_validation = middleware_pre_validation
+                            pre_validation = middleware_pre_validation,
+                            post_invoke = middleware_post_invoke
                         )
                     end
                     if occursin("replacing existing registered route", String(take!(io)))

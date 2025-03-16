@@ -50,15 +50,6 @@ function RXINFER_SERVER_CORS_RES_HEADERS()
     ]
 end
 
-function middleware_post_invoke_cors(res::HTTP.Response)
-    foreach(RXINFER_SERVER_CORS_RES_HEADERS()) do (header, value)
-        if !HTTP.hasheader(res, header)
-            push!(res.headers, header => value)
-        end
-    end
-    return res
-end
-
 function RXINFER_SERVER_CORS_OPTIONS_RESPONSE()
     return HTTP.Response(200, RXINFER_SERVER_CORS_RES_HEADERS())
 end
@@ -78,13 +69,37 @@ function cors405(req::HTTP.Request)
     return HTTP.Response(405)
 end
 
-function middleware_cors(handler::F) where {F}
+# This middleware is only used for the `OPTIONS` method
+# The actual CORS functionality is handled in middleware_post_invoke_cors
+# for the `HTTP.Response` object returned by the handler
+function middleware_cors_options(handler::F) where {F}
     return function (req::HTTP.Request)
         if HTTP.method(req) == "OPTIONS"
             return RXINFER_SERVER_CORS_OPTIONS_RESPONSE()
         end
-        return handler(req) |> middleware_post_invoke_cors
+        return handler(req)
     end
+end
+
+function middleware_post_invoke_cors(res::HTTP.Response)
+    foreach(RXINFER_SERVER_CORS_RES_HEADERS()) do (header, value)
+        if !HTTP.hasheader(res, header)
+            push!(res.headers, header => value)
+        end
+    end
+    return res
+end
+
+function RxInferServerOpenAPI.OpenAPI.Servers.server_response(res::RxInferServerOpenAPI.UnauthorizedResponse)
+    return HTTP.Response(401, res)
+end
+
+function RxInferServerOpenAPI.OpenAPI.Servers.server_response(res::RxInferServerOpenAPI.NotFoundResponse)
+    return HTTP.Response(404, res)
+end
+
+function RxInferServerOpenAPI.OpenAPI.Servers.server_response(res::RxInferServerOpenAPI.ErrorResponse)
+    return HTTP.Response(400, res)
 end
 
 const DEFAULT_DEV_TOKEN_ROLES = ["user", "admin", "test"]
@@ -196,17 +211,12 @@ function middleware_extract_token(req::HTTP.Request, cache = nothing)::Union{Not
     return !isnothing(result) ? (token, roles) : nothing
 end
 
-const UNAUTHORIZED_RESPONSE = middleware_post_invoke_cors(
-    HTTP.Response(
-        401,
-        RxInferServerOpenAPI.ErrorResponse(
-            error = "Unauthorized",
-            message = ifelse(
-                is_dev_token_enabled(),
-                "The request requires authentication, generate a token using the /generate-token endpoint or use the development token `$(RXINFER_SERVER_DEV_TOKEN())`",
-                "The request requires authentication, generate a token using the /generate-token endpoint"
-            )
-        )
+const UNAUTHORIZED_RESPONSE = RxInferServerOpenAPI.UnauthorizedResponse(
+    error = "Unauthorized",
+    message = ifelse(
+        is_dev_token_enabled(),
+        "The request requires authentication, generate a token using the /generate-token endpoint or use the development token `$(RXINFER_SERVER_DEV_TOKEN())`",
+        "The request requires authentication, generate a token using the /generate-token endpoint"
     )
 )
 
@@ -270,7 +280,7 @@ function middleware_check_token(handler::F) where {F}
         extracted = middleware_extract_token(req, cache)
 
         if isnothing(extracted)
-            return UNAUTHORIZED_RESPONSE
+            return middleware_post_invoke_cors(HTTP.Response(401, UNAUTHORIZED_RESPONSE))
         end
 
         token, roles = extracted

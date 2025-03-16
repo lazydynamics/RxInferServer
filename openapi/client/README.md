@@ -24,7 +24,9 @@ Class | Method
 ------------ | -------------
 *AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token)<br/>**POST** /generate-token<br/>Generate authentication token
 *ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model)<br/>**POST** /models/create<br/>Create a new model instance
+*ModelsApi* | [**delete_model**](docs/ModelsApi.md#delete_model)<br/>**DELETE** /models/{model_id}/delete<br/>Delete a model instance
 *ModelsApi* | [**get_model_details**](docs/ModelsApi.md#get_model_details)<br/>**GET** /models/{model_name}/details<br/>Get model details
+*ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info)<br/>**GET** /models/{model_id}/info<br/>Get model information
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models)<br/>**GET** /models<br/>Get models
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info)<br/>**GET** /info<br/>Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server)<br/>**GET** /ping<br/>Health check endpoint
@@ -34,13 +36,18 @@ Class | Method
 
  - [CreateModelRequest](docs/CreateModelRequest.md)
  - [CreateModelResponse](docs/CreateModelResponse.md)
+ - [CreatedModelInfo](docs/CreatedModelInfo.md)
+ - [DeleteModelRequest](docs/DeleteModelRequest.md)
  - [ErrorResponse](docs/ErrorResponse.md)
  - [LightweightModelDetails](docs/LightweightModelDetails.md)
  - [ModelDetails](docs/ModelDetails.md)
  - [ModelList](docs/ModelList.md)
+ - [NotFoundResponse](docs/NotFoundResponse.md)
  - [PingResponse](docs/PingResponse.md)
  - [ServerInfo](docs/ServerInfo.md)
+ - [SuccessResponse](docs/SuccessResponse.md)
  - [TokenResponse](docs/TokenResponse.md)
+ - [UnauthorizedResponse](docs/UnauthorizedResponse.md)
 
 
 <a id="authorization"></a>

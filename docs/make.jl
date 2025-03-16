@@ -2,7 +2,7 @@ using RxInferServer
 using Documenter
 using DocumenterMermaid
 
-DocMeta.setdocmeta!(RxInferServer, :DocTestSetup, :(using RxInferServer); recursive=true)
+DocMeta.setdocmeta!(RxInferServer, :DocTestSetup, :(using RxInferServer); recursive = true)
 
 """
     parse_openapi_methods()
@@ -39,7 +39,7 @@ function parse_openapi_methods()
     end
 
     # Extract the documentation block
-    doc_block = content[doc_start.stop:module_start.start-1]
+    doc_block = content[(doc_start.stop):(module_start.start - 1)]
 
     # Extract method names using regex
     # Pattern: - **method_name**
@@ -135,23 +135,42 @@ function copy_openapi_docs()
     return openapi_pages
 end
 
+"""
+    copy_openapi_spec()
+
+Copies the openapi/spec.yaml file to docs/src/openapi/spec.yaml and returns the path to the file.
+"""
+function copy_openapi_spec()
+    # Create the destination directory if it doesn't exist
+    openapi_spec_dir = joinpath(@__DIR__, "src", "openapi")
+    mkpath(openapi_spec_dir)
+
+    # Copy the spec.yaml file
+    spec_source = joinpath(@__DIR__, "..", "openapi", "spec.yaml")
+    spec_dest = joinpath(openapi_spec_dir, "spec.yaml")
+    cp(spec_source, spec_dest; force = true)
+
+    return spec_dest
+end
+
 # Get OpenAPI documentation pages
 openapi_pages = copy_openapi_docs()
+openapi_spec = copy_openapi_spec()
 
 makedocs(;
-    modules=[RxInferServer],
+    modules = [RxInferServer],
     warnonly = false,
-    authors="Lazy Dynamics <info@lazydynamics.com>",
-    sitename="RxInferServer.jl",
-    format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", nothing) == "true",
-        canonical="https://api.rxinfer.com",
-        edit_link="main",
-        assets=String[],
-        description="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models.",
-        footer="Created by [ReactiveBayes](https://github.com/ReactiveBayes), fully sponsored by [LazyDynamics](https://lazydynamics.com/), powered by [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl) and the [Julia Programming Language](https://julialang.org/)."
+    authors = "Lazy Dynamics <info@lazydynamics.com>",
+    sitename = "RxInferServer.jl",
+    format = Documenter.HTML(;
+        prettyurls = get(ENV, "CI", nothing) == "true",
+        canonical = "https://api.rxinfer.com",
+        edit_link = "main",
+        assets = [],
+        description = "A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models.",
+        footer = "Created by [ReactiveBayes](https://github.com/ReactiveBayes), fully sponsored by [LazyDynamics](https://lazydynamics.com/), powered by [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl) and the [Julia Programming Language](https://julialang.org/)."
     ),
-    pages=[
+    pages = [
         "Home" => "index.md",
         "Getting Started" => "getting-started.md",
         "API design" => "api/design-proposal.md",
@@ -160,13 +179,10 @@ makedocs(;
         "Models" => "models.md",
         "Database" => "database.md",
         "Logging" => "logging.md",
-        "OpenAPI Specification" => openapi_pages,
-    ],
+        "OpenAPI Specification" => openapi_pages
+    ]
 )
 
 deploydocs(;
-    repo="github.com/lazydynamics/RxInferServer.jl",
-    devbranch="main",
-    forcepush=true,
-    cname="api.rxinfer.com"
+    repo = "github.com/lazydynamics/RxInferServer.jl", devbranch = "main", forcepush = true, cname = "api.rxinfer.com"
 )

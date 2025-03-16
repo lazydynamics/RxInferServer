@@ -23,12 +23,17 @@ Documentation is also embedded in Julia which can be used with a Julia specific 
 Class | Method
 ------------ | -------------
 *AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token)<br/>**POST** /generate-token<br/>Generate authentication token
+*ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode)<br/>**POST** /models/{model_id}/episodes/{episode_name}/create<br/>Create a new episode for a model
 *ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model)<br/>**POST** /models/create<br/>Create a new model instance
+*ModelsApi* | [**delete_episode**](docs/ModelsApi.md#delete_episode)<br/>**DELETE** /models/{model_id}/episodes/{episode_name}/delete<br/>Delete an episode for a model
 *ModelsApi* | [**delete_model**](docs/ModelsApi.md#delete_model)<br/>**DELETE** /models/{model_id}/delete<br/>Delete a model instance
 *ModelsApi* | [**get_created_models_info**](docs/ModelsApi.md#get_created_models_info)<br/>**GET** /models/created/info<br/>Get information about all created models for a specific token
+*ModelsApi* | [**get_episode_info**](docs/ModelsApi.md#get_episode_info)<br/>**GET** /models/{model_id}/episodes/{episode_name}<br/>Get episode information
+*ModelsApi* | [**get_episodes**](docs/ModelsApi.md#get_episodes)<br/>**GET** /models/{model_id}/episodes<br/>Get all episodes for a model
 *ModelsApi* | [**get_model_details**](docs/ModelsApi.md#get_model_details)<br/>**GET** /models/{model_name}/details<br/>Get model details
 *ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info)<br/>**GET** /models/{model_id}/info<br/>Get model information
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models)<br/>**GET** /models<br/>Get models
+*ModelsApi* | [**wipe_episode**](docs/ModelsApi.md#wipe_episode)<br/>**POST** /models/{model_id}/episodes/{episode_name}/wipe<br/>Wipe all events from an episode
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info)<br/>**GET** /info<br/>Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server)<br/>**GET** /ping<br/>Health check endpoint
 
@@ -39,6 +44,7 @@ Class | Method
  - [CreateModelResponse](docs/CreateModelResponse.md)
  - [CreatedModelInfo](docs/CreatedModelInfo.md)
  - [DeleteModelRequest](docs/DeleteModelRequest.md)
+ - [EpisodeInfo](docs/EpisodeInfo.md)
  - [ErrorResponse](docs/ErrorResponse.md)
  - [LightweightModelDetails](docs/LightweightModelDetails.md)
  - [ModelDetails](docs/ModelDetails.md)

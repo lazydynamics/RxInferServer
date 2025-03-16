@@ -4,6 +4,7 @@ docs/CreateModelRequest.md
 docs/CreateModelResponse.md
 docs/CreatedModelInfo.md
 docs/DeleteModelRequest.md
+docs/EpisodeInfo.md
 docs/ErrorResponse.md
 docs/LightweightModelDetails.md
 docs/ModelDetails.md
@@ -25,6 +26,7 @@ src/models/model_CreateModelRequest.jl
 src/models/model_CreateModelResponse.jl
 src/models/model_CreatedModelInfo.jl
 src/models/model_DeleteModelRequest.jl
+src/models/model_EpisodeInfo.jl
 src/models/model_ErrorResponse.jl
 src/models/model_LightweightModelDetails.jl
 src/models/model_ModelDetails.jl

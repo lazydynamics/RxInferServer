@@ -64,3 +64,8 @@ function LoadedModel(path::String)::LoadedModel
         path = path, name = name, description = description, author = author, roles = roles, config = config, mod = mod
     )
 end
+
+function dispatch(model::LoadedModel, operation::Symbol, args...; kwargs...)
+    func = getproperty(model.mod, operation)
+    return func(args...; kwargs...)
+end

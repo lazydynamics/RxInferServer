@@ -23,7 +23,8 @@ Documentation is also embedded in Julia which can be used with a Julia specific 
 Class | Method
 ------------ | -------------
 *AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token)<br/>**POST** /generate-token<br/>Generate authentication token
-*ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info)<br/>**GET** /models/{model_name}/info<br/>Get model information
+*ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model)<br/>**POST** /models/create<br/>Create a new model instance
+*ModelsApi* | [**get_model_details**](docs/ModelsApi.md#get_model_details)<br/>**GET** /models/{model_name}/details<br/>Get model details
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models)<br/>**GET** /models<br/>Get models
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info)<br/>**GET** /info<br/>Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server)<br/>**GET** /ping<br/>Health check endpoint
@@ -31,9 +32,11 @@ Class | Method
 
 ## Models
 
+ - [CreateModelRequest](docs/CreateModelRequest.md)
+ - [CreateModelResponse](docs/CreateModelResponse.md)
  - [ErrorResponse](docs/ErrorResponse.md)
- - [LightweightModelInfo](docs/LightweightModelInfo.md)
- - [ModelInfo](docs/ModelInfo.md)
+ - [LightweightModelDetails](docs/LightweightModelDetails.md)
+ - [ModelDetails](docs/ModelDetails.md)
  - [ModelList](docs/ModelList.md)
  - [PingResponse](docs/PingResponse.md)
  - [ServerInfo](docs/ServerInfo.md)

@@ -8,10 +8,10 @@
         models=nothing,
     )
 
-    - models::Vector{LightweightModelInfo} : List of available models
+    - models::Vector{LightweightModelDetails} : List of available models
 """
 Base.@kwdef mutable struct ModelList <: OpenAPI.APIModel
-    models::Union{Nothing, Vector} = nothing # spec type: Union{ Nothing, Vector{LightweightModelInfo} }
+    models::Union{Nothing, Vector} = nothing # spec type: Union{ Nothing, Vector{LightweightModelDetails} }
 
     function ModelList(models, )
         OpenAPI.validate_property(ModelList, Symbol("models"), models)
@@ -19,7 +19,7 @@ Base.@kwdef mutable struct ModelList <: OpenAPI.APIModel
     end
 end # type ModelList
 
-const _property_types_ModelList = Dict{Symbol,String}(Symbol("models")=>"Vector{LightweightModelInfo}", )
+const _property_types_ModelList = Dict{Symbol,String}(Symbol("models")=>"Vector{LightweightModelDetails}", )
 OpenAPI.property_type(::Type{ ModelList }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_ModelList[name]))}
 
 function check_required(o::ModelList)

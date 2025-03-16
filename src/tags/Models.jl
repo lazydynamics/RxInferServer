@@ -12,13 +12,13 @@ function get_models(req::HTTP.Request)::HTTP.Response
 
     # Create a list of lightweight model info
     model_list = map(filtered_models) do model
-        return RxInferServerOpenAPI.LightweightModelInfo(name = model.name, description = model.description)
+        return RxInferServerOpenAPI.LightweightModelDetails(name = model.name, description = model.description)
     end
 
     return HTTP.Response(200, RxInferServerOpenAPI.ModelList(model_list))
 end
 
-function get_model_info(req::HTTP.Request, model_name::String)::HTTP.Response
+function get_model_details(req::HTTP.Request, model_name::String)::HTTP.Response
     model = Models.get_model(model_name)
 
     if isnothing(model)
@@ -39,9 +39,13 @@ function get_model_info(req::HTTP.Request, model_name::String)::HTTP.Response
 
     return HTTP.Response(
         200,
-        RxInferServerOpenAPI.ModelInfo(
-            info = RxInferServerOpenAPI.LightweightModelInfo(name = model.name, description = model.description),
+        RxInferServerOpenAPI.ModelDetails(
+            details = RxInferServerOpenAPI.LightweightModelDetails(name = model.name, description = model.description),
             config = model.config
         )
     )
+end
+
+function create_model(req::HTTP.Request, create_model_request::RxInferServerOpenAPI.CreateModelRequest)::HTTP.Response
+    error("Not implemented")
 end

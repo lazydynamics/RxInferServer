@@ -10,9 +10,12 @@ The following server methods must be implemented:
 - **generate_token**
     - *invocation:* POST /generate-token
     - *signature:* generate_token(req::HTTP.Request;) -> TokenResponse
-- **get_model_info**
-    - *invocation:* GET /models/{model_name}/info
-    - *signature:* get_model_info(req::HTTP.Request, model_name::String;) -> ModelInfo
+- **create_model**
+    - *invocation:* POST /models/create
+    - *signature:* create_model(req::HTTP.Request, create_model_request::CreateModelRequest;) -> CreateModelResponse
+- **get_model_details**
+    - *invocation:* GET /models/{model_name}/details
+    - *signature:* get_model_details(req::HTTP.Request, model_name::String;) -> ModelDetails
 - **get_models**
     - *invocation:* GET /models
     - *signature:* get_models(req::HTTP.Request;) -> ModelList

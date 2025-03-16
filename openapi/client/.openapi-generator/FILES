@@ -1,8 +1,10 @@
 README.md
 docs/AuthenticationApi.md
+docs/CreateModelRequest.md
+docs/CreateModelResponse.md
 docs/ErrorResponse.md
-docs/LightweightModelInfo.md
-docs/ModelInfo.md
+docs/LightweightModelDetails.md
+docs/ModelDetails.md
 docs/ModelList.md
 docs/ModelsApi.md
 docs/PingResponse.md
@@ -14,9 +16,11 @@ src/apis/api_AuthenticationApi.jl
 src/apis/api_ModelsApi.jl
 src/apis/api_ServerApi.jl
 src/modelincludes.jl
+src/models/model_CreateModelRequest.jl
+src/models/model_CreateModelResponse.jl
 src/models/model_ErrorResponse.jl
-src/models/model_LightweightModelInfo.jl
-src/models/model_ModelInfo.jl
+src/models/model_LightweightModelDetails.jl
+src/models/model_ModelDetails.jl
 src/models/model_ModelList.jl
 src/models/model_PingResponse.jl
 src/models/model_ServerInfo.jl

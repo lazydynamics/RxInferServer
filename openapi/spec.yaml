@@ -64,7 +64,7 @@ paths:
         - Models
       summary: Get models
       operationId: getModels
-      description: Retrieve the list of available models. Note that some access tokens might not have access to all models.
+      description: Retrieve the list of available models and their lightweight details. Note that some access tokens might not have access to all models.
       responses:
         '200':
           description: Successfully retrieved list of models
@@ -89,12 +89,12 @@ paths:
               example:
                 error: "Unauthorized"
                 message: "The request requires authentication, generate a token using the /generate-token endpoint"
-  /models/{model_name}/info:
+  /models/{model_name}/details:
     get:
       tags:
         - Models
-      summary: Get model information
-      operationId: getModelInfo
+      summary: Get model details
+      operationId: getModelDetails
       description: Retrieve detailed information about a specific model
       parameters:
         - name: model_name
@@ -105,11 +105,11 @@ paths:
           description: Name of the model to retrieve information for (including version identifier if applicable, e.g. "CoinToss-v1")
       responses:
         '200':
-          description: Successfully retrieved model information
+          description: Successfully retrieved model details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ModelInfo'
+                $ref: '#/components/schemas/ModelDetails'
         '401':
           description: Access token is missing or invalid
           content:
@@ -128,7 +128,6 @@ paths:
               example:
                 error: "Not Found"
                 message: "The requested model could not be found"
-                
   /ping:
     get:
       tags:
@@ -172,6 +171,64 @@ paths:
               example:
                 error: "Bad Request"
                 message: "Unable to generate token due to internal error"
+  /models/create:
+    post:
+      tags:
+        - Models
+      summary: Create a new model instance
+      operationId: createModel
+      description: Creates a new instance of a model with the specified configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateModelRequest'
+            examples:
+              simple:
+                value:
+                  model: "CoinToss-v1"
+                  description: "Testing coin toss model"
+              with_arguments:
+                value:
+                  model: "LinearRegression-v1"
+                  arguments:
+                    dt: 0.1
+                    horizon: 10
+                  description: "Linear regression with custom parameters"
+      responses:
+        '201':
+          description: Model instance created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateModelResponse'
+              example:
+                model_id: "123e4567-e89b-12d3-a456-426614174000"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_model:
+                  value:
+                    error: "Invalid Model"
+                    message: "The specified model does not exist"
+                invalid_arguments:
+                  value:
+                    error: "Invalid Arguments"
+                    message: "The provided arguments are not valid for this model"
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized"
+                message: "The request requires authentication, generate a token using the /generate-token endpoint"
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -244,21 +301,21 @@ components:
           type: array
           description: List of available models
           items:
-            $ref: '#/components/schemas/LightweightModelInfo'
-    ModelInfo:
+            $ref: '#/components/schemas/LightweightModelDetails'
+    ModelDetails:
       type: object
       required:
-        - info
+        - details
         - config
       properties:
-        info:
-          $ref: '#/components/schemas/LightweightModelInfo'
-          description: Basic model information
+        details:
+          $ref: '#/components/schemas/LightweightModelDetails'
+          description: Basic model details
         config:
           type: object
-          description: Model-specific configuration
+          description: Extended model-specific configuration
           additionalProperties: true
-    LightweightModelInfo:
+    LightweightModelDetails:
       type: object
       required:
         - name
@@ -270,3 +327,28 @@ components:
         description:
           type: string
           description: Brief description of the model
+    CreateModelRequest:
+      type: object
+      required:
+        - model
+      properties:
+        model:
+          type: string
+          description: The name of the model to create (including version identifier if applicable, e.g. "CoinToss-v1")
+        arguments:
+          type: object
+          description: Model-specific configuration arguments
+          additionalProperties: true
+        description:
+          type: string
+          maxLength: 128
+          description: Optional description of the model instance
+    CreateModelResponse:
+      type: object
+      required:
+        - model_id
+      properties:
+        model_id:
+          type: string
+          format: uuid
+          description: Unique identifier for the created model instance

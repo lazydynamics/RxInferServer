@@ -11,36 +11,68 @@ This can be used to construct the `OpenAPI.Clients.Client` instance.
 """
 basepath(::Type{ ModelsApi }) = "http://localhost:8000/v1"
 
-const _returntypes_get_model_info_ModelsApi = Dict{Regex,Type}(
-    Regex("^" * replace("200", "x"=>".") * "\$") => ModelInfo,
+const _returntypes_create_model_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("201", "x"=>".") * "\$") => CreateModelResponse,
+    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => ErrorResponse,
+)
+
+function _oacinternal_create_model(_api::ModelsApi, create_model_request::CreateModelRequest; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_create_model_ModelsApi, "/models/create", ["ApiKeyAuth", ], create_model_request)
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? ["application/json", ] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Create a new model instance
+
+Creates a new instance of a model with the specified configuration
+
+Params:
+- create_model_request::CreateModelRequest (required)
+
+Return: CreateModelResponse, OpenAPI.Clients.ApiResponse
+"""
+function create_model(_api::ModelsApi, create_model_request::CreateModelRequest; _mediaType=nothing)
+    _ctx = _oacinternal_create_model(_api, create_model_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function create_model(_api::ModelsApi, response_stream::Channel, create_model_request::CreateModelRequest; _mediaType=nothing)
+    _ctx = _oacinternal_create_model(_api, create_model_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
+const _returntypes_get_model_details_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => ModelDetails,
     Regex("^" * replace("401", "x"=>".") * "\$") => ErrorResponse,
     Regex("^" * replace("404", "x"=>".") * "\$") => ErrorResponse,
 )
 
-function _oacinternal_get_model_info(_api::ModelsApi, model_name::String; _mediaType=nothing)
-    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_model_info_ModelsApi, "/models/{model_name}/info", ["ApiKeyAuth", ])
+function _oacinternal_get_model_details(_api::ModelsApi, model_name::String; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_model_details_ModelsApi, "/models/{model_name}/details", ["ApiKeyAuth", ])
     OpenAPI.Clients.set_param(_ctx.path, "model_name", model_name)  # type String
     OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
     OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
     return _ctx
 end
 
-@doc raw"""Get model information
+@doc raw"""Get model details
 
 Retrieve detailed information about a specific model
 
 Params:
 - model_name::String (required)
 
-Return: ModelInfo, OpenAPI.Clients.ApiResponse
+Return: ModelDetails, OpenAPI.Clients.ApiResponse
 """
-function get_model_info(_api::ModelsApi, model_name::String; _mediaType=nothing)
-    _ctx = _oacinternal_get_model_info(_api, model_name; _mediaType=_mediaType)
+function get_model_details(_api::ModelsApi, model_name::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_details(_api, model_name; _mediaType=_mediaType)
     return OpenAPI.Clients.exec(_ctx)
 end
 
-function get_model_info(_api::ModelsApi, response_stream::Channel, model_name::String; _mediaType=nothing)
-    _ctx = _oacinternal_get_model_info(_api, model_name; _mediaType=_mediaType)
+function get_model_details(_api::ModelsApi, response_stream::Channel, model_name::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_details(_api, model_name; _mediaType=_mediaType)
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
@@ -58,7 +90,7 @@ end
 
 @doc raw"""Get models
 
-Retrieve the list of available models. Note that some access tokens might not have access to all models.
+Retrieve the list of available models and their lightweight details. Note that some access tokens might not have access to all models.
 
 Params:
 
@@ -74,5 +106,6 @@ function get_models(_api::ModelsApi, response_stream::Channel; _mediaType=nothin
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
-export get_model_info
+export create_model
+export get_model_details
 export get_models

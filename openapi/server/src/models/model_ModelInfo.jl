@@ -6,33 +6,27 @@
 
     ModelInfo(;
         info=nothing,
-        config=nothing,
     )
 
     - info::LightweightModelInfo
-    - config::Dict{String, Any} : Model-specific configuration
 """
 Base.@kwdef mutable struct ModelInfo <: OpenAPI.APIModel
     info = nothing # spec type: Union{ Nothing, LightweightModelInfo }
-    config::Union{Nothing, Dict{String, Any}} = nothing
 
-    function ModelInfo(info, config, )
+    function ModelInfo(info, )
         OpenAPI.validate_property(ModelInfo, Symbol("info"), info)
-        OpenAPI.validate_property(ModelInfo, Symbol("config"), config)
-        return new(info, config, )
+        return new(info, )
     end
 end # type ModelInfo
 
-const _property_types_ModelInfo = Dict{Symbol,String}(Symbol("info")=>"LightweightModelInfo", Symbol("config")=>"Dict{String, Any}", )
+const _property_types_ModelInfo = Dict{Symbol,String}(Symbol("info")=>"LightweightModelInfo", )
 OpenAPI.property_type(::Type{ ModelInfo }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_ModelInfo[name]))}
 
 function check_required(o::ModelInfo)
     o.info === nothing && (return false)
-    o.config === nothing && (return false)
     true
 end
 
 function OpenAPI.validate_property(::Type{ ModelInfo }, name::Symbol, val)
-
 
 end

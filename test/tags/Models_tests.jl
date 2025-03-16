@@ -265,8 +265,8 @@ end
     response, info = TestUtils.RxInferClientOpenAPI.get_created_models_info(models_api)
     @test info.status == 200
     @test !isempty(response)
-    @test any(m -> m.model_id == response1.model_id, response)
-    @test any(m -> m.model_id == response2.model_id, response)
+    @test any(m -> m.model_id == response1.model_id, response) # The first model should be visible
+    @test any(m -> m.model_id == response2.model_id, response) # The second model should be visible
     @test length(response) >= 2 # Might be more than 2 if there are other tests that create models
 
     TestUtils.with_temporary_token() do
@@ -285,9 +285,9 @@ end
     response, info = TestUtils.RxInferClientOpenAPI.get_created_models_info(models_api)
     @test info.status == 200
     @test !isempty(response)
-    @test !any(m -> m.model_id == response1.model_id, response)
-    @test any(m -> m.model_id == response2.model_id, response)
-    @test length(response) >= 1
+    @test !any(m -> m.model_id == response1.model_id, response) # The first model should be deleted
+    @test any(m -> m.model_id == response2.model_id, response) # But the second model should be visible
+    @test length(response) >= 1 # There might be other tests that create models
 
     dresponse2, dinfo2 = TestUtils.RxInferClientOpenAPI.delete_model(models_api, response2.model_id)
     @test dinfo2.status == 200
@@ -295,10 +295,9 @@ end
 
     response, info = TestUtils.RxInferClientOpenAPI.get_created_models_info(models_api)
     @test info.status == 200
-    @test isempty(response)
-    @test !any(m -> m.model_id == response2.model_id, response)
-    @test !any(m -> m.model_id == response1.model_id, response)
-    @test length(response) >= 0
+    @test length(response) >= 0 # There might be other tests that create models
+    @test !any(m -> m.model_id == response2.model_id, response) # But the second model should be deleted
+    @test !any(m -> m.model_id == response1.model_id, response) # And the first one too
 end
 
 @testitem "Creating model without arguments should create a model with default values" setup = [TestUtils] begin

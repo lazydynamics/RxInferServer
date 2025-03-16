@@ -78,6 +78,23 @@ function create_model(req::HTTP.Request, create_model_request::RxInferServerOpen
     return RxInferServerOpenAPI.CreateModelResponse(model_id = model_id)
 end
 
+function get_created_models_info(req::HTTP.Request)
+    token = current_token()
+    collection = Database.collection("models")
+    query = Mongoc.BSON("created_by" => token, "deleted" => false)
+    result = Mongoc.find(collection, query)
+
+    return map(result) do model
+        return RxInferServerOpenAPI.CreatedModelInfo(
+            model_id = model["model_id"],
+            model_name = model["model_name"],
+            created_at = ZonedDateTime(model["created_at"], TimeZones.localzone()),
+            description = model["description"],
+            arguments = model["arguments"]
+        )
+    end
+end
+
 function get_model_info(req::HTTP.Request, model_id::String)
     token = current_token()
 

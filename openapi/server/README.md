@@ -46,6 +46,7 @@ Class | Method | HTTP request | Description
 *AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token) | **POST** /generate-token | Generate authentication token
 *ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model) | **POST** /models/create | Create a new model instance
 *ModelsApi* | [**delete_model**](docs/ModelsApi.md#delete_model) | **DELETE** /models/{model_id}/delete | Delete a model instance
+*ModelsApi* | [**get_created_models_info**](docs/ModelsApi.md#get_created_models_info) | **GET** /models/created/info | Get information about all created models for a specific token
 *ModelsApi* | [**get_model_details**](docs/ModelsApi.md#get_model_details) | **GET** /models/{model_name}/details | Get model details
 *ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info) | **GET** /models/{model_id}/info | Get model information
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models) | **GET** /models | Get models

@@ -6,6 +6,7 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**create_model**](ModelsApi.md#create_model) | **POST** /models/create | Create a new model instance
 [**delete_model**](ModelsApi.md#delete_model) | **DELETE** /models/{model_id}/delete | Delete a model instance
+[**get_created_models_info**](ModelsApi.md#get_created_models_info) | **GET** /models/created/info | Get information about all created models for a specific token
 [**get_model_details**](ModelsApi.md#get_model_details) | **GET** /models/{model_name}/details | Get model details
 [**get_model_info**](ModelsApi.md#get_model_info) | **GET** /models/{model_id}/info | Get model information
 [**get_models**](ModelsApi.md#get_models) | **GET** /models | Get models
@@ -57,6 +58,31 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**SuccessResponse**](SuccessResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **get_created_models_info**
+> get_created_models_info(req::HTTP.Request;) -> Vector{CreatedModelInfo}
+
+Get information about all created models for a specific token
+
+Retrieve detailed information about all created models for a specific token
+
+### Required Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**Vector{CreatedModelInfo}**](CreatedModelInfo.md)
 
 ### Authorization
 

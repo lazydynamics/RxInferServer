@@ -76,6 +76,36 @@ function delete_model(_api::ModelsApi, response_stream::Channel, model_id::Strin
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_get_created_models_info_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => Vector{CreatedModelInfo},
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+)
+
+function _oacinternal_get_created_models_info(_api::ModelsApi; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_created_models_info_ModelsApi, "/models/created/info", ["ApiKeyAuth", ])
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Get information about all created models for a specific token
+
+Retrieve detailed information about all created models for a specific token
+
+Params:
+
+Return: Vector{CreatedModelInfo}, OpenAPI.Clients.ApiResponse
+"""
+function get_created_models_info(_api::ModelsApi; _mediaType=nothing)
+    _ctx = _oacinternal_get_created_models_info(_api; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function get_created_models_info(_api::ModelsApi, response_stream::Channel; _mediaType=nothing)
+    _ctx = _oacinternal_get_created_models_info(_api; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_get_model_details_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => ModelDetails,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
@@ -174,6 +204,7 @@ end
 
 export create_model
 export delete_model
+export get_created_models_info
 export get_model_details
 export get_model_info
 export get_models

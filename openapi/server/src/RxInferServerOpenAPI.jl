@@ -16,6 +16,9 @@ The following server methods must be implemented:
 - **delete_model**
     - *invocation:* DELETE /models/{model_id}/delete
     - *signature:* delete_model(req::HTTP.Request, model_id::String;) -> SuccessResponse
+- **get_created_models_info**
+    - *invocation:* GET /models/created/info
+    - *signature:* get_created_models_info(req::HTTP.Request;) -> Vector{CreatedModelInfo}
 - **get_model_details**
     - *invocation:* GET /models/{model_name}/details
     - *signature:* get_model_details(req::HTTP.Request, model_name::String;) -> ModelDetails

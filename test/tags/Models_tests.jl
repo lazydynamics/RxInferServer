@@ -163,6 +163,12 @@ end
     @test !isnothing(response)
     @test response.model_name == "BetaBernoulli-v1"
 
+    # Check that the model is visible to the user from the list of all created models
+    response, info = TestUtils.RxInferClientOpenAPI.get_created_models_info(models_api)
+    @test info.status == 200
+    @test !isempty(response)
+    @test any(m -> m.model_id == model_id, response)
+
     # Try to delete the model
     response, info = TestUtils.RxInferClientOpenAPI.delete_model(models_api, model_id)
     @test info.status == 200
@@ -174,6 +180,11 @@ end
     @test info.status == 404
     @test response.error == "Not Found"
     @test response.message == "The requested model could not be found"
+
+    # Check that the model is not visible in the list of all created models
+    response, info = TestUtils.RxInferClientOpenAPI.get_created_models_info(models_api)
+    @test info.status == 200
+    @test !any(m -> m.model_id == model_id, response)
 end
 
 @testitem "401 on create model endpoint without authorization" setup = [TestUtils] begin
@@ -233,4 +244,58 @@ end
         @test response.error == "Not Found"
         @test response.message == "The requested model could not be found"
     end
+end
+
+@testitem "200 on get created models info endpoint" setup = [TestUtils] begin
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+        model = "BetaBernoulli-v1",
+        description = "Testing beta-bernoulli model",
+        arguments = Dict("prior_a" => 1, "prior_b" => 1)
+    )
+
+    response1, info1 = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    response2, info2 = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    @test info1.status == 200
+    @test info2.status == 200
+
+    response, info = TestUtils.RxInferClientOpenAPI.get_created_models_info(models_api)
+    @test info.status == 200
+    @test !isempty(response)
+    @test any(m -> m.model_id == response1.model_id, response)
+    @test any(m -> m.model_id == response2.model_id, response)
+    @test length(response) >= 2 # Might be more than 2 if there are other tests that create models
+
+    TestUtils.with_temporary_token() do
+        another_client = TestUtils.TestClient()
+        another_models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(another_client)
+        response, info = TestUtils.RxInferClientOpenAPI.get_created_models_info(another_models_api)
+        @test info.status == 200
+        @test isempty(response)
+    end
+
+    # Check that the models can be deleted one by one
+    dresponse1, dinfo1 = TestUtils.RxInferClientOpenAPI.delete_model(models_api, response1.model_id)
+    @test dinfo1.status == 200
+    @test dresponse1.message == "Model deleted successfully"
+
+    response, info = TestUtils.RxInferClientOpenAPI.get_created_models_info(models_api)
+    @test info.status == 200
+    @test !isempty(response)
+    @test !any(m -> m.model_id == response1.model_id, response)
+    @test any(m -> m.model_id == response2.model_id, response)
+    @test length(response) >= 1
+
+    dresponse2, dinfo2 = TestUtils.RxInferClientOpenAPI.delete_model(models_api, response2.model_id)
+    @test dinfo2.status == 200
+    @test dresponse2.message == "Model deleted successfully"
+
+    response, info = TestUtils.RxInferClientOpenAPI.get_created_models_info(models_api)
+    @test info.status == 200
+    @test isempty(response)
+    @test !any(m -> m.model_id == response2.model_id, response)
+    @test !any(m -> m.model_id == response1.model_id, response)
+    @test length(response) >= 0
 end

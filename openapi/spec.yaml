@@ -211,6 +211,28 @@ paths:
               example:
                 error: "Not Found"
                 message: "The specified model does not exist"
+  /models/created/info:
+    get:
+      tags:
+        - Models
+      summary: Get information about all created models for a specific token
+      operationId: getCreatedModelsInfo
+      description: Retrieve detailed information about all created models for a specific token
+      responses:
+        '200':
+          description: Successfully retrieved list of created models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatedModelInfo'
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
   /models/{model_id}/info:
     get:
       tags:

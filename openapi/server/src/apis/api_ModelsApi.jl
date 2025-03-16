@@ -368,6 +368,35 @@ function run_inference_invoke(impl; post_invoke=nothing)
     end
 end
 
+function run_learning_read(handler)
+    function run_learning_read_handler(req::HTTP.Request)
+        openapi_params = Dict{String,Any}()
+        path_params = HTTP.getparams(req)
+        openapi_params["model_id"] = OpenAPI.Servers.to_param(String, path_params, "model_id", required=true, )
+        openapi_params["LearnRequest"] = OpenAPI.Servers.to_param_type(LearnRequest, String(req.body))
+        req.context[:openapi_params] = openapi_params
+
+        return handler(req)
+    end
+end
+
+function run_learning_validate(handler)
+    function run_learning_validate_handler(req::HTTP.Request)
+        openapi_params = req.context[:openapi_params]
+        
+        return handler(req)
+    end
+end
+
+function run_learning_invoke(impl; post_invoke=nothing)
+    function run_learning_invoke_handler(req::HTTP.Request)
+        openapi_params = req.context[:openapi_params]
+        ret = impl.run_learning(req::HTTP.Request, openapi_params["model_id"], openapi_params["LearnRequest"];)
+        resp = OpenAPI.Servers.server_response(ret)
+        return (post_invoke === nothing) ? resp : post_invoke(req, resp)
+    end
+end
+
 function wipe_episode_read(handler)
     function wipe_episode_read_handler(req::HTTP.Request)
         openapi_params = Dict{String,Any}()
@@ -412,6 +441,7 @@ function registerModelsApi(router::HTTP.Router, impl; path_prefix::String="", op
     HTTP.register!(router, "GET", path_prefix * "/models/{model_id}/state", OpenAPI.Servers.middleware(impl, get_model_state_read, get_model_state_validate, get_model_state_invoke; optional_middlewares...))
     HTTP.register!(router, "GET", path_prefix * "/models", OpenAPI.Servers.middleware(impl, get_models_read, get_models_validate, get_models_invoke; optional_middlewares...))
     HTTP.register!(router, "POST", path_prefix * "/models/{model_id}/infer", OpenAPI.Servers.middleware(impl, run_inference_read, run_inference_validate, run_inference_invoke; optional_middlewares...))
+    HTTP.register!(router, "POST", path_prefix * "/models/{model_id}/learn", OpenAPI.Servers.middleware(impl, run_learning_read, run_learning_validate, run_learning_invoke; optional_middlewares...))
     HTTP.register!(router, "POST", path_prefix * "/models/{model_id}/episodes/{episode_name}/wipe", OpenAPI.Servers.middleware(impl, wipe_episode_read, wipe_episode_validate, wipe_episode_invoke; optional_middlewares...))
     return router
 end

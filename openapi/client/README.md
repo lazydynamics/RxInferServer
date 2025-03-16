@@ -36,6 +36,7 @@ Class | Method
 *ModelsApi* | [**get_model_state**](docs/ModelsApi.md#get_model_state)<br/>**GET** /models/{model_id}/state<br/>Get the state of a model
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models)<br/>**GET** /models<br/>Get models
 *ModelsApi* | [**run_inference**](docs/ModelsApi.md#run_inference)<br/>**POST** /models/{model_id}/infer<br/>Run inference on a model
+*ModelsApi* | [**run_learning**](docs/ModelsApi.md#run_learning)<br/>**POST** /models/{model_id}/learn<br/>Learn from previous observations
 *ModelsApi* | [**wipe_episode**](docs/ModelsApi.md#wipe_episode)<br/>**POST** /models/{model_id}/episodes/{episode_name}/wipe<br/>Wipe all events from an episode
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info)<br/>**GET** /info<br/>Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server)<br/>**GET** /ping<br/>Health check endpoint
@@ -52,6 +53,8 @@ Class | Method
  - [ErrorResponse](docs/ErrorResponse.md)
  - [InferRequest](docs/InferRequest.md)
  - [InferResponse](docs/InferResponse.md)
+ - [LearnRequest](docs/LearnRequest.md)
+ - [LearnResponse](docs/LearnResponse.md)
  - [LightweightModelDetails](docs/LightweightModelDetails.md)
  - [ModelDetails](docs/ModelDetails.md)
  - [ModelList](docs/ModelList.md)

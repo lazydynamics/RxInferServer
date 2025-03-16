@@ -272,7 +272,7 @@ function run_inference(req::HTTP.Request, model_id::String, infer_request::RxInf
             model_state = model["state"]
 
             inference_result, new_state = Models.dispatch(
-                dispatcher, model_name, :inference, model_state, infer_request.data
+                dispatcher, model_name, :run_inference, model_state, infer_request.data
             )
 
             # Update the model's state
@@ -320,6 +320,72 @@ function run_inference(req::HTTP.Request, model_id::String, infer_request::RxInf
     end
 
     return RxInferServerOpenAPI.InferResponse(event_id = event_id, results = inference_task_result, errors = errors)
+end
+
+function run_learning(req::HTTP.Request, model_id::String, learn_request::RxInferServerOpenAPI.LearnRequest)
+    @debug "Attempting to run learning" model_id
+    token = current_token()
+
+    # Query the database for the model
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    model = Mongoc.find_one(collection, query)
+
+    if isnothing(model)
+        @debug "Cannot run learning because the model does not exist or token has no access to it" model_id
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
+        )
+    end
+
+    episodes = @something(learn_request.episodes, ["default"])
+
+    # TODO: Only one episode is supported for now
+    if length(episodes) != 1
+        @debug "Cannot run learning because only one episode is supported for now" model_id
+        return RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request", message = "Learning is supported only for one episode at a time"
+        )
+    end
+
+    # Query the database for the episode
+    collection = Database.collection("episodes")
+    query = Mongoc.BSON("model_id" => model_id, "name" => episodes[1], "deleted" => false)
+    episode = Mongoc.find_one(collection, query)
+
+    if isnothing(episode)
+        @debug "Cannot run learning because the episode does not exist" model_id episodes[1]
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested episode could not be found"
+        )
+    end
+
+    dispatcher = Models.get_models_dispatcher()
+    
+    model_name = model["model_name"]
+    model_state = model["state"]
+    episode_events = episode["events"]
+
+    learning_result, new_state = Models.dispatch(
+        dispatcher, model_name, :run_learning, model_state, learn_request.parameters, episode_events
+    )
+    @debug "Successfully ran learning" model_id
+
+    # Update the model's state
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id)
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("state" => new_state))
+    result = Mongoc.update_one(collection, query, update)
+
+    if result["matchedCount"] != 1
+        @debug "Unable to update model's state due to internal error" model_id
+        return RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request", message = "Unable to update model's state due to internal error"
+        )
+    end
+
+    @debug "Successfully updated model's state" model_id
+    return RxInferServerOpenAPI.LearnResponse(learned_parameters = learning_result)
 end
 
 function attach_metadata_to_event(

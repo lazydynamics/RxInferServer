@@ -377,6 +377,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
+  /models/{model_id}/learn:
+    post:
+      tags:
+        - Models
+      summary: Learn from previous observations
+      operationId: runLearning
+      description: Learn from previous episodes for a specific model
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LearnRequest'
+      responses:
+        '200':
+          description: Successfully ran learning on the model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearnResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'                
   /models/{model_id}/episodes:
     get:
       tags:
@@ -908,6 +947,33 @@ components:
           description: List of errors that occurred during the inference call, but were not fatal and the inference was still completed successfully
           items:
             $ref: '#/components/schemas/ErrorResponse'
+    LearnRequest:
+      type: object
+      required:
+        - episodes
+      properties:
+        episodes:
+          type: array
+          description: List of episodes to learn from
+          default: ["default"]
+          items:
+            type: string
+            description: Name of the episode to learn from
+        parameters:
+          type: array
+          description: Which parameters to learn from the episodes, if not specified, all parameters will be learned
+          items:
+            type: string
+            description: Name of the parameter to learn from
+    LearnResponse:
+      type: object
+      required:
+        - learned_parameters
+      properties:
+        learned_parameters:
+          type: object
+          description: A dictionary of learned parameters and their values
+          additionalProperties: true
     EpisodeInfo:
       type: object
       required:

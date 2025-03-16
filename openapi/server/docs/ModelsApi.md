@@ -17,6 +17,7 @@ Method | HTTP request | Description
 [**get_model_state**](ModelsApi.md#get_model_state) | **GET** /models/{model_id}/state | Get the state of a model
 [**get_models**](ModelsApi.md#get_models) | **GET** /models | Get models
 [**run_inference**](ModelsApi.md#run_inference) | **POST** /models/{model_id}/infer | Run inference on a model
+[**run_learning**](ModelsApi.md#run_learning) | **POST** /models/{model_id}/learn | Learn from previous observations
 [**wipe_episode**](ModelsApi.md#wipe_episode) | **POST** /models/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode
 
 
@@ -384,6 +385,36 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**InferResponse**](InferResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **run_learning**
+> run_learning(req::HTTP.Request, model_id::String, learn_request::LearnRequest;) -> LearnResponse
+
+Learn from previous observations
+
+Learn from previous episodes for a specific model
+
+### Required Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **req** | **HTTP.Request** | The HTTP Request object | 
+**model_id** | **String**|  |
+**learn_request** | [**LearnRequest**](LearnRequest.md)|  |
+
+### Return type
+
+[**LearnResponse**](LearnResponse.md)
 
 ### Authorization
 

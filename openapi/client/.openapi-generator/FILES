@@ -9,6 +9,8 @@ docs/EpisodeInfo.md
 docs/ErrorResponse.md
 docs/InferRequest.md
 docs/InferResponse.md
+docs/LearnRequest.md
+docs/LearnResponse.md
 docs/LightweightModelDetails.md
 docs/ModelDetails.md
 docs/ModelList.md
@@ -35,6 +37,8 @@ src/models/model_EpisodeInfo.jl
 src/models/model_ErrorResponse.jl
 src/models/model_InferRequest.jl
 src/models/model_InferResponse.jl
+src/models/model_LearnRequest.jl
+src/models/model_LearnResponse.jl
 src/models/model_LightweightModelDetails.jl
 src/models/model_ModelDetails.jl
 src/models/model_ModelList.jl

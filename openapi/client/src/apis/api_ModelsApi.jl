@@ -447,6 +447,40 @@ function run_inference(_api::ModelsApi, response_stream::Channel, model_id::Stri
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_run_learning_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => LearnResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_run_learning(_api::ModelsApi, model_id::String, learn_request::LearnRequest; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_run_learning_ModelsApi, "/models/{model_id}/learn", ["ApiKeyAuth", ], learn_request)
+    OpenAPI.Clients.set_param(_ctx.path, "model_id", model_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? ["application/json", ] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Learn from previous observations
+
+Learn from previous episodes for a specific model
+
+Params:
+- model_id::String (required)
+- learn_request::LearnRequest (required)
+
+Return: LearnResponse, OpenAPI.Clients.ApiResponse
+"""
+function run_learning(_api::ModelsApi, model_id::String, learn_request::LearnRequest; _mediaType=nothing)
+    _ctx = _oacinternal_run_learning(_api, model_id, learn_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function run_learning(_api::ModelsApi, response_stream::Channel, model_id::String, learn_request::LearnRequest; _mediaType=nothing)
+    _ctx = _oacinternal_run_learning(_api, model_id, learn_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_wipe_episode_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => SuccessResponse,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
@@ -495,4 +529,5 @@ export get_model_info
 export get_model_state
 export get_models
 export run_inference
+export run_learning
 export wipe_episode

@@ -49,6 +49,9 @@ The following server methods must be implemented:
 - **run_inference**
     - *invocation:* POST /models/{model_id}/infer
     - *signature:* run_inference(req::HTTP.Request, model_id::String, infer_request::InferRequest;) -> InferResponse
+- **run_learning**
+    - *invocation:* POST /models/{model_id}/learn
+    - *signature:* run_learning(req::HTTP.Request, model_id::String, learn_request::LearnRequest;) -> LearnResponse
 - **wipe_episode**
     - *invocation:* POST /models/{model_id}/episodes/{episode_name}/wipe
     - *signature:* wipe_episode(req::HTTP.Request, model_id::String, episode_name::String;) -> SuccessResponse

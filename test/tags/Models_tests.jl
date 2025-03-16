@@ -1029,3 +1029,58 @@ end
         @test response.message == "The requested model could not be found"
     end
 end
+
+@testitem "It should be possible to learn from previous observations" setup = [TestUtils] begin
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+        model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+    )
+
+    model, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    @test info.status == 200
+    @test !isnothing(model)
+
+    for i in 1:10
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => 1))
+        iter_inference, iter_info = TestUtils.RxInferClientOpenAPI.run_inference(
+            models_api, model.model_id, inference_request
+        )
+        @test iter_info.status == 200
+        @test !isnothing(iter_inference)
+    end
+
+    learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest()
+    learning_response, info = TestUtils.RxInferClientOpenAPI.run_learning(models_api, model.model_id, learning_request)
+    @test info.status == 200
+    @test !isnothing(learning_response)
+
+    @test learning_response.learned_parameters["posterior_a"] == 11
+    @test learning_response.learned_parameters["posterior_b"] == 1
+
+    # Check that the model state has been updated
+    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_state(models_api, model.model_id)
+    @test info.status == 200
+    @test !isnothing(model_state)
+    @test model_state.state["posterior_a"] == 11
+    @test model_state.state["posterior_b"] == 1
+
+    for i in 1:10
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => 0))
+        iter_inference, iter_info = TestUtils.RxInferClientOpenAPI.run_inference(
+            models_api, model.model_id, inference_request
+        )
+        @test iter_info.status == 200
+        @test !isnothing(iter_inference)
+    end
+
+    learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest()
+    learning_response, info = TestUtils.RxInferClientOpenAPI.run_learning(models_api, model.model_id, learning_request)
+    @test info.status == 200
+    @test !isnothing(learning_response)
+
+    @test learning_response.learned_parameters["posterior_a"] == 11
+    @test learning_response.learned_parameters["posterior_b"] == 11
+
+end

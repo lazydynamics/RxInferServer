@@ -4,7 +4,9 @@ All URIs are relative to *http://localhost:8000/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**create_episode**](ModelsApi.md#create_episode) | **POST** /models/{model_id}/episodes/{episode_name}/create | Create a new episode for a model
 [**create_model**](ModelsApi.md#create_model) | **POST** /models/create | Create a new model instance
+[**delete_episode**](ModelsApi.md#delete_episode) | **DELETE** /models/{model_id}/episodes/{episode_name}/delete | Delete an episode for a model
 [**delete_model**](ModelsApi.md#delete_model) | **DELETE** /models/{model_id}/delete | Delete a model instance
 [**get_created_models_info**](ModelsApi.md#get_created_models_info) | **GET** /models/created/info | Get information about all created models for a specific token
 [**get_episode_info**](ModelsApi.md#get_episode_info) | **GET** /models/{model_id}/episodes/{episode_name} | Get episode information
@@ -12,7 +14,39 @@ Method | HTTP request | Description
 [**get_model_details**](ModelsApi.md#get_model_details) | **GET** /models/{model_name}/details | Get model details
 [**get_model_info**](ModelsApi.md#get_model_info) | **GET** /models/{model_id}/info | Get model information
 [**get_models**](ModelsApi.md#get_models) | **GET** /models | Get models
+[**wipe_episode**](ModelsApi.md#wipe_episode) | **POST** /models/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode
 
+
+# **create_episode**
+> create_episode(_api::ModelsApi, model_id::String, episode_name::String; _mediaType=nothing) -> EpisodeInfo, OpenAPI.Clients.ApiResponse <br/>
+> create_episode(_api::ModelsApi, response_stream::Channel, model_id::String, episode_name::String; _mediaType=nothing) -> Channel{ EpisodeInfo }, OpenAPI.Clients.ApiResponse
+
+Create a new episode for a model
+
+Create a new episode for a specific model, note that the default episode cannot be created, but you can wipe data from it. When created, the new episode becomes the current episode for the model.
+
+### Required Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **_api** | **ModelsApi** | API context | 
+**model_id** | **String** | ID of the model to create episode for |
+**episode_name** | **String** | Name of the episode to create |
+
+### Return type
+
+[**EpisodeInfo**](EpisodeInfo.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 # **create_model**
 > create_model(_api::ModelsApi, create_model_request::CreateModelRequest; _mediaType=nothing) -> CreateModelResponse, OpenAPI.Clients.ApiResponse <br/>
@@ -40,6 +74,37 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+# **delete_episode**
+> delete_episode(_api::ModelsApi, model_id::String, episode_name::String; _mediaType=nothing) -> SuccessResponse, OpenAPI.Clients.ApiResponse <br/>
+> delete_episode(_api::ModelsApi, response_stream::Channel, model_id::String, episode_name::String; _mediaType=nothing) -> Channel{ SuccessResponse }, OpenAPI.Clients.ApiResponse
+
+Delete an episode for a model
+
+Delete a specific episode for a model, note that the default episode cannot be deleted, but you can wipe data from it. If the deleted episode was the current episode, the default episode will become the current episode.
+
+### Required Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **_api** | **ModelsApi** | API context | 
+**model_id** | **String** | ID of the model to delete episode for |
+**episode_name** | **String** | Name of the episode to delete |
+
+### Return type
+
+[**SuccessResponse**](SuccessResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
@@ -235,6 +300,37 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**ModelList**](ModelList.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+# **wipe_episode**
+> wipe_episode(_api::ModelsApi, model_id::String, episode_name::String; _mediaType=nothing) -> SuccessResponse, OpenAPI.Clients.ApiResponse <br/>
+> wipe_episode(_api::ModelsApi, response_stream::Channel, model_id::String, episode_name::String; _mediaType=nothing) -> Channel{ SuccessResponse }, OpenAPI.Clients.ApiResponse
+
+Wipe all events from an episode
+
+Wipe all events from a specific episode for a model
+
+### Required Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **_api** | **ModelsApi** | API context | 
+**model_id** | **String** | ID of the model to wipe episode for |
+**episode_name** | **String** | Name of the episode to wipe |
+
+### Return type
+
+[**SuccessResponse**](SuccessResponse.md)
 
 ### Authorization
 

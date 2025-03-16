@@ -379,6 +379,145 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
+  /models/{model_id}/episodes/{episode_name}/create:
+    post:
+      tags:
+        - Models
+      summary: Create a new episode for a model
+      operationId: createEpisode
+      description: Create a new episode for a specific model, note that the default episode cannot be created, but you can wipe data from it. When created, the new episode becomes the current episode for the model.
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to create episode for
+        - name: episode_name
+          in: path
+          required: true
+          schema:
+            type: string  
+          description: Name of the episode to create
+      responses:
+        '200':
+          description: Successfully created episode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpisodeInfo'
+        '400':
+          description: Episode cannot be created, e.g. it already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Bad Request"
+                message: "The requested episode already exists"
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'  
+  /models/{model_id}/episodes/{episode_name}/delete:
+    delete:
+      tags:
+        - Models
+      summary: Delete an episode for a model
+      operationId: deleteEpisode
+      description: Delete a specific episode for a model, note that the default episode cannot be deleted, but you can wipe data from it. If the deleted episode was the current episode, the default episode will become the current episode.
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to delete episode for
+        - name: episode_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the episode to delete
+      responses:
+        '200':
+          description: Successfully deleted episode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Episode cannot be deleted, e.g. it is the default episode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Bad Request"
+                message: "Default episode cannot be deleted, wipe data instead"
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model or episode not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+
+  /models/{model_id}/episodes/{episode_name}/wipe:
+    post:
+      tags:
+        - Models
+      summary: Wipe all events from an episode
+      operationId: wipeEpisode
+      description: Wipe all events from a specific episode for a model
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to wipe episode for
+        - name: episode_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the episode to wipe
+      responses:
+        '200':
+          description: Successfully wiped episode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model or episode not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'    
 components:
   securitySchemes:
     ApiKeyAuth:

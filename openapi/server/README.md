@@ -44,7 +44,9 @@ The following server methods must be implemented:
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token) | **POST** /generate-token | Generate authentication token
+*ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode) | **POST** /models/{model_id}/episodes/{episode_name}/create | Create a new episode for a model
 *ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model) | **POST** /models/create | Create a new model instance
+*ModelsApi* | [**delete_episode**](docs/ModelsApi.md#delete_episode) | **DELETE** /models/{model_id}/episodes/{episode_name}/delete | Delete an episode for a model
 *ModelsApi* | [**delete_model**](docs/ModelsApi.md#delete_model) | **DELETE** /models/{model_id}/delete | Delete a model instance
 *ModelsApi* | [**get_created_models_info**](docs/ModelsApi.md#get_created_models_info) | **GET** /models/created/info | Get information about all created models for a specific token
 *ModelsApi* | [**get_episode_info**](docs/ModelsApi.md#get_episode_info) | **GET** /models/{model_id}/episodes/{episode_name} | Get episode information
@@ -52,6 +54,7 @@ Class | Method | HTTP request | Description
 *ModelsApi* | [**get_model_details**](docs/ModelsApi.md#get_model_details) | **GET** /models/{model_name}/details | Get model details
 *ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info) | **GET** /models/{model_id}/info | Get model information
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models) | **GET** /models | Get models
+*ModelsApi* | [**wipe_episode**](docs/ModelsApi.md#wipe_episode) | **POST** /models/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info) | **GET** /info | Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server) | **GET** /ping | Health check endpoint
 

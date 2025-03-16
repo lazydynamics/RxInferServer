@@ -397,7 +397,7 @@ end
     @test !isnothing(response)
     @test response.name == "default"
     @test response.created_at < TimeZones.now(TimeZones.localzone())
-    @test response.created_at == mcat
+    @test response.created_at >= mcat
     @test response.model_id == model_id
     @test response.events == [] # no events yet
 
@@ -430,4 +430,139 @@ end
     # List of episodes should not be available anymore 
     response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, model_id)
     @test info.status == 404
+end
+
+@testitem "Episodes can be created, deleted and wiped" setup = [TestUtils] begin
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+        model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+    )
+
+    response, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    
+    @test info.status == 200
+    @test !isnothing(response)
+    
+
+    model_id = response.model_id
+
+    response, info = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, model_id)
+    @test info.status == 200
+    @test !isnothing(response)
+    @test response.current_episode == "default"
+
+    model_created_at = response.created_at
+
+    @testset "Check that the current episode is the default episode" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.current_episode == "default"
+    end
+
+    @testset "Create a new episode and check that it is the current episode" begin
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model_id, "new_episode")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.name == "new_episode"
+        @test response.created_at > model_created_at
+        @test response.model_id == model_id
+        @test response.events == [] # no events yet
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.current_episode == "new_episode"
+    end
+
+    @testset "Check that another episode with the same name cannot be created" begin
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model_id, "new_episode")
+        @test info.status == 400
+        @test response.error == "Bad Request"
+        @test response.message == "The requested episode already exists"
+    end
+
+    @testset "Retrieve the list of episodes and check that the new episode is present" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test any(e -> e.name == "new_episode", response)
+        @test any(e -> e.name == "default", response)
+    end
+    
+    @testset "Check that the default episode cannot be deleted" begin 
+        response, info = TestUtils.RxInferClientOpenAPI.delete_episode(models_api, model_id, "default")
+        @test info.status == 400
+        @test response.error == "Bad Request"
+        @test response.message == "Default episode cannot be deleted, wipe data instead"
+    end
+
+    @testset "Create yet another episode and check that it is the current episode" begin
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model_id, "yet_another_episode")
+        @test info.status == 200
+        @test !isnothing(response)
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.current_episode == "yet_another_episode"
+    end
+
+    @testset "Check that the new episode can be deleted, however since it is NOT the current episode, model state is not affected" begin
+        response, info = TestUtils.RxInferClientOpenAPI.delete_episode(models_api, model_id, "new_episode")
+        @test info.status == 200
+        @test response.message == "Episode deleted successfully"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.current_episode == "yet_another_episode"
+    end
+
+    @testset "Retrieve the list of episodes and check that the new episode is not present" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test !any(e -> e.name == "new_episode", response)
+    end
+
+    @testset "Delete the yet another episode and check that the default episode becomes the current episode" begin
+        response, info = TestUtils.RxInferClientOpenAPI.delete_episode(models_api, model_id, "yet_another_episode")
+        @test info.status == 200
+        @test response.message == "Episode deleted successfully"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.current_episode == "default"
+    end
+
+    @testset "Retrieve the list of episodes and check that only the default episode is present" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test any(e -> e.name == "default", response)
+        @test !any(e -> e.name == "yet_another_episode", response)
+        @test !any(e -> e.name == "new_episode", response)
+        @test length(response) == 1
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.current_episode == "default"
+    end
+
+    @testset "Wipe the default episode and check that it is empty" begin
+        response, info = TestUtils.RxInferClientOpenAPI.wipe_episode(models_api, model_id, "default")
+        @test info.status == 200
+        @test response.message == "Episode wiped successfully"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_id, "default")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.events == []
+    end
+
 end

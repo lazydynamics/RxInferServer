@@ -1082,5 +1082,4 @@ end
 
     @test learning_response.learned_parameters["posterior_a"] == 11
     @test learning_response.learned_parameters["posterior_b"] == 11
-
 end

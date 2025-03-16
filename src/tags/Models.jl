@@ -361,7 +361,7 @@ function run_learning(req::HTTP.Request, model_id::String, learn_request::RxInfe
     end
 
     dispatcher = Models.get_models_dispatcher()
-    
+
     model_name = model["model_name"]
     model_state = model["state"]
     episode_events = episode["events"]

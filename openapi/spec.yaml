@@ -211,7 +211,7 @@ paths:
               example:
                 error: "Not Found"
                 message: "The specified model does not exist"
-  /models/created/info:
+  /models/created:
     get:
       tags:
         - Models
@@ -295,6 +295,80 @@ paths:
           description: Access token is missing, invalid or has no access to the specific model
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+  /models/{model_id}/state:
+    get:
+      tags:
+        - Models
+      summary: Get the state of a model
+      operationId: getModelState
+      description: Retrieve the state of a specific model instance
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to retrieve state for
+      responses:
+        '200':
+          description: Successfully retrieved model state. Each model has its own state, which is a dictionary of arbitrary key-value pairs. Check model-specific documentation for more details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelState'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+  /models/{model_id}/infer:
+    post:
+      tags:
+        - Models
+      summary: Run inference on a model
+      operationId: runInference
+      description: Run inference on a specific model instance
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to run inference on
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InferRequest'
+      responses:
+        '200':
+          description: Successfully ran inference on the model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InferResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json: 
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
         '404':
@@ -724,6 +798,49 @@ components:
           type: string
           format: uuid
           description: ID of the model to delete
+    ModelState:
+      type: object
+      required:
+        - state
+      properties:
+        state:
+          type: object
+          description: Model-specific state
+          additionalProperties: true
+    InferRequest:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          description: Model-specific data to run inference on
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the inference request, used to mark the event in the episode
+          example: "2024-03-20T12:00:00Z"
+        episode_name:
+          type: string
+          description: Name of the episode to run inference on
+          default: "default"
+          example: "default"
+    InferResponse:
+      type: object
+      required:
+        - results
+        - errors
+      properties:
+        results:
+          type: object
+          description: Model-specific results of the inference
+          additionalProperties: true
+        errors:
+          type: array
+          description: List of errors that occurred during the inference call, but were not fatal and the inference was still completed successfully
+          items:
+            $ref: '#/components/schemas/ErrorResponse'
     EpisodeInfo:
       type: object
       required:

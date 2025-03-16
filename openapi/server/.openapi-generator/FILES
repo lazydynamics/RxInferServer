@@ -6,9 +6,12 @@ docs/CreatedModelInfo.md
 docs/DeleteModelRequest.md
 docs/EpisodeInfo.md
 docs/ErrorResponse.md
+docs/InferRequest.md
+docs/InferResponse.md
 docs/LightweightModelDetails.md
 docs/ModelDetails.md
 docs/ModelList.md
+docs/ModelState.md
 docs/ModelsApi.md
 docs/NotFoundResponse.md
 docs/PingResponse.md
@@ -28,9 +31,12 @@ src/models/model_CreatedModelInfo.jl
 src/models/model_DeleteModelRequest.jl
 src/models/model_EpisodeInfo.jl
 src/models/model_ErrorResponse.jl
+src/models/model_InferRequest.jl
+src/models/model_InferResponse.jl
 src/models/model_LightweightModelDetails.jl
 src/models/model_ModelDetails.jl
 src/models/model_ModelList.jl
+src/models/model_ModelState.jl
 src/models/model_NotFoundResponse.jl
 src/models/model_PingResponse.jl
 src/models/model_ServerInfo.jl

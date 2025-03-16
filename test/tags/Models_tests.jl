@@ -564,3 +564,354 @@ end
         @test response.events == []
     end
 end
+
+@testitem "Inference calls should update the model's state" setup = [TestUtils] begin
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+        model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+    )
+
+    model, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    @test info.status == 200
+    @test !isnothing(model)
+
+    @testset "Check that the model's state is empty" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_state(models_api, model.model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.state["number_of_infer_calls"] == 0
+    end
+
+    @testset "Run inference on the model" begin
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => 1))
+        inference, info = TestUtils.RxInferClientOpenAPI.run_inference(models_api, model.model_id, inference_request)
+        @test info.status == 200
+        @test !isnothing(inference)
+    end
+
+    @testset "Check that the model's state has been updated" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_state(models_api, model.model_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.state["number_of_infer_calls"] == 1
+    end
+
+    @testset "Delete the model and check that the model's state is not available anymore" begin
+        response, info = TestUtils.RxInferClientOpenAPI.delete_model(models_api, model.model_id)
+        @test info.status == 200
+        @test response.message == "Model deleted successfully"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_state(models_api, model.model_id)
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model could not be found"
+    end
+end
+
+@testitem "Inference requests should populate the episode with events" setup = [TestUtils] begin
+    using Dates
+
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+        model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+    )
+
+    model, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    @test info.status == 200
+    @test !isnothing(model)
+
+    episode, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "default")
+    @test info.status == 200
+    @test !isnothing(episode)
+    @test episode.name == "default"
+    @test episode.model_id == model.model_id
+
+    # Check that the episode is empty before running any inference tasks
+    @test episode.events == []
+
+    # By default, the "default" episode is used
+    inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => 1))
+
+    inference, info = TestUtils.RxInferClientOpenAPI.run_inference(models_api, model.model_id, inference_request)
+
+    @test info.status == 200
+    @test !isnothing(inference)
+
+    @testset "Check that the episode has one event" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "default")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 1
+        @test response.events[1]["data"] == Dict("observation" => 1)
+        @test DateTime(response.events[1]["timestamp"]) < Dates.now()
+    end
+
+    for i in 1:10
+        iter_inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => 0))
+        iter_inference, iter_info = TestUtils.RxInferClientOpenAPI.run_inference(
+            models_api, model.model_id, iter_inference_request
+        )
+        @test iter_info.status == 200
+        @test !isnothing(iter_inference)
+    end
+
+    @testset "Check that the episode has 11 events" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "default")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 11
+        @test allunique(e["timestamp"] for e in response.events)
+    end
+
+    @testset "Delete the model and check that the episode is not accessible anymore" begin
+        response, info = TestUtils.RxInferClientOpenAPI.delete_model(models_api, model.model_id)
+        @test info.status == 200
+        @test response.message == "Model deleted successfully"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "default")
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model could not be found"
+    end
+end
+
+@testitem "Inference requests should be able to specify the episode" setup = [TestUtils] begin
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+        model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+    )
+
+    model, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    @test info.status == 200
+    @test !isnothing(model)
+
+    @testset "Create episode1" begin
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model.model_id, "episode1")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.name == "episode1"
+    end
+
+    @testset "Create episode2" begin
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model.model_id, "episode2")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.name == "episode2"
+    end
+
+    @testset "Check that episode1 is empty" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "episode1")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.events == []
+    end
+
+    @testset "Check that episode2 is empty" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "episode2")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.events == []
+    end
+
+    @testset "Run inference on episode1" begin
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(
+            episode_name = "episode1", data = Dict("observation" => 1)
+        )
+
+        inference, info = TestUtils.RxInferClientOpenAPI.run_inference(models_api, model.model_id, inference_request)
+        @test info.status == 200
+        @test !isnothing(inference)
+    end
+
+    @testset "Run inference on episode2" begin
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(
+            episode_name = "episode2", data = Dict("observation" => 0)
+        )
+
+        inference, info = TestUtils.RxInferClientOpenAPI.run_inference(models_api, model.model_id, inference_request)
+        @test info.status == 200
+        @test !isnothing(inference)
+    end
+
+    @testset "Check that episode1 has one event" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "episode1")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 1
+        @test response.events[1]["data"] == Dict("observation" => 1)
+    end
+
+    @testset "Check that episode2 has one event" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "episode2")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 1
+        @test response.events[1]["data"] == Dict("observation" => 0)
+    end
+
+    @testset "Check that default episode is empty" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "default")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.events == []
+    end
+
+    @testset "Delete the model and check that the episodes are not accessible anymore" begin
+        response, info = TestUtils.RxInferClientOpenAPI.delete_model(models_api, model.model_id)
+        @test info.status == 200
+        @test response.message == "Model deleted successfully"
+
+        for episode_name in ["episode1", "episode2", "default"]
+            response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, episode_name)
+            @test info.status == 404
+            @test response.error == "Not Found"
+            @test response.message == "The requested model could not be found"
+        end
+    end
+end
+
+@testitem "It should be possible to wipe an episode" setup = [TestUtils] begin
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+        model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+    )
+
+    model, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    @test info.status == 200
+    @test !isnothing(model)
+
+    @testset "Create a new episode" begin
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model.model_id, "another_episode")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.name == "another_episode"
+    end
+
+    # Make infer calls on the default episode
+    for i in 1:10
+        inference_request_1 = TestUtils.RxInferClientOpenAPI.InferRequest(
+            episode_name = "default", data = Dict("observation" => 1)
+        )
+        inference_1, info_1 = TestUtils.RxInferClientOpenAPI.run_inference(
+            models_api, model.model_id, inference_request_1
+        )
+        @test info_1.status == 200
+    end
+
+    # Make infer calls on the another episode
+    for i in 1:10
+        inference_request_2 = TestUtils.RxInferClientOpenAPI.InferRequest(
+            episode_name = "another_episode", data = Dict("observation" => 1)
+        )
+        inference_2, info_2 = TestUtils.RxInferClientOpenAPI.run_inference(
+            models_api, model.model_id, inference_request_2
+        )
+        @test info_2.status == 200
+    end
+
+    @testset "Check that the another_episode has 10 events" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "another_episode")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 10
+    end
+
+    @testset "Wipe the default episode" begin
+        response, info = TestUtils.RxInferClientOpenAPI.wipe_episode(models_api, model.model_id, "default")
+        @test info.status == 200
+        @test response.message == "Episode wiped successfully"
+    end
+
+    @testset "The another episode should not be affected" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "another_episode")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 10
+    end
+
+    @testset "Check that the default episode is empty" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "default")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.events == []
+    end
+
+    @testset "Wipe the another episode" begin
+        response, info = TestUtils.RxInferClientOpenAPI.wipe_episode(models_api, model.model_id, "another_episode")
+        @test info.status == 200
+        @test response.message == "Episode wiped successfully"
+    end
+
+    @testset "Check that the another episode is empty" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "another_episode")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.events == []
+    end
+
+    @testset "Delete the model and check that the episodes are not accessible anymore" begin
+        response, info = TestUtils.RxInferClientOpenAPI.delete_model(models_api, model.model_id)
+        @test info.status == 200
+        @test response.message == "Model deleted successfully"
+
+        for episode_name in ["another_episode", "default"]
+            response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, episode_name)
+            @test info.status == 404
+            @test response.error == "Not Found"
+            @test response.message == "The requested model could not be found"
+        end
+    end
+end
+
+@testitem "It should be possible to specify the timestamp of the inference request manually" setup = [TestUtils] begin
+    using Dates, TimeZones
+
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+        model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+    )
+
+    model, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    @test info.status == 200
+    @test !isnothing(model)
+
+    timestamp = ZonedDateTime(Dates.now(), localzone())
+
+    @testset "Run inference with manual timestamp" begin
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(
+            data = Dict("observation" => 1), timestamp = timestamp
+        )
+
+        inference, info = TestUtils.RxInferClientOpenAPI.run_inference(models_api, model.model_id, inference_request)
+        @test info.status == 200
+        @test !isnothing(inference)
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "default")
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 1
+        @test response.events[1]["data"] == Dict("observation" => 1)
+        @test ZonedDateTime(DateTime(response.events[1]["timestamp"]), localzone()) == timestamp
+    end
+
+    @testset "Delete the model and check that the episode is not accessible anymore" begin
+        response, info = TestUtils.RxInferClientOpenAPI.delete_model(models_api, model.model_id)
+        @test info.status == 200
+        @test response.message == "Model deleted successfully"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model.model_id, "default")
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model could not be found"
+    end
+end

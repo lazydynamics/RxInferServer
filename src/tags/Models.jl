@@ -185,6 +185,128 @@ function delete_model(req::HTTP.Request, model_id::String)
     return RxInferServerOpenAPI.SuccessResponse(message = "Model deleted successfully")
 end
 
+function get_model_state(req::HTTP.Request, model_id::String)
+    @debug "Attempting to get model state" model_id
+    token = current_token()
+
+    # Query the database for the model
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    result = Mongoc.find_one(collection, query)
+
+    if isnothing(result)
+        @debug "Cannot get model state because the model does not exist or token has no access to it" model_id
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
+        )
+    end
+
+    @debug "Successfully got model state" model_id
+    return RxInferServerOpenAPI.ModelState(state = result["state"])
+end
+
+function run_inference(req::HTTP.Request, model_id::String, infer_request::RxInferServerOpenAPI.InferRequest)
+    @debug "Attempting to run inference" model_id
+    token = current_token()
+
+    # Query the database for the model
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    model = Mongoc.find_one(collection, query)
+
+    if isnothing(model)
+        @debug "Cannot run inference because the model does not exist or token has no access to it" model_id
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
+        )
+    end
+
+    # Asynchronously attach data to the specified episode
+    @debug "Attaching data to the episode" model_id infer_request.episode_name
+    fill_episode_task = Threads.@spawn begin
+        # Query the database for the episode
+        collection = Database.collection("episodes")
+        query = Mongoc.BSON("model_id" => model_id, "name" => infer_request.episode_name, "deleted" => false)
+        update = Mongoc.BSON(
+            "\$push" => Mongoc.BSON(
+                "events" => Dict(
+                    "data" => infer_request.data,
+                    "timestamp" => DateTime(something(infer_request.timestamp, Dates.now())) # OpenAPI eh?
+                )
+            )
+        )
+        result = Mongoc.update_one(collection, query, update)
+
+        if result["matchedCount"] != 1
+            @debug "Unable to attach data to the episode due to internal error" model_id infer_request.episode_name
+            return RxInferServerOpenAPI.ErrorResponse(
+                error = "Bad Request", message = "Unable to attach data to the episode due to internal error"
+            )
+        end
+
+        @debug "Successfully attached data to the episode" model_id infer_request.episode_name
+        return RxInferServerOpenAPI.SuccessResponse(message = "Data attached to the episode successfully")
+    end
+
+    # Asynchronously run the inference
+    @debug "Running inference" model_id
+    inference_task = Threads.@spawn begin
+        # Get the model's dispatcher
+        dispatcher = Models.get_models_dispatcher()
+
+        # Run the inference
+        try
+            model_name = model["model_name"]
+            model_state = model["state"]
+
+            inference_result, new_state = Models.dispatch(
+                dispatcher, model_name, :inference, model_state, infer_request.data
+            )
+
+            # Update the model's state
+            collection = Database.collection("models")
+            query = Mongoc.BSON("model_id" => model_id)
+            update = Mongoc.BSON("\$set" => Mongoc.BSON("state" => new_state))
+            result = Mongoc.update_one(collection, query, update)
+
+            if result["matchedCount"] != 1
+                @debug "Unable to update model's state due to internal error" model_id
+                return RxInferServerOpenAPI.ErrorResponse(
+                    error = "Bad Request", message = "Unable to update model's state due to internal error"
+                )
+            end
+
+            @debug "Successfully updated model's state" model_id
+            return inference_result
+        catch e
+            @error "Unable to run inference due to internal error. Check debug logs for more information." model_id
+            @debug "Unable to run inference due to internal error." exception = (e, catch_backtrace())
+            return RxInferServerOpenAPI.ErrorResponse(
+                error = "Bad Request", message = "Unable to run inference due to internal error"
+            )
+        end
+    end
+
+    # Wait for the episode to be filled and the inference to be run
+    inference_task_result = fetch(inference_task)
+
+    if isa(inference_task_result, RxInferServerOpenAPI.ErrorResponse)
+        return inference_task_result
+    end
+
+    # Inference completed successfully, but there might be non-fatal errors
+    # for example, the episode might not be filled successfully, which is sad, but not a big deal
+    errors = []
+
+    fill_episode_task_result = fetch(fill_episode_task)
+
+    if isa(fill_episode_task_result, RxInferServerOpenAPI.ErrorResponse)
+        push!(errors, fill_episode_task_result)
+    end
+
+    return RxInferServerOpenAPI.InferResponse(results = inference_task_result, errors = errors)
+end
+
 function get_episode_info(req::HTTP.Request, model_id::String, episode_name::String)
     @debug "Attempting to get episode info" model_id episode_name
     token = current_token()

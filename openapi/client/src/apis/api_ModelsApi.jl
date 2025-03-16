@@ -154,7 +154,7 @@ const _returntypes_get_created_models_info_ModelsApi = Dict{Regex,Type}(
 )
 
 function _oacinternal_get_created_models_info(_api::ModelsApi; _mediaType=nothing)
-    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_created_models_info_ModelsApi, "/models/created/info", ["ApiKeyAuth", ])
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_created_models_info_ModelsApi, "/models/created", ["ApiKeyAuth", ])
     OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
     OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
     return _ctx
@@ -312,6 +312,39 @@ function get_model_info(_api::ModelsApi, response_stream::Channel, model_id::Str
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_get_model_state_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => ModelState,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_get_model_state(_api::ModelsApi, model_id::String; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_model_state_ModelsApi, "/models/{model_id}/state", ["ApiKeyAuth", ])
+    OpenAPI.Clients.set_param(_ctx.path, "model_id", model_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Get the state of a model
+
+Retrieve the state of a specific model instance
+
+Params:
+- model_id::String (required)
+
+Return: ModelState, OpenAPI.Clients.ApiResponse
+"""
+function get_model_state(_api::ModelsApi, model_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_state(_api, model_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function get_model_state(_api::ModelsApi, response_stream::Channel, model_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_state(_api, model_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_get_models_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => ModelList,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
@@ -339,6 +372,40 @@ end
 
 function get_models(_api::ModelsApi, response_stream::Channel; _mediaType=nothing)
     _ctx = _oacinternal_get_models(_api; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
+const _returntypes_run_inference_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => InferResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_run_inference(_api::ModelsApi, model_id::String, infer_request::InferRequest; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_run_inference_ModelsApi, "/models/{model_id}/infer", ["ApiKeyAuth", ], infer_request)
+    OpenAPI.Clients.set_param(_ctx.path, "model_id", model_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? ["application/json", ] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Run inference on a model
+
+Run inference on a specific model instance
+
+Params:
+- model_id::String (required)
+- infer_request::InferRequest (required)
+
+Return: InferResponse, OpenAPI.Clients.ApiResponse
+"""
+function run_inference(_api::ModelsApi, model_id::String, infer_request::InferRequest; _mediaType=nothing)
+    _ctx = _oacinternal_run_inference(_api, model_id, infer_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function run_inference(_api::ModelsApi, response_stream::Channel, model_id::String, infer_request::InferRequest; _mediaType=nothing)
+    _ctx = _oacinternal_run_inference(_api, model_id, infer_request; _mediaType=_mediaType)
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
@@ -386,5 +453,7 @@ export get_episode_info
 export get_episodes
 export get_model_details
 export get_model_info
+export get_model_state
 export get_models
+export run_inference
 export wipe_episode

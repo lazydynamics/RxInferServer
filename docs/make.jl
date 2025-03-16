@@ -4,61 +4,55 @@ using DocumenterMermaid
 
 DocMeta.setdocmeta!(RxInferServer, :DocTestSetup, :(using RxInferServer); recursive = true)
 
-"""
-    parse_openapi_methods()
+function snake_case(camelstring; joinwith = "_")
+    wordpat = r"
+    ^[a-z]+ |                  #match initial lower case part
+    [A-Z][a-z]+ |              #match Words Like This
+    \d*([A-Z](?=[A-Z]|$))+ |   #match ABBREV 30MW 
+    \d+                        #match 1234 (numbers without units)
+    "x
 
-Parses the openapi/server/src/RxInferServerOpenAPI.jl file to extract API method names
-from its documentation header. Returns an array of method names and a list of docfixes.
+    smartlower(word) = any(islowercase, word) ? lowercase(word) : word
+    words = [smartlower(m.match) for m in eachmatch(wordpat, camelstring)]
 
-The docfixes are used to fix weird italic formatting in the generated OpenAPI docs.
-"""
-function parse_openapi_methods()
-    openapi_file = joinpath(@__DIR__, "..", "openapi", "server", "src", "RxInferServerOpenAPI.jl")
-
-    # Check if the file exists
-    if !isfile(openapi_file)
-        @warn "OpenAPI file not found: $openapi_file"
-        return String[]
-    end
-
-    # Read the file content
-    content = read(openapi_file, String)
-
-    # Find the documentation block
-    doc_start = findfirst(r"@doc\s+raw\"\"\"", content)
-    if doc_start === nothing
-        @warn "Documentation block not found in OpenAPI file"
-        return String[], Pair[]
-    end
-
-    # Find the module declaration (end of doc block)
-    module_start = findfirst("module RxInferServerOpenAPI", content)
-    if module_start === nothing
-        @warn "Module declaration not found in OpenAPI file"
-        return String[], Pair[]
-    end
-
-    # Extract the documentation block
-    doc_block = content[(doc_start.stop):(module_start.start - 1)]
-
-    # Extract method names using regex
-    # Pattern: - **method_name**
-    method_matches = eachmatch(r"-\s+\*\*([a-zA-Z0-9_]+)\*\*", doc_block)
-
-    # Collect method names
-    methods = String[]
-    docfixes = Pair[]
-    for m in method_matches
-        push!(methods, m.captures[1])
-        push!(docfixes, m.captures[1] => "`" * m.captures[1] * "`")
-    end
-
-    return methods, docfixes
+    join(words, joinwith)
 end
 
-# Get API methods
-api_methods, docfixes = parse_openapi_methods()
-@info "Detected OpenAPI methods:\n" * join(["  • " * method for method in api_methods], "\n")
+"""
+    get_operation_ids()
+
+Extracts all operationIds from the OpenAPI spec.yaml file and returns them as an array.
+"""
+function get_operation_ids()
+    # Path to the spec.yaml file
+    spec_path = joinpath(@__DIR__, "..", "openapi", "spec.yaml")
+
+    # Read the file content
+    content = read(spec_path, String)
+
+    # Regular expression to find operationId fields
+    operation_id_pattern = r"operationId:\s*([a-zA-Z0-9]+)"
+
+    # Find all matches
+    matches = collect(eachmatch(operation_id_pattern, content))
+
+    # Extract the operationId values
+    operation_ids = [match.captures[1] for match in matches]
+
+    # Prepare docfixes, joinwith is used to escape underscores in the operation IDs within the markdown files
+    docfixes = [ id => snake_case(id; joinwith = "\\_") for id in operation_ids]
+
+    # I don't know why these are being auto-generated but they do not exist
+    push!(docfixes, "[**Map**](AnyType.md)" => "**Map**")
+    push!(docfixes, "[**List**](map.md)" => "**List**")
+
+    return operation_ids, docfixes
+end
+
+# Get Operation IDs
+operation_ids, docfixes = get_operation_ids()
+
+@info "Detected OpenAPI operation IDs:\n" * join(["  • " * snake_case(id) for id in operation_ids], "\n")
 
 """
     copy_openapi_docs()
@@ -81,8 +75,21 @@ function copy_openapi_docs()
 
     """
 
-    # Get a list of all markdown files in the OpenAPI docs
-    openapi_files = filter(file -> endswith(file, ".md"), readdir(openapi_source_dir))
+    # Function to recursively find all markdown files
+    function find_markdown_files(dir)
+        files = []
+        for entry in readdir(dir; join=true)
+            if isfile(entry) && endswith(entry, ".md")
+                push!(files, relpath(entry, openapi_source_dir))
+            elseif isdir(entry) && !endswith(entry, ".openapi-generator")
+                append!(files, find_markdown_files(entry))
+            end
+        end
+        return files
+    end
+
+    # Get a list of all markdown files in the OpenAPI docs recursively
+    openapi_files = find_markdown_files(openapi_source_dir)
 
     # Copy README.md file as well
     readme_source = joinpath(@__DIR__, "..", "openapi", "server", "README.md")
@@ -90,8 +97,8 @@ function copy_openapi_docs()
     if isfile(readme_source)
         readme_content = read(readme_source, String)
 
-        # Fix the relative links in README file (e.g., docs/ServerInfo.md -> ServerInfo.md)
-        readme_content = replace(readme_content, r"docs/([A-Za-z0-9_]+\.md)" => s"\1", docfixes...)
+        # Apply docfixes
+        readme_content = replace(readme_content, docfixes...)
 
         # Add the auto-generated banner
         readme_content = autogen_banner * readme_content * autogen_banner
@@ -107,11 +114,11 @@ function copy_openapi_docs()
         source_path = joinpath(openapi_source_dir, file)
         dest_path = joinpath(openapi_docs_dir, file)
 
+        # Create the destination directory if it doesn't exist
+        mkpath(dirname(dest_path))
+
         # Read the file content
         content = read(source_path, String)
-
-        # Replace all relative references to README from ../README.md to README.md
-        content = replace(content, "../README.md" => "README.md")
 
         # Fix the relative links to other docs (e.g., docs/ServerInfo.md -> ServerInfo.md)
         content = replace(content, r"docs/([A-Za-z0-9_]+\.md)" => s"\1", docfixes...)
@@ -122,12 +129,32 @@ function copy_openapi_docs()
         # Write the modified content to the destination file
         write(dest_path, content)
 
-        # Add to pages array (remove .md extension for the page name)
-        page_name = replace(file, ".md" => "")
-        push!(openapi_pages, page_name => joinpath("openapi", file))
+        # Create nested structure for pages
+        parts = splitpath(file)
+        page_name = replace(last(parts), ".md" => "")
+        
+        # Create the page entry preserving the folder structure
+        if length(parts) == 1
+            # Root level files
+            push!(openapi_pages, page_name => joinpath("openapi", file))
+        else
+            # Nested files - create a nested structure
+            section_name = first(parts)
+            if !any(p -> p[1] == section_name, openapi_pages)
+                # Add a new section if it doesn't exist
+                section_pages = [page_name => joinpath("openapi", file)]
+                push!(openapi_pages, section_name => section_pages)
+            else
+                # Add to existing section
+                section_idx = findfirst(p -> p[1] == section_name, openapi_pages)
+                if section_idx !== nothing
+                    push!(openapi_pages[section_idx][2], page_name => joinpath("openapi", file))
+                end
+            end
+        end
     end
 
-    # Add README to the pages
+    # Add README to the pages at the beginning
     if isfile(readme_dest)
         pushfirst!(openapi_pages, "Overview" => joinpath("openapi", "README.md"))
     end
@@ -161,7 +188,7 @@ makedocs(;
     modules = [RxInferServer],
     warnonly = false,
     authors = "Lazy Dynamics <info@lazydynamics.com>",
-    sitename = "RxInferServer.jl",
+    sitename = "RxInferServer",
     format = Documenter.HTML(;
         prettyurls = get(ENV, "CI", nothing) == "true",
         canonical = "https://api.rxinfer.com",

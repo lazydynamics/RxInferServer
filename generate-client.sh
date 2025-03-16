@@ -11,21 +11,38 @@ if ! docker info > /dev/null 2>&1; then
   exit 1
 fi
 
-echo "Generating Julia client code from OpenAPI specification..."
+echo "Generating Julia client code and documentation from OpenAPI specification..."
 
 # Get absolute path to the current directory
 CURRENT_DIR=$(pwd)
+
+# Create documentation directory if it doesn't exist
+mkdir -p "${CURRENT_DIR}/openapi/docs/client"
 
 # Run the OpenAPI Generator for Julia client directly with Docker
 docker run --rm \
   -v "${CURRENT_DIR}/openapi:/openapi" \
   -v "${CURRENT_DIR}/openapi/client:/openapi/client" \
+  -v "${CURRENT_DIR}/openapi/docs/client:/openapi/docs/client" \
   openapitools/openapi-generator-cli:latest generate \
   -i /openapi/spec.yaml \
   -g julia-client \
   -o /openapi/client \
   --additional-properties=packageName=RxInferClientOpenAPI
 
-echo "Client code generation complete!"
+# Generate Markdown documentation
+# Remove existing docs directory if it exists
+rm -rf "${CURRENT_DIR}/openapi/client/docs"
+
+docker run --rm \
+  -v "${CURRENT_DIR}/openapi:/openapi" \
+  -v "${CURRENT_DIR}/openapi/docs/client:/openapi/docs/client" \
+  openapitools/openapi-generator-cli:latest generate \
+  -i /openapi/spec.yaml \
+  -g markdown \
+  -o /openapi/client/docs
+
+echo "Client code and documentation generation complete!"
 echo "Generated Julia client code is available in the 'openapi/client' directory."
+echo "Generated documentation is available in the 'openapi/docs/client' directory."
 echo "You can now use this client to interact with the RxInfer API." 

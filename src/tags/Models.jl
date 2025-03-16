@@ -53,6 +53,17 @@ function create_model(req::HTTP.Request, create_model_request::RxInferServerOpen
     # Create model in the database
     model_name = model_details.details.name
     created_by = current_token()
+
+    # Merge the default arguments with the arguments provided by the user
+    # If user has not provided any arguments merge with the empty dictionary
+    arguments = merge(
+        Models.parse_default_arguments_from_config(model_details.config),
+        @something(create_model_request.arguments, Dict{String, Any}())
+    )
+
+    # If user has not provided a description, use empty description
+    description = @something(create_model_request.description, "")
+
     @debug "Creating new model in the database" model_name created_by
     model_id = string(UUIDs.uuid4())
     document = Mongoc.BSON(
@@ -60,8 +71,8 @@ function create_model(req::HTTP.Request, create_model_request::RxInferServerOpen
         "model_name"  => model_name,
         "created_at"  => Dates.now(),
         "created_by"  => created_by,
-        "arguments"   => create_model_request.arguments,
-        "description" => @something(create_model_request.description, ""),
+        "arguments"   => arguments,
+        "description" => description,
         "deleted"     => false
     )
     collection = Database.collection("models")

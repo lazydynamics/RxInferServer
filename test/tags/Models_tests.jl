@@ -299,3 +299,71 @@ end
     @test !any(m -> m.model_id == response1.model_id, response)
     @test length(response) >= 0
 end
+
+@testitem "creating model without arguments should create a model with default values" setup = [TestUtils] begin
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    @testset "Absolutely no arguments" begin
+        create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+            model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        )
+
+        response, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+        @test info.status == 200
+        @test !isnothing(response)
+
+        # Check that the model has default arguments
+        response2, info2 = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, response.model_id)
+        @test info2.status == 200
+        @test !isnothing(response2)
+        @test response2.arguments == Dict("prior_a" => 1, "prior_b" => 1)
+
+        # Delete the models at the end of the test
+        dresponse, dinfo = TestUtils.RxInferClientOpenAPI.delete_model(models_api, response.model_id)
+        @test dinfo.status == 200
+        @test dresponse.message == "Model deleted successfully"
+    end
+
+    @testset "`a` is specified but `b` is not" begin
+        create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+            model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model", arguments = Dict("prior_a" => 3)
+        )   
+
+        response, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+        @test info.status == 200
+        @test !isnothing(response)
+
+        # Check that the model has default arguments
+        response2, info2 = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, response.model_id)
+        @test info2.status == 200
+        @test !isnothing(response2)
+        @test response2.arguments == Dict("prior_a" => 3, "prior_b" => 1)
+
+        # Delete the models at the end of the test
+        dresponse, dinfo = TestUtils.RxInferClientOpenAPI.delete_model(models_api, response.model_id)
+        @test dinfo.status == 200
+        @test dresponse.message == "Model deleted successfully"
+    end
+
+    @testset "`a` is not specified but `b` is" begin
+        create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+            model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model", arguments = Dict("prior_b" => 3)
+        )
+        
+        response, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+        @test info.status == 200
+        @test !isnothing(response)
+
+        # Check that the model has default arguments
+        response2, info2 = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, response.model_id)
+        @test info2.status == 200
+        @test !isnothing(response2)
+        @test response2.arguments == Dict("prior_a" => 1, "prior_b" => 3)
+
+        # Delete the models at the end of the test
+        dresponse, dinfo = TestUtils.RxInferClientOpenAPI.delete_model(models_api, response.model_id)
+        @test dinfo.status == 200
+        @test dresponse.message == "Model deleted successfully"
+    end
+end

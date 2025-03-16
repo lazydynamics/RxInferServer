@@ -227,25 +227,37 @@ function run_inference(req::HTTP.Request, model_id::String, infer_request::RxInf
         # Query the database for the episode
         collection = Database.collection("episodes")
         query = Mongoc.BSON("model_id" => model_id, "name" => infer_request.episode_name, "deleted" => false)
+
+        # Get the current number of events from the n_events field
+        options = Mongoc.BSON("projection" => Mongoc.BSON("events_id_counter" => 1))
+        current = Mongoc.find_one(collection, query; options = options)
+        next_id = isnothing(current) ? 1 : current["events_id_counter"] + 1
+
         update = Mongoc.BSON(
             "\$push" => Mongoc.BSON(
                 "events" => Dict(
+                    "event_id" => next_id,
                     "data" => infer_request.data,
                     "timestamp" => DateTime(something(infer_request.timestamp, Dates.now())) # OpenAPI eh?
                 )
-            )
+            ),
+            "\$set" => Mongoc.BSON("events_id_counter" => next_id)
         )
-        result = Mongoc.update_one(collection, query, update)
 
-        if result["matchedCount"] != 1
+        options = Mongoc.BSON(
+            "returnDocument" => "after", "projection" => Mongoc.BSON("event_id" => Mongoc.BSON("\$size" => "\$events"))
+        )
+        result = Mongoc.find_one_and_update(collection, query, update; options = options)
+
+        if isnothing(result)
             @debug "Unable to attach data to the episode due to internal error" model_id infer_request.episode_name
             return RxInferServerOpenAPI.ErrorResponse(
                 error = "Bad Request", message = "Unable to attach data to the episode due to internal error"
             )
         end
 
-        @debug "Successfully attached data to the episode" model_id infer_request.episode_name
-        return RxInferServerOpenAPI.SuccessResponse(message = "Data attached to the episode successfully")
+        @debug "Successfully attached data to the episode" model_id infer_request.episode_name next_id
+        return next_id
     end
 
     # Asynchronously run the inference
@@ -297,14 +309,76 @@ function run_inference(req::HTTP.Request, model_id::String, infer_request::RxInf
     # Inference completed successfully, but there might be non-fatal errors
     # for example, the episode might not be filled successfully, which is sad, but not a big deal
     errors = []
+    event_id = nothing
 
     fill_episode_task_result = fetch(fill_episode_task)
 
     if isa(fill_episode_task_result, RxInferServerOpenAPI.ErrorResponse)
         push!(errors, fill_episode_task_result)
+    else
+        event_id = fill_episode_task_result
     end
 
-    return RxInferServerOpenAPI.InferResponse(results = inference_task_result, errors = errors)
+    return RxInferServerOpenAPI.InferResponse(event_id = event_id, results = inference_task_result, errors = errors)
+end
+
+function attach_metadata_to_event(
+    req::HTTP.Request,
+    model_id,
+    episode_name,
+    event_id,
+    attach_metadata_to_event_request::RxInferServerOpenAPI.AttachMetadataToEventRequest
+)
+    @debug "Attempting to attach metadata to an event" model_id episode_name event_id
+    token = current_token()
+
+    # Query the database for the model
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    model = Mongoc.find_one(collection, query)
+
+    if isnothing(model)
+        @debug "Cannot attach metadata to an event because the model does not exist or token has no access to it" model_id episode_name event_id
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
+        )
+    end
+
+    # Query the database for the episode
+    collection = Database.collection("episodes")
+    query = Mongoc.BSON(
+        "model_id" => model_id,
+        "name" => episode_name,
+        "deleted" => false,
+        "events" => Mongoc.BSON("\$elemMatch" => Mongoc.BSON("event_id" => event_id))
+    )
+    episode = Mongoc.find_one(collection, query)
+
+    if isnothing(episode)
+        @debug "Cannot attach metadata to an event because the episode does not exist or event not found" model_id episode_name event_id
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found",
+            message = "The requested episode could not be found or the event with the specified ID does not exist"
+        )
+    end
+
+    # Update the specific event with the metadata
+    update = Mongoc.BSON(
+        "\$set" => Mongoc.BSON("events.\$.metadata" => attach_metadata_to_event_request.metadata)
+    )
+    
+    result = Mongoc.update_one(collection, query, update)
+
+    if result["matchedCount"] != 1
+        @debug "Unable to attach metadata to the event due to internal error" model_id episode_name event_id
+        return RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request",
+            message = "Unable to attach metadata to the event due to internal error"
+        )
+    end
+
+    @debug "Successfully attached metadata to the event" model_id episode_name event_id
+    return RxInferServerOpenAPI.SuccessResponse(message = "Metadata attached to the event successfully")
 end
 
 function get_episode_info(req::HTTP.Request, model_id::String, episode_name::String)
@@ -407,7 +481,12 @@ function create_episode(req::HTTP.Request, model_id::String, episode_name::Strin
     # Create the episode
     created_at = Dates.now()
     document = Mongoc.BSON(
-        "model_id" => model_id, "name" => episode_name, "created_at" => created_at, "events" => [], "deleted" => false
+        "model_id" => model_id,
+        "name" => episode_name,
+        "created_at" => created_at,
+        "events" => [],
+        "events_id_counter" => 0,
+        "deleted" => false
     )
     insert_result = Mongoc.insert_one(collection, document)
 

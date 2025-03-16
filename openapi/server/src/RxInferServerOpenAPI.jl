@@ -10,6 +10,9 @@ The following server methods must be implemented:
 - **generate_token**
     - *invocation:* POST /generate-token
     - *signature:* generate_token(req::HTTP.Request;) -> TokenResponse
+- **attach_metadata_to_event**
+    - *invocation:* POST /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata
+    - *signature:* attach_metadata_to_event(req::HTTP.Request, model_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest;) -> SuccessResponse
 - **create_episode**
     - *invocation:* POST /models/{model_id}/episodes/{episode_name}/create
     - *signature:* create_episode(req::HTTP.Request, model_id::String, episode_name::String;) -> EpisodeInfo

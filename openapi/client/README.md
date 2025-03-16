@@ -23,6 +23,7 @@ Documentation is also embedded in Julia which can be used with a Julia specific 
 Class | Method
 ------------ | -------------
 *AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token)<br/>**POST** /generate-token<br/>Generate authentication token
+*ModelsApi* | [**attach_metadata_to_event**](docs/ModelsApi.md#attach_metadata_to_event)<br/>**POST** /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata<br/>Attach metadata to an event
 *ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode)<br/>**POST** /models/{model_id}/episodes/{episode_name}/create<br/>Create a new episode for a model
 *ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model)<br/>**POST** /models/create<br/>Create a new model instance
 *ModelsApi* | [**delete_episode**](docs/ModelsApi.md#delete_episode)<br/>**DELETE** /models/{model_id}/episodes/{episode_name}/delete<br/>Delete an episode for a model
@@ -42,6 +43,7 @@ Class | Method
 
 ## Models
 
+ - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [CreateModelRequest](docs/CreateModelRequest.md)
  - [CreateModelResponse](docs/CreateModelResponse.md)
  - [CreatedModelInfo](docs/CreatedModelInfo.md)

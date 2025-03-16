@@ -1,4 +1,5 @@
 README.md
+docs/AttachMetadataToEventRequest.md
 docs/AuthenticationApi.md
 docs/CreateModelRequest.md
 docs/CreateModelResponse.md
@@ -25,6 +26,7 @@ src/apis/api_AuthenticationApi.jl
 src/apis/api_ModelsApi.jl
 src/apis/api_ServerApi.jl
 src/modelincludes.jl
+src/models/model_AttachMetadataToEventRequest.jl
 src/models/model_CreateModelRequest.jl
 src/models/model_CreateModelResponse.jl
 src/models/model_CreatedModelInfo.jl

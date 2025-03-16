@@ -11,6 +11,44 @@ This can be used to construct the `OpenAPI.Clients.Client` instance.
 """
 basepath(::Type{ ModelsApi }) = "http://localhost:8000/v1"
 
+const _returntypes_attach_metadata_to_event_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => SuccessResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_attach_metadata_to_event(_api::ModelsApi, model_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_attach_metadata_to_event_ModelsApi, "/models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata", ["ApiKeyAuth", ], attach_metadata_to_event_request)
+    OpenAPI.Clients.set_param(_ctx.path, "model_id", model_id)  # type String
+    OpenAPI.Clients.set_param(_ctx.path, "episode_name", episode_name)  # type String
+    OpenAPI.Clients.set_param(_ctx.path, "event_id", event_id)  # type Int64
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? ["application/json", ] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Attach metadata to an event
+
+Attach metadata to a specific event for a model
+
+Params:
+- model_id::String (required)
+- episode_name::String (required)
+- event_id::Int64 (required)
+- attach_metadata_to_event_request::AttachMetadataToEventRequest (required)
+
+Return: SuccessResponse, OpenAPI.Clients.ApiResponse
+"""
+function attach_metadata_to_event(_api::ModelsApi, model_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest; _mediaType=nothing)
+    _ctx = _oacinternal_attach_metadata_to_event(_api, model_id, episode_name, event_id, attach_metadata_to_event_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function attach_metadata_to_event(_api::ModelsApi, response_stream::Channel, model_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest; _mediaType=nothing)
+    _ctx = _oacinternal_attach_metadata_to_event(_api, model_id, episode_name, event_id, attach_metadata_to_event_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_create_episode_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => EpisodeInfo,
     Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
@@ -444,6 +482,7 @@ function wipe_episode(_api::ModelsApi, response_stream::Channel, model_id::Strin
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+export attach_metadata_to_event
 export create_episode
 export create_model
 export delete_episode

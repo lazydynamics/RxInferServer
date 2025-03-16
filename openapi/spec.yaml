@@ -551,7 +551,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-
   /models/{model_id}/episodes/{episode_name}/wipe:
     post:
       tags:
@@ -592,6 +591,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'    
+  /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata:
+    post:
+      tags:
+        - Models
+      summary: Attach metadata to an event
+      operationId: attachMetadataToEvent
+      description: Attach metadata to a specific event for a model
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to attach metadata to
+        - name: episode_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the episode to attach metadata to
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the event to attach metadata to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachMetadataToEventRequest'
+      responses:
+        '200':
+          description: Successfully attached metadata to the event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model or episode not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+                      
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -807,6 +860,15 @@ components:
           type: object
           description: Model-specific state
           additionalProperties: true
+    AttachMetadataToEventRequest:
+      type: object
+      required:
+        - metadata
+      properties:
+        metadata:
+          type: object
+          description: Metadata to attach to the event
+          additionalProperties: true
     InferRequest:
       type: object
       required:
@@ -829,9 +891,14 @@ components:
     InferResponse:
       type: object
       required:
+        - event_id
         - results
         - errors
       properties:
+        event_id:
+          type: integer
+          format: int64
+          description: Unique identifier for the inference event
         results:
           type: object
           description: Model-specific results of the inference

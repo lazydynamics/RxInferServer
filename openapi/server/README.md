@@ -44,6 +44,7 @@ The following server methods must be implemented:
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token) | **POST** /generate-token | Generate authentication token
+*ModelsApi* | [**attach_metadata_to_event**](docs/ModelsApi.md#attach_metadata_to_event) | **POST** /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event
 *ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode) | **POST** /models/{model_id}/episodes/{episode_name}/create | Create a new episode for a model
 *ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model) | **POST** /models/create | Create a new model instance
 *ModelsApi* | [**delete_episode**](docs/ModelsApi.md#delete_episode) | **DELETE** /models/{model_id}/episodes/{episode_name}/delete | Delete an episode for a model
@@ -64,6 +65,7 @@ Class | Method | HTTP request | Description
 
 ## Models
 
+ - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [CreateModelRequest](docs/CreateModelRequest.md)
  - [CreateModelResponse](docs/CreateModelResponse.md)
  - [CreatedModelInfo](docs/CreatedModelInfo.md)

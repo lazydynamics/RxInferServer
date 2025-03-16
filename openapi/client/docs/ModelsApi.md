@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost:8000/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**attach_metadata_to_event**](ModelsApi.md#attach_metadata_to_event) | **POST** /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event
 [**create_episode**](ModelsApi.md#create_episode) | **POST** /models/{model_id}/episodes/{episode_name}/create | Create a new episode for a model
 [**create_model**](ModelsApi.md#create_model) | **POST** /models/create | Create a new model instance
 [**delete_episode**](ModelsApi.md#delete_episode) | **DELETE** /models/{model_id}/episodes/{episode_name}/delete | Delete an episode for a model
@@ -18,6 +19,39 @@ Method | HTTP request | Description
 [**run_inference**](ModelsApi.md#run_inference) | **POST** /models/{model_id}/infer | Run inference on a model
 [**wipe_episode**](ModelsApi.md#wipe_episode) | **POST** /models/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode
 
+
+# **attach_metadata_to_event**
+> attach_metadata_to_event(_api::ModelsApi, model_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest; _mediaType=nothing) -> SuccessResponse, OpenAPI.Clients.ApiResponse <br/>
+> attach_metadata_to_event(_api::ModelsApi, response_stream::Channel, model_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest; _mediaType=nothing) -> Channel{ SuccessResponse }, OpenAPI.Clients.ApiResponse
+
+Attach metadata to an event
+
+Attach metadata to a specific event for a model
+
+### Required Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **_api** | **ModelsApi** | API context | 
+**model_id** | **String** | ID of the model to attach metadata to |
+**episode_name** | **String** | Name of the episode to attach metadata to |
+**event_id** | **Int64** | ID of the event to attach metadata to |
+**attach_metadata_to_event_request** | [**AttachMetadataToEventRequest**](AttachMetadataToEventRequest.md) |  |
+
+### Return type
+
+[**SuccessResponse**](SuccessResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 # **create_episode**
 > create_episode(_api::ModelsApi, model_id::String, episode_name::String; _mediaType=nothing) -> EpisodeInfo, OpenAPI.Clients.ApiResponse <br/>

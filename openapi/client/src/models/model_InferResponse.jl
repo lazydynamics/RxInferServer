@@ -5,34 +5,43 @@
 @doc raw"""InferResponse
 
     InferResponse(;
+        event_id=nothing,
         results=nothing,
         errors=nothing,
     )
 
+    - event_id::Int64 : Unique identifier for the inference event
     - results::Dict{String, Any} : Model-specific results of the inference
     - errors::Vector{ErrorResponse} : List of errors that occurred during the inference call, but were not fatal and the inference was still completed successfully
 """
 Base.@kwdef mutable struct InferResponse <: OpenAPI.APIModel
+    event_id::Union{Nothing, Int64} = nothing
     results::Union{Nothing, Dict{String, Any}} = nothing
     errors::Union{Nothing, Vector} = nothing # spec type: Union{ Nothing, Vector{ErrorResponse} }
 
-    function InferResponse(results, errors, )
+    function InferResponse(event_id, results, errors, )
+        OpenAPI.validate_property(InferResponse, Symbol("event_id"), event_id)
         OpenAPI.validate_property(InferResponse, Symbol("results"), results)
         OpenAPI.validate_property(InferResponse, Symbol("errors"), errors)
-        return new(results, errors, )
+        return new(event_id, results, errors, )
     end
 end # type InferResponse
 
-const _property_types_InferResponse = Dict{Symbol,String}(Symbol("results")=>"Dict{String, Any}", Symbol("errors")=>"Vector{ErrorResponse}", )
+const _property_types_InferResponse = Dict{Symbol,String}(Symbol("event_id")=>"Int64", Symbol("results")=>"Dict{String, Any}", Symbol("errors")=>"Vector{ErrorResponse}", )
 OpenAPI.property_type(::Type{ InferResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_InferResponse[name]))}
 
 function check_required(o::InferResponse)
+    o.event_id === nothing && (return false)
     o.results === nothing && (return false)
     o.errors === nothing && (return false)
     true
 end
 
 function OpenAPI.validate_property(::Type{ InferResponse }, name::Symbol, val)
+
+    if name === Symbol("event_id")
+        OpenAPI.validate_param(name, "InferResponse", :format, val, "int64")
+    end
 
 
 end

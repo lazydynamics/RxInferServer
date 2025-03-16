@@ -2,6 +2,37 @@
 # Do not modify this file directly. Modify the OpenAPI specification instead.
 
 
+function attach_metadata_to_event_read(handler)
+    function attach_metadata_to_event_read_handler(req::HTTP.Request)
+        openapi_params = Dict{String,Any}()
+        path_params = HTTP.getparams(req)
+        openapi_params["model_id"] = OpenAPI.Servers.to_param(String, path_params, "model_id", required=true, )
+        openapi_params["episode_name"] = OpenAPI.Servers.to_param(String, path_params, "episode_name", required=true, )
+        openapi_params["event_id"] = OpenAPI.Servers.to_param(Int64, path_params, "event_id", required=true, )
+        openapi_params["AttachMetadataToEventRequest"] = OpenAPI.Servers.to_param_type(AttachMetadataToEventRequest, String(req.body))
+        req.context[:openapi_params] = openapi_params
+
+        return handler(req)
+    end
+end
+
+function attach_metadata_to_event_validate(handler)
+    function attach_metadata_to_event_validate_handler(req::HTTP.Request)
+        openapi_params = req.context[:openapi_params]
+        
+        return handler(req)
+    end
+end
+
+function attach_metadata_to_event_invoke(impl; post_invoke=nothing)
+    function attach_metadata_to_event_invoke_handler(req::HTTP.Request)
+        openapi_params = req.context[:openapi_params]
+        ret = impl.attach_metadata_to_event(req::HTTP.Request, openapi_params["model_id"], openapi_params["episode_name"], openapi_params["event_id"], openapi_params["AttachMetadataToEventRequest"];)
+        resp = OpenAPI.Servers.server_response(ret)
+        return (post_invoke === nothing) ? resp : post_invoke(req, resp)
+    end
+end
+
 function create_episode_read(handler)
     function create_episode_read_handler(req::HTTP.Request)
         openapi_params = Dict{String,Any}()
@@ -368,6 +399,7 @@ end
 
 
 function registerModelsApi(router::HTTP.Router, impl; path_prefix::String="", optional_middlewares...)
+    HTTP.register!(router, "POST", path_prefix * "/models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata", OpenAPI.Servers.middleware(impl, attach_metadata_to_event_read, attach_metadata_to_event_validate, attach_metadata_to_event_invoke; optional_middlewares...))
     HTTP.register!(router, "POST", path_prefix * "/models/{model_id}/episodes/{episode_name}/create", OpenAPI.Servers.middleware(impl, create_episode_read, create_episode_validate, create_episode_invoke; optional_middlewares...))
     HTTP.register!(router, "POST", path_prefix * "/models/create", OpenAPI.Servers.middleware(impl, create_model_read, create_model_validate, create_model_invoke; optional_middlewares...))
     HTTP.register!(router, "DELETE", path_prefix * "/models/{model_id}/episodes/{episode_name}/delete", OpenAPI.Servers.middleware(impl, delete_episode_read, delete_episode_validate, delete_episode_invoke; optional_middlewares...))

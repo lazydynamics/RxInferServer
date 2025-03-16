@@ -47,6 +47,8 @@ Class | Method | HTTP request | Description
 *ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model) | **POST** /models/create | Create a new model instance
 *ModelsApi* | [**delete_model**](docs/ModelsApi.md#delete_model) | **DELETE** /models/{model_id}/delete | Delete a model instance
 *ModelsApi* | [**get_created_models_info**](docs/ModelsApi.md#get_created_models_info) | **GET** /models/created/info | Get information about all created models for a specific token
+*ModelsApi* | [**get_episode_info**](docs/ModelsApi.md#get_episode_info) | **GET** /models/{model_id}/episodes/{episode_name} | Get episode information
+*ModelsApi* | [**get_episodes**](docs/ModelsApi.md#get_episodes) | **GET** /models/{model_id}/episodes | Get all episodes for a model
 *ModelsApi* | [**get_model_details**](docs/ModelsApi.md#get_model_details) | **GET** /models/{model_name}/details | Get model details
 *ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info) | **GET** /models/{model_id}/info | Get model information
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models) | **GET** /models | Get models
@@ -61,6 +63,7 @@ Class | Method | HTTP request | Description
  - [CreateModelResponse](docs/CreateModelResponse.md)
  - [CreatedModelInfo](docs/CreatedModelInfo.md)
  - [DeleteModelRequest](docs/DeleteModelRequest.md)
+ - [EpisodeInfo](docs/EpisodeInfo.md)
  - [ErrorResponse](docs/ErrorResponse.md)
  - [LightweightModelDetails](docs/LightweightModelDetails.md)
  - [ModelDetails](docs/ModelDetails.md)

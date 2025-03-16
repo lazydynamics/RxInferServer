@@ -10,6 +10,7 @@
         created_at=nothing,
         description=nothing,
         arguments=nothing,
+        current_episode=nothing,
     )
 
     - model_id::String : Unique identifier for the created model instance
@@ -17,6 +18,7 @@
     - created_at::ZonedDateTime : Timestamp of when the model was created
     - description::String : Description of the created model instance
     - arguments::Dict{String, Any} : Model-specific configuration arguments
+    - current_episode::String : Name of the current episode for this model
 """
 Base.@kwdef mutable struct CreatedModelInfo <: OpenAPI.APIModel
     model_id::Union{Nothing, String} = nothing
@@ -24,18 +26,20 @@ Base.@kwdef mutable struct CreatedModelInfo <: OpenAPI.APIModel
     created_at::Union{Nothing, ZonedDateTime} = nothing
     description::Union{Nothing, String} = nothing
     arguments::Union{Nothing, Dict{String, Any}} = nothing
+    current_episode::Union{Nothing, String} = nothing
 
-    function CreatedModelInfo(model_id, model_name, created_at, description, arguments, )
+    function CreatedModelInfo(model_id, model_name, created_at, description, arguments, current_episode, )
         OpenAPI.validate_property(CreatedModelInfo, Symbol("model_id"), model_id)
         OpenAPI.validate_property(CreatedModelInfo, Symbol("model_name"), model_name)
         OpenAPI.validate_property(CreatedModelInfo, Symbol("created_at"), created_at)
         OpenAPI.validate_property(CreatedModelInfo, Symbol("description"), description)
         OpenAPI.validate_property(CreatedModelInfo, Symbol("arguments"), arguments)
-        return new(model_id, model_name, created_at, description, arguments, )
+        OpenAPI.validate_property(CreatedModelInfo, Symbol("current_episode"), current_episode)
+        return new(model_id, model_name, created_at, description, arguments, current_episode, )
     end
 end # type CreatedModelInfo
 
-const _property_types_CreatedModelInfo = Dict{Symbol,String}(Symbol("model_id")=>"String", Symbol("model_name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("description")=>"String", Symbol("arguments")=>"Dict{String, Any}", )
+const _property_types_CreatedModelInfo = Dict{Symbol,String}(Symbol("model_id")=>"String", Symbol("model_name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("description")=>"String", Symbol("arguments")=>"Dict{String, Any}", Symbol("current_episode")=>"String", )
 OpenAPI.property_type(::Type{ CreatedModelInfo }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_CreatedModelInfo[name]))}
 
 function check_required(o::CreatedModelInfo)
@@ -44,6 +48,7 @@ function check_required(o::CreatedModelInfo)
     o.created_at === nothing && (return false)
     o.description === nothing && (return false)
     o.arguments === nothing && (return false)
+    o.current_episode === nothing && (return false)
     true
 end
 
@@ -57,6 +62,7 @@ function OpenAPI.validate_property(::Type{ CreatedModelInfo }, name::Symbol, val
     if name === Symbol("created_at")
         OpenAPI.validate_param(name, "CreatedModelInfo", :format, val, "date-time")
     end
+
 
 
 end

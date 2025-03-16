@@ -1,5 +1,3 @@
-module BetaBernoulli
-
 using RxInfer
 
 @model function beta_bernoulli(prior_a, prior_b, observations)
@@ -17,4 +15,7 @@ function inference(arguments, data)
     return Dict("p" => results.posteriors[:p])
 end
 
+function initial_state(arguments)
+    # This model does not require any initial state
+    return nothing
 end

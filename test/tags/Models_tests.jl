@@ -145,6 +145,7 @@ end
     @test response.description == "Testing beta-bernoulli model"
     @test response.arguments == Dict("prior_a" => 1, "prior_b" => 1)
     @test response.created_at < TimeZones.now(TimeZones.localzone())
+    @test response.current_episode == "default"
 
     # Another user should not have access to this model and should not be able to delete it
     TestUtils.with_temporary_token() do
@@ -300,7 +301,7 @@ end
     @test length(response) >= 0
 end
 
-@testitem "creating model without arguments should create a model with default values" setup = [TestUtils] begin
+@testitem "Creating model without arguments should create a model with default values" setup = [TestUtils] begin
     client = TestUtils.TestClient()
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
@@ -366,4 +367,68 @@ end
         @test dinfo.status == 200
         @test dresponse.message == "Model deleted successfully"
     end
+end
+
+@testitem "When creating a model, a default episode should be created automatically" setup = [TestUtils] begin
+    using Dates, TimeZones
+
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_request = TestUtils.RxInferClientOpenAPI.CreateModelRequest(
+        model = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+    )
+
+    response, info = TestUtils.RxInferClientOpenAPI.create_model(models_api, create_model_request)
+    @test info.status == 200
+    @test !isnothing(response)
+
+    model_id = response.model_id
+
+    # Check that the episode is created
+    response, info = TestUtils.RxInferClientOpenAPI.get_model_info(models_api, model_id)
+    @test info.status == 200
+    @test !isnothing(response)
+    @test response.current_episode == "default"
+
+    mcat = response.created_at
+
+    response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_id, "default")
+    @test info.status == 200
+    @test !isnothing(response)
+    @test response.name == "default"
+    @test response.created_at < TimeZones.now(TimeZones.localzone())
+    @test response.created_at == mcat
+    @test response.model_id == model_id
+    @test response.events == [] # no events yet
+
+    # Used to identify the episode in the list of episodes
+    cat = response.created_at
+
+    # Check that the episode is visible in the list of episodes
+    response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, model_id)
+    @test info.status == 200
+    @test !isnothing(response)
+    @test any(e -> e.name == "default", response)
+    @test any(e -> e.created_at == cat, response)
+
+    # Other users should not have access to the episode
+    TestUtils.with_temporary_token() do
+        another_client = TestUtils.TestClient()
+        another_models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(another_client)
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(another_models_api, model_id, "default")
+        @test info.status == 404
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_episodes(another_models_api, model_id)
+        @test info.status == 404
+    end
+
+    # Delete model after the test
+    dresponse, dinfo = TestUtils.RxInferClientOpenAPI.delete_model(models_api, model_id)
+    @test dinfo.status == 200
+    @test dresponse.message == "Model deleted successfully"
+
+    # List of episodes should not be available anymore 
+    response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, model_id)
+    @test info.status == 404
 end

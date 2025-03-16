@@ -9,6 +9,7 @@ Name | Type | Description | Notes
 **created_at** | **ZonedDateTime** | Timestamp of when the model was created | [default to nothing]
 **description** | **String** | Description of the created model instance | [default to nothing]
 **arguments** | **Dict{String, Any}** | Model-specific configuration arguments | [default to nothing]
+**current_episode** | **String** | Name of the current episode for this model | [default to nothing]
 
 
 [[Back to Model list]](../README.md#models) [[Back to API list]](../README.md#api-endpoints) [[Back to README]](../README.md)

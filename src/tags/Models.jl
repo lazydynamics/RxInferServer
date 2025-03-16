@@ -64,16 +64,24 @@ function create_model(req::HTTP.Request, create_model_request::RxInferServerOpen
     # If user has not provided a description, use empty description
     description = @something(create_model_request.description, "")
 
+    # Create the model's initial state
+    dispatcher    = Models.get_models_dispatcher()
+    initial_state = Models.dispatch(dispatcher, model_name, :initial_state, arguments)
+
+    created_at = Dates.now()
+
     @debug "Creating new model in the database" model_name created_by
     model_id = string(UUIDs.uuid4())
     document = Mongoc.BSON(
-        "model_id"    => model_id,
-        "model_name"  => model_name,
-        "created_at"  => Dates.now(),
-        "created_by"  => created_by,
-        "arguments"   => arguments,
+        "model_id" => model_id,
+        "model_name" => model_name,
+        "created_at" => created_at,
+        "created_by" => created_by,
+        "arguments" => arguments,
         "description" => description,
-        "deleted"     => false
+        "state" => initial_state,
+        "current_episode" => "default",
+        "deleted" => false
     )
     collection = Database.collection("models")
     insert_result = Mongoc.insert_one(collection, document)
@@ -82,6 +90,27 @@ function create_model(req::HTTP.Request, create_model_request::RxInferServerOpen
         @error "Unable to create model due to internal error"
         return RxInferServerOpenAPI.ErrorResponse(
             error = "Bad Request", message = "Unable to create model due to internal error"
+        )
+    end
+
+    @debug "Creating default episode for a model" model_id
+    episode = Mongoc.BSON(
+        "model_id" => model_id,
+        "name" => "default",
+        "created_at" => created_at,
+        "events" => []
+    )
+    collection = Database.collection("episodes")
+    insert_result = Mongoc.insert_one(collection, episode)
+
+    if insert_result.reply["insertedCount"] != 1
+        @error "Unable to create default episode due to internal error"
+
+        # Delete the model if the default episode cannot be created
+        delete_model(req, model_id)
+
+        return RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request", message = "Unable to create default episode due to internal error"
         )
     end
 
@@ -127,7 +156,8 @@ function get_model_info(req::HTTP.Request, model_id::String)
         model_name = result["model_name"],
         created_at = ZonedDateTime(result["created_at"], TimeZones.localzone()), # OpenAPI eh?
         description = result["description"],
-        arguments = result["arguments"]
+        arguments = result["arguments"],
+        current_episode = result["current_episode"]
     )
 end
 
@@ -135,6 +165,7 @@ function delete_model(req::HTTP.Request, model_id::String)
     token = current_token()
 
     # Update the model to be deleted
+    @debug "Attempt to delete model" model_id token
     collection = Database.collection("models")
     query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
     update = Mongoc.BSON("\$set" => Mongoc.BSON("deleted" => true))
@@ -152,5 +183,68 @@ function delete_model(req::HTTP.Request, model_id::String)
         )
     end
 
+    @debug "Model deleted successfully" model_id
     return RxInferServerOpenAPI.SuccessResponse(message = "Model deleted successfully")
+end
+
+function get_episode_info(req::HTTP.Request, model_id::String, episode_name::String)
+    token = current_token()
+
+    # Query the database for the model
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    result = Mongoc.find_one(collection, query)
+
+    if isnothing(result)
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
+        )
+    end
+
+    # Query the database for the episode
+    collection = Database.collection("episodes")
+    query = Mongoc.BSON("model_id" => model_id, "name" => episode_name)
+    result = Mongoc.find_one(collection, query)
+
+    if isnothing(result)
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested episode could not be found"
+        )
+    end
+
+    return RxInferServerOpenAPI.EpisodeInfo(
+        model_id = model_id,
+        name = episode_name,
+        created_at = ZonedDateTime(result["created_at"], TimeZones.localzone()),
+        events = result["events"]
+    )
+end
+
+function get_episodes(req::HTTP.Request, model_id::String)
+    token = current_token()
+
+    # Query the database for the model
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    result = Mongoc.find_one(collection, query)
+
+    if isnothing(result)
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
+        )
+    end
+
+    # Query the database for the episodes
+    collection = Database.collection("episodes")
+    query = Mongoc.BSON("model_id" => model_id)
+    result = Mongoc.find(collection, query)
+
+    return map(result) do episode
+        return RxInferServerOpenAPI.EpisodeInfo(
+            model_id = model_id,
+            name = episode["name"],
+            created_at = ZonedDateTime(episode["created_at"], TimeZones.localzone()),
+            events = episode["events"]
+        )
+    end
 end

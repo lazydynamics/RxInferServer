@@ -303,6 +303,82 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
+  /models/{model_id}/episodes:
+    get:
+      tags:
+        - Models
+      summary: Get all episodes for a model
+      operationId: getEpisodes
+      description: Retrieve all episodes for a specific model
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to retrieve episodes for
+      responses:
+        '200':
+          description: Successfully retrieved list of episodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EpisodeInfo'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+  /models/{model_id}/episodes/{episode_name}:
+    get:
+      tags:
+        - Models
+      summary: Get episode information
+      operationId: getEpisodeInfo
+      description: Retrieve information about a specific episode of a model
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to retrieve episode for
+        - name: episode_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the episode to retrieve
+      responses:
+        '200':
+          description: Successfully retrieved episode information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpisodeInfo'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model or episode not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -476,6 +552,7 @@ components:
         - created_at
         - description
         - arguments
+        - current_episode
       properties:
         model_id:
           type: string
@@ -495,6 +572,10 @@ components:
           type: object
           description: Model-specific configuration arguments
           additionalProperties: true
+        current_episode:
+          type: string
+          description: Name of the current episode for this model
+          example: "default"
     DeleteModelRequest:
       type: object
       required:
@@ -504,3 +585,32 @@ components:
           type: string
           format: uuid
           description: ID of the model to delete
+    EpisodeInfo:
+      type: object
+      required:
+        - model_id
+        - name
+        - created_at
+        - events
+      properties:
+        model_id:
+          type: string
+          format: uuid
+          description: ID of the model this episode belongs to
+        name:
+          type: string
+          description: Name of the episode
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp of when the episode was created
+        events:
+          type: array
+          description: List of events that have occurred in the episode
+          items:
+            type: object
+            additionalProperties: true
+      example:
+        model_id: "123e4567-e89b-12d3-a456-426614174000"
+        name: "default"
+        created_at: "2024-03-20T12:00:00Z"

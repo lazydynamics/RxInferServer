@@ -19,6 +19,12 @@ The following server methods must be implemented:
 - **get_created_models_info**
     - *invocation:* GET /models/created/info
     - *signature:* get_created_models_info(req::HTTP.Request;) -> Vector{CreatedModelInfo}
+- **get_episode_info**
+    - *invocation:* GET /models/{model_id}/episodes/{episode_name}
+    - *signature:* get_episode_info(req::HTTP.Request, model_id::String, episode_name::String;) -> EpisodeInfo
+- **get_episodes**
+    - *invocation:* GET /models/{model_id}/episodes
+    - *signature:* get_episodes(req::HTTP.Request, model_id::String;) -> Vector{EpisodeInfo}
 - **get_model_details**
     - *invocation:* GET /models/{model_name}/details
     - *signature:* get_model_details(req::HTTP.Request, model_name::String;) -> ModelDetails

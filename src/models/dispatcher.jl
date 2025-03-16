@@ -130,3 +130,12 @@ function get_model(dispatcher::ModelsDispatcher, model_name::String)::Union{Load
     end
     return dispatcher.models[model_name]
 end
+
+function dispatch(dispatcher::ModelsDispatcher, model_name::String, operation::Symbol, args...; kwargs...)
+    model = get_model(dispatcher, model_name)
+    if isnothing(model)
+        error("Cannot dispatch operation `$operation` on model `$model_name` because it is not loaded")
+    end
+    return dispatch(model, operation, args...; kwargs...)
+end
+

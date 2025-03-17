@@ -1,10 +1,8 @@
 # [Configuration](@id configuration)
 
 This section describes the configuration options for the RxInferServer.jl package.
-`RxInferServer` exposes two different configuration mechanisms:
-
-- Environment variables: for setting runtime settings, which do not require recompilation of the project
-- Preferences: for setting preferences persistent across Julia sessions, which are usually compile-time settings. These settings persist across Julia sessions and require a restart of the server and re-compilation of the project to take effect. You could also manually modify the `LocalPreferences.toml` file to change these settings.
+All configuration is done through environment variables, which can be set before starting the server.
+These settings are runtime configurations that do not require recompilation of the project.
 
 # [Port Configuration](@id port-configuration)
 
@@ -116,10 +114,21 @@ RxInferServer.RXINFER_SERVER_LISTEN_KEYBOARD
 # [Hot Reloading](@id hot-reloading-configuration)
 
 The server supports hot reloading, which automatically updates endpoints when code changes are detected. 
-This feature is enabled by default but can be disabled using preferences:
+This feature is controlled by the following environment variable:
 
 ```@docs
+RxInferServer.RXINFER_SERVER_ENABLE_HOT_RELOAD
 RxInferServer.is_hot_reload_enabled
-RxInferServer.set_hot_reload
-RxInferServer.HOT_RELOAD_PREF_KEY
 ```
+
+Hot reloading consists of two separate mechanisms:
+- **Source Code Hot-Reloading**: Updates API endpoints and server code when changes are detected
+- **Models Hot-Reloading**: Refreshes models when their files change
+
+Both mechanisms monitor files for changes using `Revise.jl` and automatically apply updates when detected. Console logs with the `[HOT-RELOAD]` prefix indicate reloading activity.
+
+!!! note
+    Hot reloading requires `Revise.jl` to be loaded in the current Julia session. If `Revise.jl` is not loaded, hot reloading will be disabled even if enabled through the environment variable.
+
+!!! warning
+    Hot reloading should be disabled in production environments as it can impact performance and may cause unexpected behavior.

@@ -85,13 +85,27 @@ Both mechanisms monitor files for changes using `Revise.jl` and automatically ap
 
 #### Controlling Hot-Reloading
 
-See [Hot Reloading](@ref hot-reloading-configuration) for more details.
+Hot reloading can be controlled through the `RXINFER_SERVER_ENABLE_HOT_RELOAD` environment variable:
+
+```bash
+# Enable hot reloading (default is "false")
+export RXINFER_SERVER_ENABLE_HOT_RELOAD="true"
+
+# Start the server with hot reloading enabled
+make serve
+```
+
+!!! note
+    Hot reloading requires `Revise.jl` to be loaded in the current Julia session. If `Revise.jl` is not loaded, hot reloading will be disabled even if enabled through the environment variable.
 
 #### Best Practices and Troubleshooting
 
 - Hot-reloading works best for typical code changes but complex structural changes may require server restart
-- Disable hot-reloading in production environments
+- Disable hot-reloading in production environments by setting `RXINFER_SERVER_ENABLE_HOT_RELOAD="false"`
 - If issues occur, check logs for `[HOT-RELOAD]` errors and verify files are in monitored directories
+- When hot reloading is enabled but not working, ensure `Revise.jl` is loaded in your Julia session
+
+See [Hot Reloading](@ref hot-reloading-configuration) for more details.
 
 ### Development Workflow with Makefile
 

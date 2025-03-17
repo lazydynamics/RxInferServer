@@ -1,3 +1,5 @@
+*.so
+*.dylib
 *.jl.*.cov
 *.jl.cov
 *.jl.mem

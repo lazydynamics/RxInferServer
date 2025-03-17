@@ -50,6 +50,23 @@ function is_revise_loaded()
     return haskey(Base.loaded_modules, Base.PkgId(UUID("295af30f-e4ad-537b-8983-00126c2a3abe"), "Revise"))
 end
 
+function hot_reloading_banner_hint()
+    if is_hot_reload_enabled() && is_revise_loaded()
+        return """
+        Hot reloading is enabled and Revise.jl is loaded in the current Julia session.
+        """
+    elseif is_hot_reload_enabled() && !is_revise_loaded()
+        return """
+        Hot reloading is requested, but Revise.jl is not loaded in the current Julia session.
+        Run `using Revise` before starting the server to enable hot reloading.
+        """
+    elseif !is_hot_reload_enabled()
+        return """
+        Hot reloading is disabled.
+        """
+    end
+end
+
 # Creates a task that hot reloads the server when the source code changes
 # Basically only one vaiable option for Julia is Revise.jl, see `ext/HotReloadExt/HotReloadExt.jl` for the actual implementation
 function hot_reload_task(

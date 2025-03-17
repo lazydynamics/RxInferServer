@@ -42,44 +42,108 @@ include("tags/Server.jl")
 include("tags/Authentification.jl")
 include("tags/Models.jl")
 
-# A simple structure to keep track of the server state. 
-# Also used for the hot reload task to check if the server has been instantiated and/or is running.
-# Not a part of the public API.
-Base.@kwdef mutable struct ServerState
-    server_running::Threads.Atomic{Bool} = Threads.Atomic{Bool}(false)
-    server_errored::Threads.Atomic{Bool} = Threads.Atomic{Bool}(false)
-    server_instantiated::Base.Threads.Event = Base.Threads.Event()
-    server_pid_file::String = tempname()
+"""
+    ServerState
+
+A structure that keeps track of the server state, including whether it is running or has errored.
+Used internally to check server status and manage server lifecycle events.
+
+# Fields
+- `is_running::Threads.Atomic{Bool}`: Atomic boolean indicating if server is currently running
+- `is_errored::Threads.Atomic{Bool}`: Atomic boolean indicating if server has encountered an error
+- `event_instantiated::Base.Threads.Event`: Event triggered when server is instantiated
+- `pid_file::String`: File path used to trigger the hot reload task
+- `router::HTTP.Router`: The HTTP router handling server requests
+- `ip::Sockets.IPv4`: IP address the server binds to
+- `port::Int`: Port number the server listens on
+"""
+Base.@kwdef struct ServerState{R}
+    is_running::Threads.Atomic{Bool} = Threads.Atomic{Bool}(false)
+    is_errored::Threads.Atomic{Bool} = Threads.Atomic{Bool}(false)
+    event_instantiated::Base.Threads.Event = Base.Threads.Event()
+    pid_file::String = tempname() # this is a file that is used to trigger the hot reload task
+
+    router::R = HTTP.Router(cors404, cors405)
+    ip::Sockets.IPv4 = ip"0.0.0.0"
+    port::Int = RXINFER_SERVER_PORT()
 end
 
-function pid_server_event(state::ServerState, event::String)
-    open(state.server_pid_file, "a") do f
+"""
+    pid_server_event(server::ServerState, event::String)
+
+Logs an event to the server's PID file.
+This is used, for example, to trigger the hot reload task when the server is instantiated or shuts down.
+"""
+function pid_server_event(server::ServerState, event::String)
+    open(server.pid_file, "a") do f
         println(f, "$event at $(Dates.format(now(), "yyyy-mm-dd HH:MM:SS"));")
     end
 end
 
-function is_server_running(state::ServerState)
-    return state.server_running[]
+"""
+    is_server_running(server::ServerState) -> Bool
+
+Check if the server is currently running.
+
+See also: [`RxInferServer.set_server_running`](@ref)
+"""
+function is_server_running(server::ServerState)
+    return server.is_running[]
 end
 
-function set_server_running(state::ServerState, running::Bool)
-    state.server_running[] = running
+"""
+    set_server_running(server::ServerState, running::Bool)
+
+Set the server running flag to the given value.
+
+See also: [`RxInferServer.is_server_running`](@ref)
+"""
+function set_server_running(server::ServerState, running::Bool)
+    server.is_running[] = running
 end
 
-function is_server_errored(state::ServerState)
-    return state.server_errored[]
+"""
+    is_server_errored(server::ServerState) -> Bool
+
+Check if the server has encountered an error.
+
+See also: [`RxInferServer.set_server_errored`](@ref)
+"""
+function is_server_errored(server::ServerState)
+    return server.is_errored[]
 end
 
-function set_server_errored(state::ServerState, errored::Bool)
-    state.server_errored[] = errored
+"""
+    set_server_errored(server::ServerState, errored::Bool)
+
+Set the server errored flag to the given value.
+
+See also: [`RxInferServer.is_server_errored`](@ref)
+"""
+function set_server_errored(server::ServerState, errored::Bool)
+    server.is_errored[] = errored
 end
 
-function notify_instantiated(state::ServerState)
-    notify(state.server_instantiated)
+"""
+    notify_instantiated(server::ServerState)
+
+Notify threads which are waiting for the server to be instantiated.
+
+See also: [`RxInferServer.wait_instantiated`](@ref)
+"""
+function notify_instantiated(server::ServerState)
+    notify(server.event_instantiated)
 end
 
-function wait_instantiated(state::ServerState)
-    return wait(state.server_instantiated)
+"""
+    wait_instantiated(server::ServerState)
+
+Wait for the server to be instantiated.
+
+See also: [`RxInferServer.notify_instantiated`](@ref)
+"""
+function wait_instantiated(server::ServerState)
+    return wait(server.event_instantiated)
 end
 
 # Hot reloading functionality 
@@ -164,6 +228,7 @@ function serve()
 
                 Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())`
                 $(Logging.is_debug_logging_enabled() ? "Debug level logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())/debug.log`" : "")
+                $(is_hot_reload_enabled() ? "Hot reloading is enabled" : "Hot reloading is disabled")
                 
                 $(RXINFER_SERVER_LISTEN_KEYBOARD() ? "Type 'q' or 'quit' and hit ENTER to quit the server" : "Server is not listening for keyboard input")
                 $(isinteractive() ? "Alternatively use Ctrl-C to quit." : "(Running in non-interactive mode, Ctrl-C may not work properly)")
@@ -173,115 +238,85 @@ function serve()
     end
 
     Logging.with_logger() do
-        # Initialize HTTP router for handling API endpoints
-        router = HTTP.Router(cors404, cors405)
-
-        server_state = ServerState()
+        # Initialize server state
+        server = ServerState()
 
         # Log the server start event in the server pid file
         # Note that this is not a log file, but a file to trigger file watchers
-        pid_server_event(server_state, "server is starting")
+        pid_server_event(server, "server is starting")
 
         Models.with_models() do
             # Register all API endpoints defined in OpenAPI spec
             RxInferServerOpenAPI.register(
-                router,
+                server.router,
                 @__MODULE__;
                 path_prefix = API_PATH_PREFIX,
                 pre_validation = middleware_pre_validation,
                 post_invoke = middleware_post_invoke
             )
 
-            # Hot reloading of the source code, see `hotreload.jl` for more details
-            # There is a separate task for hot reloading models defined below
-            hot_reload_source_code =
-                hot_reload_task(:source_code, server_state, [], [RxInferServerOpenAPI, @__MODULE__]; all = true) do
-                    io = IOBuffer()
-                    # The register function prints a lot of annoying warnings with routes being replaced
-                    # But this is the actual purpose of the hot reload task, so we suppress the warnings
-                    Logging.with_simple_logger(io) do
-                        RxInferServerOpenAPI.register(
-                            router,
-                            @__MODULE__;
-                            path_prefix = API_PATH_PREFIX,
-                            pre_validation = middleware_pre_validation,
-                            post_invoke = middleware_post_invoke
-                        )
-                    end
-                    if occursin("replacing existing registered route", String(take!(io)))
-                        @warn "[HOT-RELOAD] Successfully replaced existing registered route" _id = :hot_reload
-                    end
-                end
-
-            # We instantiate a separate task for hot reloading models
-            # Because it is slower than the source code hot reloading and does not need to be done all the time
-            hot_reload_models_locations = [
-                joinpath(root, file) for location in Models.RXINFER_SERVER_MODELS_LOCATIONS() for
-                (root, _, files) in walkdir(location) if isdir(location) for file in files
-            ]
-            hot_reload_models = hot_reload_task(:models, server_state, hot_reload_models_locations, []; all = false) do
-                Models.reload!(Models.get_models_dispatcher())
-                @warn "[HOT-RELOAD] Models have been reloaded" _id = :hot_reload
-            end
-
-            server_ip = ip"0.0.0.0"
-            server_port = RXINFER_SERVER_PORT()
-
-            @info "Starting server on port `$(server_port)`"
-
-            server = Sockets.listen(server_ip, server_port)
+            @info "Starting server on port `$(server.port)`"
+            socket = Sockets.listen(server.ip, server.port)
 
             # Start HTTP server on port `RXINFER_SERVER_PORT`
             server_task = Threads.@spawn begin
                 try
                     Database.with_connection() do
                         # Start the HTTP server in non-blocking mode in order to trigger the `server_instantiated` event
-                        s = HTTP.serve!($router, server_ip, server_port, server = $server)
+                        s = HTTP.serve!(server.router, server.ip, server.port, server = socket)
                         # Flip the server running flag to true
-                        set_server_running(server_state, true)
+                        set_server_running(server, true)
                         # Notify the main thread that the server has been instantiated
-                        notify_instantiated(server_state)
+                        notify_instantiated(server)
                         # Wait for the server to be closed from the main thread
                         wait(s)
                     end
                 catch e
                     @error "Server task encountered an error: $e"
-                    set_server_running(server_state, false)
-                    set_server_errored(server_state, true)
-                    notify_instantiated(server_state)
+                    set_server_running(server, false)
+                    set_server_errored(server, true)
+                    notify_instantiated(server)
                 end
             end
+
+            # Hot reloading of the source code, see `hotreload.jl` for more details
+            # There is a separate task for hot reloading models defined below
+            hot_reload_source_code = hot_reload_task_source_code(server)
+
+            # We instantiate a separate task for hot reloading models
+            # Because it is slower than the source code hot reloading and does not need to be done all the time
+            hot_reload_models = hot_reload_task_models(server)
 
             function shutdown()
                 # Atomic operation to set the server running flag to false
                 # Returns the old value of the flag, e.g. true if the server was actually running
-                if Base.Threads.atomic_xchg!(server_state.server_running, false)
+                if Base.Threads.atomic_xchg!(server.is_running, false)
                     @info "Initiating graceful shutdown..."
 
-                    close(server)
+                    close(socket)
 
                     # Update server state file to trigger file watcher for hot reloading task 
                     # We do it again though before waiting for each hot reload task to complete
-                    pid_server_event(server_state, "server is shutting down")
+                    pid_server_event(server, "server is shutting down")
 
                     # Wait for hot reload task to complete if it was running
                     if is_hot_reload_enabled()
-                        pid_server_event(server_state, "attempting to stop hot reload tasks")
+                        pid_server_event(server, "attempting to stop hot reload tasks")
 
                         if !isnothing(hot_reload_source_code)
-                            pid_server_event(server_state, "stopping hot reload for source code")
+                            pid_server_event(server, "stopping hot reload for source code")
                             wait(hot_reload_source_code)
                         end
 
                         if !isnothing(hot_reload_models)
-                            pid_server_event(server_state, "stopping hot reload for models")
+                            pid_server_event(server, "stopping hot reload for models")
                             wait(hot_reload_models)
                         end
                     end
 
                     # Wait for the server task to complete
                     wait(server_task)
-                    pid_server_event(server_state, "server has been stopped")
+                    pid_server_event(server, "server has been stopped")
 
                     @info "Server shutdown complete."
                 end
@@ -293,7 +328,7 @@ function serve()
             if !isinteractive()
                 Base.atexit() do
                     shutdown()
-                    if is_server_errored(server_state)
+                    if is_server_errored(server)
                         exit(1)
                     else
                         exit(0)
@@ -306,8 +341,8 @@ function serve()
 
             # Running a loop to wait for the user to quit the server
             try
-                wait_instantiated(server_state)
-                while is_server_running(server_state) && !istaskdone(server_task) && !istaskfailed(server_task)
+                wait_instantiated(server)
+                while is_server_running(server) && !istaskdone(server_task) && !istaskfailed(server_task)
                     if RXINFER_SERVER_LISTEN_KEYBOARD()
                         input = readline()
                         if input == "q" || input == "quit"
@@ -324,7 +359,7 @@ function serve()
 
             shutdown()
 
-            if is_server_errored(server_state)
+            if is_server_errored(server)
                 error("Server task encountered an error")
             end
         end

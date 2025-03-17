@@ -384,3 +384,19 @@ end
 
 !!! note
     These functions will throw an error if called in a non-authenticated context. Always ensure they are only called in endpoints protected by the authentication middleware.
+
+## API Reference 
+
+### Server Lifecycle Management
+
+RxInferServer uses a `ServerState` struct to manage the server's lifecycle and state. This is created automatically when the server is instantiated with the [`serve()`](@ref) function. This structure is used internally to keep track of the server's status and manage the server's lifecycle. The most notable use case is for the hot-reloading mechanism to check if the server is running and/or has encountered an error. The hot-reloading tasks also track the server pid file to trigger the hot-reloading tasks when the server is instantiated or shuts down.
+
+```@docs
+RxInferServer.ServerState
+RxInferServer.is_server_running
+RxInferServer.set_server_running
+RxInferServer.is_server_errored
+RxInferServer.set_server_errored
+RxInferServer.notify_instantiated
+RxInferServer.wait_instantiated
+```

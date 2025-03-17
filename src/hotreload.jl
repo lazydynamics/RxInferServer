@@ -1,3 +1,5 @@
+# !!! do not wrap this file in a separate module !!!
+
 # NOTE: Hot reload functionality is only available when Revise is loaded
 # in the current Julia session. See the `ext/HotReloadExt/HotReloadExt.jl` 
 # module for the actual implementation. 
@@ -50,24 +52,64 @@ end
 
 # Creates a task that hot reloads the server when the source code changes
 # Basically only one vaiable option for Julia is Revise.jl, see `ext/HotReloadExt/HotReloadExt.jl` for the actual implementation
-function hot_reload_task(f::F, label::Symbol, state::ServerState, files, modules; all = false, postpone = true) where {F}
+function hot_reload_task(
+    f::F, label::Symbol, state::ServerState, files, modules; all = false, postpone = true
+) where {F}
     if !is_hot_reload_enabled()
         @info "Hot reloading is disabled" label _id = :hot_reload
         return nothing
     end
     if !is_revise_loaded()
-        @warn "Hot reloading is enabled, but Revise.jl is not loaded in the current Julia session. Run `using Revise` before starting the server to enable hot reloading." label _id = :hot_reload
+        @warn "Hot reloading is enabled, but Revise.jl is not loaded in the current Julia session. Run `using Revise` before starting the server to enable hot reloading." label _id =
+            :hot_reload
         return nothing
     end
     # Add the server pid file to the list of files to watch for changes
     # This is intended to trigger a hot reload when the server pid file is changed
-    files_with_pid_file = vcat(files, [state.server_pid_file])
+    files_with_pid_file = vcat(files, [state.pid_file])
     return hot_reload_task(Val(:Revise), f, label, state, files_with_pid_file, modules; all = all, postpone = postpone)
 end
 
 # This is intentionally not implemented and is supposed to be overwritten by the actual implementation 
 #   - Revise.jl implementation in `ext/HotReloadExt/HotReloadExt.jl`
-function hot_reload_task(hot_reload_backend, f::F, label::Symbol, state::ServerState, files, modules; all = false, postpone = true) where {F}
+function hot_reload_task(
+    hot_reload_backend, f::F, label::Symbol, state::ServerState, files, modules; all = false, postpone = true
+) where {F}
     @warn "Hot reloading is not supported for the given hot reload backend: $hot_reload_backend" label _id = :hot_reload
     return nothing
+end
+
+# Hot reload task for the source code, it tracks changes in the 
+# - RxInferServerOpenAPI
+# - The current module, which is the module of the server 
+# !!! do not wrap this file in a separate module !!!
+function hot_reload_task_source_code(state::ServerState)
+    return hot_reload_task(:source_code, state, [], [RxInferServerOpenAPI, @__MODULE__]; all = true) do
+        io = IOBuffer()
+        # The register function prints a lot of annoying warnings with routes being replaced
+        # But this is the actual purpose of the hot reload task, so we suppress the warnings
+        Logging.with_simple_logger(io) do
+            RxInferServerOpenAPI.register(
+                state.router,
+                @__MODULE__;
+                path_prefix = API_PATH_PREFIX,
+                pre_validation = middleware_pre_validation,
+                post_invoke = middleware_post_invoke
+            )
+        end
+        if occursin("replacing existing registered route", String(take!(io)))
+            @warn "[HOT-RELOAD] Successfully replaced existing registered route" _id = :hot_reload
+        end
+    end
+end
+
+function hot_reload_task_models(state::ServerState)
+    hot_reload_models_locations = [
+        joinpath(root, file) for location in Models.RXINFER_SERVER_MODELS_LOCATIONS() for
+        (root, _, files) in walkdir(location) if isdir(location) for file in files
+    ]
+    return hot_reload_task(:models, state, hot_reload_models_locations, []; all = false) do
+        Models.reload!(Models.get_models_dispatcher())
+        @warn "[HOT-RELOAD] Models have been reloaded" _id = :hot_reload
+    end
 end

@@ -29,7 +29,9 @@ function RxInferServer.hot_reload_task(
                     number_of_concecutive_failures = 0
                 catch e
                     if RxInferServer.is_server_running(state)
-                        @error "[HOT-RELOAD] Hot reload task encountered an error: $e" label _id = :hot_reload
+                        @error "[HOT-RELOAD] Hot reload task encountered an error" label _id = :hot_reload exception = (
+                            e, catch_backtrace()
+                        )
                     else
                         @warn "[HOT-RELOAD] Exiting hot reload task for" label _id = :hot_reload
                     end

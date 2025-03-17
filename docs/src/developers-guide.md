@@ -130,9 +130,6 @@ make format
 
 # Check code formatting without modifying files
 make check-format
-
-# List available OpenAPI endpoints to implement
-make openapi-endpoints
 ```
 
 For a full list of available commands, run:
@@ -273,14 +270,7 @@ end
 ```
 
 This tells you that you need to implement the `get_server_info` function that must return a `ServerInfo` object as defined in the `openapi/spec.yaml` file.
-
-For a quick check of which server methods need to be implemented, you can use the provided Makefile target:
-
-```bash
-make openapi-endpoints
-```
-
-This command will load RxInferServer and display the documentation of the RxInferServerOpenAPI module, which contains the list of methods that must be implemented.
+You however, can also return other types of objects, for example `ErrorResponse` or `UnauthorizedResponse`. Those will be converted to the appropriate HTTP response codes by the server.
 
 #### Client Code
 

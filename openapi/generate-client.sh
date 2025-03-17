@@ -16,27 +16,27 @@ echo "Generating Julia client code and documentation from OpenAPI specification.
 # Get absolute path to the current directory
 CURRENT_DIR=$(pwd)
 
-# Create documentation directory if it doesn't exist
-mkdir -p "${CURRENT_DIR}/openapi/docs/client"
+# Delete both docs and src directories if they exists
+rm -rf "${CURRENT_DIR}/client/docs"
+rm -rf "${CURRENT_DIR}/client/src"
 
 # Run the OpenAPI Generator for Julia client directly with Docker
 docker run --rm \
-  -v "${CURRENT_DIR}/openapi:/openapi" \
-  -v "${CURRENT_DIR}/openapi/client:/openapi/client" \
-  -v "${CURRENT_DIR}/openapi/docs/client:/openapi/docs/client" \
+  -v "${CURRENT_DIR}:/openapi" \
+  -v "${CURRENT_DIR}/client:/openapi/client" \
   openapitools/openapi-generator-cli:latest generate \
   -i /openapi/spec.yaml \
   -g julia-client \
   -o /openapi/client \
   --additional-properties=packageName=RxInferClientOpenAPI
 
-# Generate Markdown documentation
-# Remove existing docs directory if it exists
-rm -rf "${CURRENT_DIR}/openapi/client/docs"
+# Remove docs again because the previous command will have created them
+# But in a different format
+rm -rf "${CURRENT_DIR}/client/docs"
 
+# Generate Markdown documentation
 docker run --rm \
-  -v "${CURRENT_DIR}/openapi:/openapi" \
-  -v "${CURRENT_DIR}/openapi/docs/client:/openapi/docs/client" \
+  -v "${CURRENT_DIR}:/openapi" \
   openapitools/openapi-generator-cli:latest generate \
   -i /openapi/spec.yaml \
   -g markdown \
@@ -44,5 +44,5 @@ docker run --rm \
 
 echo "Client code and documentation generation complete!"
 echo "Generated Julia client code is available in the 'openapi/client' directory."
-echo "Generated documentation is available in the 'openapi/docs/client' directory."
+echo "Generated documentation is available in the 'openapi/client/docs' directory."
 echo "You can now use this client to interact with the RxInfer API." 

@@ -229,7 +229,6 @@ function serve()
                 Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())`
                 $(Logging.is_debug_logging_enabled() ? "Debug level logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())/debug.log`" : "")
                 $(hot_reloading_banner_hint())
-                
                 $(RXINFER_SERVER_LISTEN_KEYBOARD() ? "Type 'q' or 'quit' and hit ENTER to quit the server" : "Server is not listening for keyboard input")
                 $(isinteractive() ? "Alternatively use Ctrl-C to quit." : "(Running in non-interactive mode, Ctrl-C may not work properly)")
 

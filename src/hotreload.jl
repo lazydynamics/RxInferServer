@@ -52,18 +52,11 @@ end
 
 function hot_reloading_banner_hint()
     if is_hot_reload_enabled() && is_revise_loaded()
-        return """
-        Hot reloading is enabled and Revise.jl is loaded in the current Julia session.
-        """
+        return "Hot reloading is enabled and Revise.jl is loaded in the current Julia session."
     elseif is_hot_reload_enabled() && !is_revise_loaded()
-        return """
-        Hot reloading is requested, but Revise.jl is not loaded in the current Julia session.
-        Run `using Revise` before starting the server to enable hot reloading.
-        """
+        return "Hot reloading is requested, but Revise.jl is not loaded in the current Julia session. Run `using Revise` before starting the server to enable hot reloading."
     elseif !is_hot_reload_enabled()
-        return """
-        Hot reloading is disabled.
-        """
+        return "Hot reloading is disabled."
     end
 end
 

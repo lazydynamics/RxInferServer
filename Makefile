@@ -64,7 +64,9 @@ test: deps ## Run project tests
 	julia --project -e 'using Pkg; Pkg.test()'
 
 serve: deps ## Run the server (with .env.development)
-	RXINFER_SERVER_ENV=development julia --project -e 'using RxInferServer; RxInferServer.serve()'
+	$(eval TRACE_COMPILE_PATH ?=)
+	$(eval TRACE_COMPILE_FLAG := $(if $(TRACE_COMPILE_PATH),--trace-compile=$(TRACE_COMPILE_PATH),))
+	RXINFER_SERVER_ENV=development julia --project $(TRACE_COMPILE_FLAG) -e 'using RxInferServer; RxInferServer.serve()'
 
 docker: docker-start ## Starts the docker compose environment
 

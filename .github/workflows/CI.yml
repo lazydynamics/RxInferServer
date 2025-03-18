@@ -73,32 +73,35 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
       
-      # Check if required directories exist
-      - name: Check if OpenAPI directories exist
+      # We need to create a copy of the openapi directory because:
+      # 1. GitHub Actions runner has limited permissions to delete files in the original checkout
+      # 2. The OpenAPI generation scripts need to remove directories (especially docs) before regeneration
+      # 3. Using a separate directory with full permissions ensures clean generation without permission errors
+      - name: Create copy of openapi directory
         run: |
-          if [ ! -d "openapi/server" ] || [ ! -d "openapi/client" ]; then
-            echo "::error::OpenAPI generated code directories are missing! Please run 'make generate-all' locally and commit the generated code."
-            exit 1
-          fi
+          cp -r openapi openapi-copy
       
-      # Take initial snapshot
+      # Take initial snapshot of original OpenAPI code
       - name: Take initial snapshot of OpenAPI generated code
         run: |
           find openapi -type f -not -path "*/\.*" | sort | xargs md5sum > openapi_before_hash.txt
       
-      # Run OpenAPI code generation
-      - name: Run OpenAPI code generation
+      # Run OpenAPI code generation with custom output directory
+      - name: Run OpenAPI code generation with custom output directory
         run: |
-          make generate-all
+          OPENAPI_OUTPUT_DIR="$(pwd)/openapi-copy" make generate-all
       
       # Compare code
       - name: Check if OpenAPI generated code is up-to-date
         run: |
-          find openapi -type f -not -path "*/\.*" | sort | xargs md5sum > openapi_after_hash.txt
+          find openapi-copy -type f -not -path "*/\.*" | sort | xargs md5sum > openapi_after_hash.txt
           
-          if ! diff -q openapi_before_hash.txt openapi_after_hash.txt > /dev/null; then
+          # Update paths in the hash file to match original paths for comparison
+          sed 's|openapi-copy|openapi|g' openapi_after_hash.txt > openapi_after_adjusted_hash.txt
+          
+          if ! diff -q openapi_before_hash.txt openapi_after_adjusted_hash.txt > /dev/null; then
             echo "::error::OpenAPI generated code is out of date! Please run 'make generate-all' locally and commit the changes."
-            diff openapi_before_hash.txt openapi_after_hash.txt || true
+            diff openapi_before_hash.txt openapi_after_adjusted_hash.txt || true
             exit 1
           else
             echo "✅ OpenAPI generated code is up-to-date."

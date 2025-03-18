@@ -16,14 +16,17 @@ echo "Generating Julia server code and documentation from OpenAPI specification.
 # Get absolute path to the current directory
 CURRENT_DIR=$(pwd)
 
+# Set output directory from environment variable or use default
+OUTPUT_DIR="${OPENAPI_OUTPUT_DIR:-${CURRENT_DIR}}/server"
+
 # Delete both docs and src directories if they exists
-rm -rf "${CURRENT_DIR}/server/docs"
-rm -rf "${CURRENT_DIR}/server/src"
+rm -rf "${OUTPUT_DIR}/docs"
+rm -rf "${OUTPUT_DIR}/src"
 
 # Run the OpenAPI Generator for Julia directly with Docker
 docker run --rm \
   -v "${CURRENT_DIR}:/openapi" \
-  -v "${CURRENT_DIR}/server:/openapi/server" \
+  -v "${OUTPUT_DIR}:/openapi/server" \
   openapitools/openapi-generator-cli:latest generate \
   -i /openapi/spec.yaml \
   -g julia-server \
@@ -32,7 +35,7 @@ docker run --rm \
 
 # Remove docs again because the previous command will have created them
 # But in a different format
-rm -rf "${CURRENT_DIR}/server/docs"
+rm -rf "${OUTPUT_DIR}/docs"
 
 # Generate Markdown documentation
 docker run --rm \
@@ -43,6 +46,6 @@ docker run --rm \
   -o /openapi/server/docs
 
 echo "Code and documentation generation complete!"
-echo "Generated Julia server code is available in the 'openapi/server' directory."
-echo "Generated documentation is available in the 'openapi/server/docs' directory."
+echo "Generated Julia server code is available in '${OUTPUT_DIR}'"
+echo "Generated documentation is available in '${OUTPUT_DIR}/docs'"
 echo "Do not modify the generated code. Instead, you should implement the API defined in the 'src/RxInferServerOpenAPI.jl' file."

@@ -37,6 +37,8 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - name: Run tests
+        env:
+          RXINFER_SERVER_ENABLE_DEBUG_LOGGING: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           # Start the docker compose environment
           make docker-start

@@ -35,7 +35,7 @@ ENV["RXINFER_SERVER_ENABLE_DEBUG_LOGGING"] = "true"
 RxInferServer.serve()
 ```
 """
-RXINFER_SERVER_ENABLE_DEBUG_LOGGING() = get(ENV, "RXINFER_SERVER_ENABLE_DEBUG_LOGGING", "false")
+RXINFER_SERVER_ENABLE_DEBUG_LOGGING() = lowercase(get(ENV, "RXINFER_SERVER_ENABLE_DEBUG_LOGGING", "false")) == "true"
 
 """
 Returns `true` if debug logging is enabled, `false` otherwise.

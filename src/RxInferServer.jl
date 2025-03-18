@@ -5,6 +5,7 @@ using RxInfer
 using HTTP, Sockets, JSON, RxInferServerOpenAPI
 using Dates, Pkg
 
+include("dotenv.jl")
 include("database.jl")
 include("logging.jl")
 
@@ -188,6 +189,7 @@ The server uses the OpenAPI specification defined in `RxInferServerOpenAPI` modu
 # Features
 - Configurable port via the `RXINFER_SERVER_PORT` environment variable (default: 8000)
 - Graceful shutdown with proper resource cleanup when interrupted
+- Loads the .env files based on the `RXINFER_SERVER_ENV` environment variable
 - When `Revise.jl` is loaded in the current Julia session, and the `RXINFER_SERVER_ENABLE_HOT_RELOAD` environment variable is set to `"true"`, 
   the server will hot reload the source code and models when the source code changes.
 
@@ -204,12 +206,16 @@ RxInferServer.serve()
 ```
 
 # See Also
+- [`RxInferServer.RXINFER_SERVER_ENV`](@ref): The environment on which the RxInfer server will run, determines which .env files are loaded
 - [`RxInferServer.RXINFER_SERVER_PORT`](@ref): The port on which the RxInfer server will run
 - [`RxInferServer.RXINFER_SERVER_ENABLE_HOT_RELOAD`](@ref): Check if hot reloading is enabled
 - [`RxInferServer.RXINFER_SERVER_SHOW_BANNER`](@ref): Whether to show the welcome banner
 - [`RxInferServer.RXINFER_SERVER_LISTEN_KEYBOARD`](@ref): Whether to listen for keyboard input to quit the server
 """
 function serve()
+    # Load the .env files
+    dotenv_loaded = load_dotenv()
+
     if RXINFER_SERVER_SHOW_BANNER()
         banner = """
 
@@ -226,6 +232,7 @@ function serve()
                 API Documentation: https://api.rxinfer.com
                 RxInfer Documentation: https://docs.rxinfer.com
 
+                .env files: $(join(dotenv_loaded, ", "))
                 Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())`
                 $(Logging.is_debug_logging_enabled() ? "Debug level logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())/debug.log`" : "")
                 $(hot_reloading_banner_hint())
@@ -317,6 +324,8 @@ function serve()
                     # Wait for the server task to complete
                     wait(server_task)
                     pid_server_event(server, "server has been stopped")
+
+                    unload_dotenv(dotenv_loaded)
 
                     @info "Server shutdown complete."
                 end

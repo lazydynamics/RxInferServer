@@ -80,6 +80,8 @@ jobs:
       - name: Create copy of openapi directory
         run: |
           cp -r openapi openapi-copy
+          # Ensure full read/write permissions on the copied directory
+          chmod -R 755 openapi-copy
       
       # Take initial snapshot of original OpenAPI code
       - name: Take initial snapshot of OpenAPI generated code

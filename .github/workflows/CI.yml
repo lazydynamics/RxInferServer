@@ -39,6 +39,7 @@ jobs:
       - name: Run tests
         env:
           RXINFER_SERVER_ENABLE_DEBUG_LOGGING: ${{ github.event_name == 'workflow_dispatch' }}
+          TRACE_COMPILE_PATH: ${{ github.workspace }}/server-compilation-trace.jl
         run: |
           # Start the docker compose environment
           make docker-start
@@ -46,11 +47,19 @@ jobs:
           # Precompile deps before running the server and tests 
           make deps
           
-          # Start the Julia server in the background
+          # Start the Julia server in the background with trace compilation
           make serve &
           
           # Run tests (runtests.jl has built-in server availability check)
           make test
+      
+      - name: Upload trace compilation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-compilation-trace
+          path: server-compilation-trace.jl
+          retention-days: 30
+          if-no-files-found: warn
 
   docs:
     name: Documentation

@@ -36,8 +36,9 @@ If this variable is not set, the current working directory (`pwd()`) is used ins
     such as in environment variables or in a secrets manager.
 
 !!! note 
-    Both [`RXINFER_SERVER_ENV`](@ref) and [`RXINFER_SERVER_ENV_PWD`](@ref) cannot be set via the .env files 
-    as they are accessed before the .env files are loaded.
+    [`RXINFER_SERVER_ENV`](@ref), [`RXINFER_SERVER_ENV_PWD`](@ref) and [`RXINFER_SERVER_ENV_OVERRIDE`](@ref) cannot be set via the .env files as they are accessed before the .env files are loaded.
+
+See also: [`RXINFER_SERVER_ENV_PWD`](@ref), [`RXINFER_SERVER_ENV_OVERRIDE`](@ref).
 """
 RXINFER_SERVER_ENV() = get(ENV, "RXINFER_SERVER_ENV", "")
 
@@ -48,8 +49,9 @@ Returns the directory in which to search for .env files.
 Defaults to the current working directory (`pwd()`) when the environment variable is not set.
 
 !!! note 
-    Both [`RXINFER_SERVER_ENV`](@ref) and [`RXINFER_SERVER_ENV_PWD`](@ref) cannot be set via the .env files 
-    as they are accessed before the .env files are loaded.
+    [`RXINFER_SERVER_ENV`](@ref), [`RXINFER_SERVER_ENV_PWD`](@ref) and [`RXINFER_SERVER_ENV_OVERRIDE`](@ref) cannot be set via the .env files as they are accessed before the .env files are loaded.
+
+See also: [`RXINFER_SERVER_ENV`](@ref), [`RXINFER_SERVER_ENV_OVERRIDE`](@ref).
 """
 RXINFER_SERVER_ENV_PWD() = get(ENV, "RXINFER_SERVER_ENV_PWD", pwd())
 
@@ -61,6 +63,9 @@ Defaults to `false` when the environment variable is not set.
 
 If `RXINFER_SERVER_ENV_OVERRIDE` environment variable is set to `true`, 
 values already set in the environment variable are overridden by the .env files.
+
+!!! note 
+    [`RXINFER_SERVER_ENV`](@ref), [`RXINFER_SERVER_ENV_PWD`](@ref) and [`RXINFER_SERVER_ENV_OVERRIDE`](@ref) cannot be set via the .env files as they are accessed before the .env files are loaded.
 
 See also: [`RXINFER_SERVER_ENV`](@ref), [`RXINFER_SERVER_ENV_PWD`](@ref).
 """

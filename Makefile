@@ -75,12 +75,13 @@ docker-stop: ## Stops the docker compose environment
 	docker compose down
 
 generate-client: ## Generate OpenAPI client code
-	./openapi/generate-client.sh
+	./openapi/generate.sh client
 
 generate-server: ## Generate OpenAPI server code
-	./openapi/generate-server.sh
+	./openapi/generate.sh server
 
-generate-all: generate-client generate-server ## Generate both OpenAPI client and server code
+generate-all: ## Generate both OpenAPI client and server code
+	./openapi/generate.sh all
 
 clean: docs-clean ## Clean all generated files
 

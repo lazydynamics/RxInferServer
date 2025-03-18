@@ -216,6 +216,9 @@ function serve()
     # Load the .env files
     dotenv_loaded = load_dotenv()
 
+    # Initialize server state
+    server = ServerState()
+
     if RXINFER_SERVER_SHOW_BANNER()
         banner = """
 
@@ -228,6 +231,7 @@ function serve()
                 ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝╚═╝     ╚══════╝╚═╝  ╚═╝
                 
                 Welcome to RxInfer Server! (version: $(pkgversion(RxInferServer)))
+                Listening on $(server.ip):$(server.port)
                 
                 API Documentation: https://api.rxinfer.com
                 RxInfer Documentation: https://docs.rxinfer.com
@@ -245,8 +249,6 @@ function serve()
     end
 
     Logging.with_logger() do
-        # Initialize server state
-        server = ServerState()
 
         # Log the server start event in the server pid file
         # Note that this is not a log file, but a file to trigger file watchers
@@ -262,7 +264,6 @@ function serve()
                 post_invoke = middleware_post_invoke
             )
 
-            @info "Starting server on port `$(server.port)`"
             socket = Sockets.listen(server.ip, server.port)
 
             # Start HTTP server on port `RXINFER_SERVER_PORT`

@@ -1,6 +1,6 @@
 # RxInferServer.jl Makefile
 
-.PHONY: help docs docs-serve docs-clean docs-build deps test clean format check-format generate-client generate-server generate-all
+.PHONY: help docs docs-serve docs-clean docs-build deps test serve clean format check-format generate-client generate-server generate-all
 
 # Colors for terminal output
 GREEN  := $(shell tput -Txterm setaf 2)

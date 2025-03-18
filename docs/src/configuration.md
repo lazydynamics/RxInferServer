@@ -4,6 +4,16 @@ This section describes the configuration options for the RxInferServer.jl packag
 All configuration is done through environment variables, which can be set before starting the server.
 These settings are runtime configurations that do not require recompilation of the project.
 
+# [Environment Configuration with .env files](@id environment-configuration-with-env-files)
+
+The server supports loading environment variables from `.env` files. The specific files loaded depend on the server environment setting:
+
+```@docs
+RxInferServer.RXINFER_SERVER_ENV
+RxInferServer.RXINFER_SERVER_ENV_PWD
+RxInferServer.RXINFER_SERVER_ENV_OVERRIDE
+```
+
 # [Port Configuration](@id port-configuration)
 
 The server port can be configured using the following environment variable:

@@ -3,6 +3,7 @@
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
+.env.*.local
 /Manifest.toml
 /docs/Manifest.toml
 /docs/build/

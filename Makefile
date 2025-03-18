@@ -63,8 +63,8 @@ deps: ## Install project dependencies
 test: deps ## Run project tests
 	julia --project -e 'using Pkg; Pkg.test()'
 
-serve: deps ## Run the server (with debug logging and hot reloading enabled)
-	RXINFER_SERVER_ENABLE_DEBUG_LOGGING=true RXINFER_SERVER_ENABLE_HOT_RELOAD=true julia --project -e 'using RxInferServer; RxInferServer.serve()'
+serve: deps ## Run the server (with .env.development)
+	RXINFER_SERVER_ENV=development julia --project -e 'using RxInferServer; RxInferServer.serve()'
 
 docker: docker-start ## Starts the docker compose environment
 

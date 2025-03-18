@@ -73,15 +73,7 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
       
-      # Check if required directories exist
-      - name: Check if OpenAPI directories exist
-        run: |
-          if [ ! -d "openapi/server" ] || [ ! -d "openapi/client" ]; then
-            echo "::error::OpenAPI generated code directories are missing! Please run 'make generate-all' locally and commit the generated code."
-            exit 1
-          fi
-      
-      # Take initial snapshot
+      # Take initial snapshot of the OpenAPI code
       - name: Take initial snapshot of OpenAPI generated code
         run: |
           find openapi -type f -not -path "*/\.*" | sort | xargs md5sum > openapi_before_hash.txt
@@ -91,7 +83,7 @@ jobs:
         run: |
           make generate-all
       
-      # Compare code
+      # Compare code to check if it's up-to-date
       - name: Check if OpenAPI generated code is up-to-date
         run: |
           find openapi -type f -not -path "*/\.*" | sort | xargs md5sum > openapi_after_hash.txt

@@ -1,6 +1,6 @@
 # RxInferServer.jl Makefile
 
-.PHONY: help docs docs-serve docs-clean docs-build deps test clean openapi-endpoints format check-format generate-client generate-server generate-all
+.PHONY: help docs docs-serve docs-clean docs-build deps test clean format check-format generate-client generate-server generate-all
 
 # Colors for terminal output
 GREEN  := $(shell tput -Txterm setaf 2)
@@ -28,7 +28,6 @@ help:
 	@echo '  ${YELLOW}serve${RESET}                Run the server (with debug logging enabled)'
 	@echo '  ${YELLOW}docker-start${RESET}         Start the docker compose environment'
 	@echo '  ${YELLOW}docker-stop${RESET}          Stop the docker compose environment'
-	@echo '  ${YELLOW}openapi-endpoints${RESET}    Show RxInferServerOpenAPI module documentation'
 	@echo '  ${YELLOW}generate-client${RESET}      Generate OpenAPI client code'
 	@echo '  ${YELLOW}generate-server${RESET}      Generate OpenAPI server code'
 	@echo '  ${YELLOW}generate-all${RESET}         Generate both OpenAPI client and server code'
@@ -75,16 +74,14 @@ docker-start: ## Starts the docker compose environment
 docker-stop: ## Stops the docker compose environment
 	docker compose down
 
-openapi-endpoints: deps ## Show RxInferServerOpenAPI module documentation (methods to implement)
-	julia --project -e 'using RxInferServer; println(@doc(RxInferServer.RxInferServerOpenAPI))'
-
 generate-client: ## Generate OpenAPI client code
-	./generate-client.sh
+	./openapi/generate.sh client
 
 generate-server: ## Generate OpenAPI server code
-	./generate-server.sh
+	./openapi/generate.sh server
 
-generate-all: generate-client generate-server ## Generate both OpenAPI client and server code
+generate-all: ## Generate both OpenAPI client and server code
+	./openapi/generate.sh all
 
 clean: docs-clean ## Clean all generated files
 

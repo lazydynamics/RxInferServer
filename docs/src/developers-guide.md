@@ -144,9 +144,6 @@ make format
 
 # Check code formatting without modifying files
 make check-format
-
-# List available OpenAPI endpoints to implement
-make openapi-endpoints
 ```
 
 For a full list of available commands, run:
@@ -233,30 +230,38 @@ make generate-server
 make generate-all
 ```
 
-These commands use the underlying scripts to perform the code generation with appropriate settings.
+These commands use the underlying combined script to perform the code generation with appropriate settings.
 
-#### Generating Server Code
+#### Using the Generation Script Directly
 
-To generate Julia server code from the OpenAPI specification, run:
-
-```bash
-./generate-server.sh
-```
-
-This script will:
-1. Check if Docker is running
-2. Run the OpenAPI Generator Docker image directly
-3. Generate Julia server code in the `openapi/server` directory
-
-#### Generating Client Code
-
-To generate Julia client code from the OpenAPI specification, run:
+You can also run the generation script directly with various options:
 
 ```bash
-./generate-client.sh
+# Generate both client and server code (default)
+./openapi/generate.sh all
+
+# Generate only client code
+./openapi/generate.sh client
+
+# Generate only server code
+./openapi/generate.sh server
+
+# Generate to a custom output directory
+OPENAPI_OUTPUT_DIR="/path/to/output" ./openapi/generate.sh all
 ```
 
-This script follows the same workflow as the server generation script but produces a Julia client instead, placing the output in the `openapi/client` directory. The client code can be used to interact with the RxInfer API from Julia applications.
+The script checks if Docker is running, then uses the OpenAPI Generator Docker image to generate Julia code based on the OpenAPI specification.
+
+##### Customizing Output Location
+
+By default, generated code is placed in the `openapi/client` and `openapi/server` directories. You can customize this by setting the `OPENAPI_OUTPUT_DIR` environment variable:
+
+```bash
+# Example: Generate code to a different directory
+OPENAPI_OUTPUT_DIR="/path/to/custom/directory" ./openapi/generate.sh all
+```
+
+The script will create `client` and `server` subdirectories under the specified path.
 
 !!! note
     After the re-generation of the server code, the initial startup time will be longer due to initial compilation of the generated code.
@@ -287,14 +292,7 @@ end
 ```
 
 This tells you that you need to implement the `get_server_info` function that must return a `ServerInfo` object as defined in the `openapi/spec.yaml` file.
-
-For a quick check of which server methods need to be implemented, you can use the provided Makefile target:
-
-```bash
-make openapi-endpoints
-```
-
-This command will load RxInferServer and display the documentation of the RxInferServerOpenAPI module, which contains the list of methods that must be implemented.
+You however, can also return other types of objects, for example `ErrorResponse` or `UnauthorizedResponse`. Those will be converted to the appropriate HTTP response codes by the server.
 
 #### Client Code
 

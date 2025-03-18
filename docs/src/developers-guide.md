@@ -85,13 +85,27 @@ Both mechanisms monitor files for changes using `Revise.jl` and automatically ap
 
 #### Controlling Hot-Reloading
 
-See [Hot Reloading](@ref hot-reloading-configuration) for more details.
+Hot reloading can be controlled through the `RXINFER_SERVER_ENABLE_HOT_RELOAD` environment variable:
+
+```bash
+# Enable hot reloading (default is "false")
+export RXINFER_SERVER_ENABLE_HOT_RELOAD="true"
+
+# Start the server with hot reloading enabled
+make serve
+```
+
+!!! note
+    Hot reloading requires `Revise.jl` to be loaded in the current Julia session. If `Revise.jl` is not loaded, hot reloading will be disabled even if enabled through the environment variable.
 
 #### Best Practices and Troubleshooting
 
 - Hot-reloading works best for typical code changes but complex structural changes may require server restart
-- Disable hot-reloading in production environments
+- Disable hot-reloading in production environments by setting `RXINFER_SERVER_ENABLE_HOT_RELOAD="false"`
 - If issues occur, check logs for `[HOT-RELOAD]` errors and verify files are in monitored directories
+- When hot reloading is enabled but not working, ensure `Revise.jl` is loaded in your Julia session
+
+See [Hot Reloading](@ref hot-reloading-configuration) for more details.
 
 ### Development Workflow with Makefile
 
@@ -360,3 +374,20 @@ end
 
 !!! note
     These functions will throw an error if called in a non-authenticated context. Always ensure they are only called in endpoints protected by the authentication middleware.
+
+## API Reference 
+
+### Server Lifecycle Management
+
+RxInferServer uses a `ServerState` struct to manage the server's lifecycle and state. This is created automatically when the server is instantiated with the [`RxInferServer.serve`](@ref) function. This structure is used internally to keep track of the server's status and manage the server's lifecycle. The most notable use case is for the hot-reloading mechanism to check if the server is running and/or has encountered an error. The hot-reloading tasks also track the server pid file to trigger the hot-reloading tasks when the server is instantiated or shuts down.
+
+```@docs
+RxInferServer.ServerState
+RxInferServer.is_server_running
+RxInferServer.set_server_running
+RxInferServer.is_server_errored
+RxInferServer.set_server_errored
+RxInferServer.notify_instantiated
+RxInferServer.wait_instantiated
+RxInferServer.pid_server_event
+```

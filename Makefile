@@ -45,26 +45,26 @@ help:
 docs: docs-build ## Build the documentation (same as docs-build)
 
 docs-build: ## Build the documentation
-	julia --startup-file=no --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
-	julia --startup-file=no --project=docs docs/make.jl
+	julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+	julia --project=docs docs/make.jl
 
 docs-serve: ## Serve documentation locally for preview in browser (requires LiveServer.jl installed globally, ignores changes to auto-generated openapi documentation)
-	julia --startup-file=no --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
-	julia --startup-file=no --project=docs -e 'using LiveServer; servedocs(skip_dirs=[joinpath("docs", "src", "openapi")])'
-
+	julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+	julia --project=docs -e 'using LiveServer; servedocs()'
+  
 docs-clean: ## Clean the documentation build directory
 	rm -rf docs/build/
 	rm -rf docs/src/openapi/
 
 ## Development commands:
 deps: ## Install project dependencies
-	julia --startup-file=no --project -e 'using Pkg; Pkg.instantiate()'
+	julia --project -e 'using Pkg; Pkg.instantiate()'
 
 test: deps ## Run project tests
-	julia --startup-file=no --project -e 'using Pkg; Pkg.test()'
+	julia --project -e 'using Pkg; Pkg.test()'
 
-serve: deps ## Run the server
-	RXINFER_SERVER_ENABLE_DEBUG_LOGGING=true julia --startup-file=no --project -e 'using RxInferServer; RxInferServer.serve()'
+serve: deps ## Run the server (with debug logging and hot reloading enabled)
+	RXINFER_SERVER_ENABLE_DEBUG_LOGGING=true RXINFER_SERVER_ENABLE_HOT_RELOAD=true julia --project -e 'using RxInferServer; RxInferServer.serve()'
 
 docker: docker-start ## Starts the docker compose environment
 
@@ -86,13 +86,13 @@ clean: docs-clean ## Clean all generated files
 
 # Formatting commands:
 scripts-deps: ## Install dependencies for the scripts
-	julia --startup-file=no --project=scripts -e 'using Pkg; Pkg.instantiate()'
+	julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
 
 format: scripts-deps ## Format Julia code
-	julia --startup-file=no --project=scripts scripts/formatter.jl --overwrite
+	julia --project=scripts scripts/formatter.jl --overwrite
 
 check-format: scripts-deps ## Check Julia code formatting
-	julia --startup-file=no --project=scripts scripts/formatter.jl
+	julia --project=scripts scripts/formatter.jl
 
 debug-env: deps ## Debug environment variables
-	RXINFER_SERVER_ENABLE_DEBUG_LOGGING=true julia --startup-file=no --project -e 'using RxInferServer; println("Debug logging enabled: $(RxInferServer.is_debug_logging_enabled())"); println("Debug env var value: $(RxInferServer.RXINFER_SERVER_ENABLE_DEBUG_LOGGING())")'
+	RXINFER_SERVER_ENABLE_DEBUG_LOGGING=true julia  --project -e 'using RxInferServer; println("Debug logging enabled: $(RxInferServer.is_debug_logging_enabled())"); println("Debug env var value: $(RxInferServer.RXINFER_SERVER_ENABLE_DEBUG_LOGGING())")'

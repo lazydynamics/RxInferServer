@@ -180,7 +180,7 @@ RXINFER_SERVER_LISTEN_KEYBOARD() =
     serve() -> HTTP.Server
 
 Start the RxInfer API server with the configured settings.
-Official documentation is available at https://api.rxinfer.com/
+Official documentation is available at https://server.rxinfer.com/
 
 # Description
 Initializes and starts an HTTP server that exposes RxInfer functionality through a REST API.
@@ -233,7 +233,7 @@ function serve()
                 Welcome to RxInfer Server! (version: $(pkgversion(RxInferServer)))
                 Listening on $(server.ip):$(server.port)
                 
-                API Documentation: https://api.rxinfer.com
+                API Documentation: https://server.rxinfer.com
                 RxInfer Documentation: https://docs.rxinfer.com
 
                 .env files: $(join(dotenv_loaded, ", "))

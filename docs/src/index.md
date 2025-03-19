@@ -17,8 +17,8 @@ RxInferServer provides a REST API server for [RxInfer.jl](https://github.com/bia
 
 The RxInferServer API is documented using the OpenAPI specification. You can explore the API in the following ways:
 
-1. Interact with the stable version of the API using the [Swagger UI](https://petstore.swagger.io/?url=https://api.rxinfer.com/stable/openapi/spec.yaml)
-2. Interact with the latest version of the API using the [Swagger UI](https://petstore.swagger.io/?url=https://api.rxinfer.com/dev/openapi/spec.yaml)
+1. Interact with the stable version of the API using the [Swagger UI](https://petstore.swagger.io/?url=https://server.rxinfer.com/stable/openapi/spec.yaml)
+2. Interact with the latest version of the API using the [Swagger UI](https://petstore.swagger.io/?url=https://server.rxinfer.com/dev/openapi/spec.yaml)
 
 The Swagger UI provides an interactive interface to explore the API endpoints, make test requests, and view response formats. It's a helpful tool for developers integrating with the RxInferServer API.
 

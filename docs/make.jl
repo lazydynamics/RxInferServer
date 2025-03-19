@@ -202,7 +202,7 @@ makedocs(;
     sitename = "RxInferServer",
     format = Documenter.HTML(;
         prettyurls = get(ENV, "CI", nothing) == "true",
-        canonical = "https://api.rxinfer.com",
+        canonical = "https://server.rxinfer.com",
         edit_link = "main",
         assets = [],
         description = "A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models.",
@@ -225,5 +225,5 @@ makedocs(;
 )
 
 deploydocs(;
-    repo = "github.com/lazydynamics/RxInferServer.jl", devbranch = "main", forcepush = true, cname = "api.rxinfer.com"
+    repo = "github.com/lazydynamics/RxInferServer.jl", devbranch = "main", forcepush = true, cname = "server.rxinfer.com"
 )

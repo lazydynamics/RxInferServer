@@ -377,6 +377,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
+  /models/{model_id}/plan:
+    post:
+      tags:
+        - Models
+      summary: Run planning on a model
+      operationId: runPlanning
+      description: Run planning on a specific model instance
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to run planning on
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanningRequest'
+      responses:
+        '200':
+          description: Successfully ran planning on the model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanningResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
   /models/{model_id}/learn:
     post:
       tags:
@@ -945,6 +985,45 @@ components:
         errors:
           type: array
           description: List of errors that occurred during the inference call, but were not fatal and the inference was still completed successfully
+          items:
+            $ref: '#/components/schemas/ErrorResponse'
+    PlanningRequest:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          description: Model-specific data to run planning on
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the planning request, used to mark the event in the episode
+          example: "2024-03-20T12:00:00Z"
+        episode_name:
+          type: string
+          description: Name of the episode to run planning on
+          default: "default"
+          example: "default"
+    PlanningResponse:
+      type: object
+      required:
+        - event_id
+        - results
+        - errors
+      properties:
+        event_id:
+          type: integer
+          format: int64
+          description: Unique identifier for the planning event
+        results:
+          type: object
+          description: Model-specific results of the planning
+          additionalProperties: true
+        errors:
+          type: array
+          description: List of errors that occurred during the planning call, but were not fatal and the planning was still completed successfully
           items:
             $ref: '#/components/schemas/ErrorResponse'
     LearnRequest:

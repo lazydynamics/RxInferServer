@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>API design · RxInferServer</title><meta name="title" content="API design · RxInferServer"/><meta property="og:title" content="API design · RxInferServer"/><meta property="twitter:title" content="API design · RxInferServer"/><meta name="description" content="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models."/><meta property="og:description" content="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models."/><meta property="twitter:description" content="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models."/><meta property="og:url" content="https://server.rxinfer.com/api/design-proposal/"/><meta property="twitter:url" content="https://server.rxinfer.com/api/design-proposal/"/><link rel="canonical" href="https://server.rxinfer.com/api/design-proposal/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">RxInferServer</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../getting-started/">Getting Started</a></li><li class="is-active"><a class="tocitem" href>API design</a><ul class="internal"><li><a class="tocitem" href="#Core-Concepts"><span>Core Concepts</span></a></li><li><a class="tocitem" href="#API-Endpoints"><span>API Endpoints</span></a></li><li><a class="tocitem" href="#Error-Handling"><span>Error Handling</span></a></li><li><a class="tocitem" href="#Authentication"><span>Authentication</span></a></li><li><a class="tocitem" href="#Distribution-Representation"><span>Distribution Representation</span></a></li><li><a class="tocitem" href="#Data-Validation-and-Handling"><span>Data Validation and Handling</span></a></li><li><a class="tocitem" href="#Client-Example"><span>Client Example</span></a></li><li><a class="tocitem" href="#Implementation-Notes"><span>Implementation Notes</span></a></li><li><a class="tocitem" href="#Future-Considerations"><span>Future Considerations</span></a></li></ul></li><li><a class="tocitem" href="../../configuration/">Configuration</a></li><li><a class="tocitem" href="../../developers-guide/">Developers guide</a></li><li><a class="tocitem" href="../../models/">Models</a></li><li><a class="tocitem" href="../../database/">Database</a></li><li><a class="tocitem" href="../../logging/">Logging</a></li><li><span class="tocitem">OpenAPI Documentation</span><ul><li><input class="collapse-toggle" id="menuitem-9-1" type="checkbox"/><label class="tocitem" for="menuitem-9-1"><span class="docs-label">Server</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/README/">Overview</a></li><li><input class="collapse-toggle" id="menuitem-9-1-2" type="checkbox"/><label class="tocitem" for="menuitem-9-1-2"><span class="docs-label">Apis</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Apis/AuthenticationApi/">AuthenticationApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ModelsApi/">ModelsApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ServerApi/">ServerApi</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-1-3" type="checkbox"/><label class="tocitem" for="menuitem-9-1-3"><span class="docs-label">Models</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Models/AttachMetadataToEventRequest/">AttachMetadataToEventRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelRequest/">CreateModelRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelResponse/">CreateModelResponse</a></li><li><a class="tocitem" href="../../openapi/Models/CreatedModelInfo/">CreatedModelInfo</a></li><li><a class="tocitem" href="../../openapi/Models/DeleteModelRequest/">DeleteModelRequest</a></li><li><a class="tocitem" href="../../openapi/Models/EpisodeInfo/">EpisodeInfo</a></li><li><a class="tocitem" href="../../openapi/Models/ErrorResponse/">ErrorResponse</a></li><li><a class="tocitem" href="../../openapi/Models/InferRequest/">InferRequest</a></li><li><a class="tocitem" href="../../openapi/Models/InferResponse/">InferResponse</a></li><li><a class="tocitem" href="../../openapi/Models/LearnRequest/">LearnRequest</a></li><li><a class="tocitem" href="../../openapi/Models/LearnResponse/">LearnResponse</a></li><li><a class="tocitem" href="../../openapi/Models/LightweightModelDetails/">LightweightModelDetails</a></li><li><a class="tocitem" href="../../openapi/Models/ModelDetails/">ModelDetails</a></li><li><a class="tocitem" href="../../openapi/Models/ModelList/">ModelList</a></li><li><a class="tocitem" href="../../openapi/Models/ModelState/">ModelState</a></li><li><a class="tocitem" href="../../openapi/Models/NotFoundResponse/">NotFoundResponse</a></li><li><a class="tocitem" href="../../openapi/Models/PingResponse/">PingResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ServerInfo/">ServerInfo</a></li><li><a class="tocitem" href="../../openapi/Models/SuccessResponse/">SuccessResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenResponse/">TokenResponse</a></li><li><a class="tocitem" href="../../openapi/Models/UnauthorizedResponse/">UnauthorizedResponse</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-2" type="checkbox"/><label class="tocitem" for="menuitem-9-2"><span class="docs-label">Client</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/README/">Overview</a></li><li><input class="collapse-toggle" id="menuitem-9-2-2" type="checkbox"/><label class="tocitem" for="menuitem-9-2-2"><span class="docs-label">Apis</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Apis/AuthenticationApi/">AuthenticationApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ModelsApi/">ModelsApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ServerApi/">ServerApi</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-9-2-3" type="checkbox"/><label class="tocitem" for="menuitem-9-2-3"><span class="docs-label">Models</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Models/AttachMetadataToEventRequest/">AttachMetadataToEventRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelRequest/">CreateModelRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelResponse/">CreateModelResponse</a></li><li><a class="tocitem" href="../../openapi/Models/CreatedModelInfo/">CreatedModelInfo</a></li><li><a class="tocitem" href="../../openapi/Models/DeleteModelRequest/">DeleteModelRequest</a></li><li><a class="tocitem" href="../../openapi/Models/EpisodeInfo/">EpisodeInfo</a></li><li><a class="tocitem" href="../../openapi/Models/ErrorResponse/">ErrorResponse</a></li><li><a class="tocitem" href="../../openapi/Models/InferRequest/">InferRequest</a></li><li><a class="tocitem" href="../../openapi/Models/InferResponse/">InferResponse</a></li><li><a class="tocitem" href="../../openapi/Models/LearnRequest/">LearnRequest</a></li><li><a class="tocitem" href="../../openapi/Models/LearnResponse/">LearnResponse</a></li><li><a class="tocitem" href="../../openapi/Models/LightweightModelDetails/">LightweightModelDetails</a></li><li><a class="tocitem" href="../../openapi/Models/ModelDetails/">ModelDetails</a></li><li><a class="tocitem" href="../../openapi/Models/ModelList/">ModelList</a></li><li><a class="tocitem" href="../../openapi/Models/ModelState/">ModelState</a></li><li><a class="tocitem" href="../../openapi/Models/NotFoundResponse/">NotFoundResponse</a></li><li><a class="tocitem" href="../../openapi/Models/PingResponse/">PingResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ServerInfo/">ServerInfo</a></li><li><a class="tocitem" href="../../openapi/Models/SuccessResponse/">SuccessResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenResponse/">TokenResponse</a></li><li><a class="tocitem" href="../../openapi/Models/UnauthorizedResponse/">UnauthorizedResponse</a></li></ul></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>API design</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>API design</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lazydynamics/RxInferServer" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lazydynamics/RxInferServer/blob/main/docs/src/api/design-proposal.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Design-Proposal-for-RxInfer-Model-Server-API"><a class="docs-heading-anchor" href="#Design-Proposal-for-RxInfer-Model-Server-API">Design Proposal for RxInfer Model Server API</a><a id="Design-Proposal-for-RxInfer-Model-Server-API-1"></a><a class="docs-heading-anchor-permalink" href="#Design-Proposal-for-RxInfer-Model-Server-API" title="Permalink"></a></h1><p>This proposal outlines a clean, RESTful API for the RxInfer model server, focusing on simplicity and ease of implementation while maintaining powerful probabilistic modeling capabilities. The current API is different and we can discuss how to integrate both of them.</p><h2 id="Core-Concepts"><a class="docs-heading-anchor" href="#Core-Concepts">Core Concepts</a><a id="Core-Concepts-1"></a><a class="docs-heading-anchor-permalink" href="#Core-Concepts" title="Permalink"></a></h2><ul><li><strong>Model Instance</strong>: An isolated runtime environment for a specific model, identified by a unique ID</li><li><strong>Arguments</strong>: Fixed values passed to the model that don&#39;t change during inference (e.g., time step)</li><li><strong>Parameters</strong>: Values that can be learned by the model (e.g., transition matrices)</li><li><strong>Episode</strong>: A sequence of observations and actions, used for learning parameters</li></ul><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>Do not confuse the <code>arguments</code> with the <code>parameters</code>. The <code>arguments</code> are the arguments that are passed to the model and are fixed for a single <code>infer</code> call. The <code>parameters</code> are the parameters that are learned by the model and are updated by the <code>/api/models/{model_id}/learn</code> endpoint.</p></div></div><h2 id="API-Endpoints"><a class="docs-heading-anchor" href="#API-Endpoints">API Endpoints</a><a id="API-Endpoints-1"></a><a class="docs-heading-anchor-permalink" href="#API-Endpoints" title="Permalink"></a></h2><h3 id="Create-a-Model-Instance"><a class="docs-heading-anchor" href="#Create-a-Model-Instance">Create a Model Instance</a><a id="Create-a-Model-Instance-1"></a><a class="docs-heading-anchor-permalink" href="#Create-a-Model-Instance" title="Permalink"></a></h3><p>The central to the API would be to create an endpoint for a single model <em>instance</em>. An <em>instance</em> would be defined as an isolated run-time environment for a specific model. It would be identified by a unique id. Two instances of the same model can be run in parallel and do not interfere with each other (unless they are explicitly designed to communicate with each other).</p><pre><code class="nohighlight hljs">POST /api/models</code></pre><h4 id="Request"><a class="docs-heading-anchor" href="#Request">Request</a><a id="Request-1"></a><a class="docs-heading-anchor-permalink" href="#Request" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;model&quot;: &quot;drone-v1&quot;,                    // (required) Model type name
+  &quot;description&quot;: &quot;Drone model (testing)&quot;, // (optional) Description
+  &quot;arguments&quot;: {                          // (optional) Model configuration
+    &quot;dt&quot;: 0.1,
+    &quot;horizon&quot;: 10
+  }
+}</code></pre><p>In the beginning we will be required to craft these models manually. This proposal does not allow users to define their own models. Thus, the <code>model</code> requires to be a valid model name, e.g. <code>drone-v1</code>, <code>ar</code>, <code>rslds</code>, <code>hmm</code>. A model also specifies the layout of the data that can be sent to the model as well as the parameters of the model that can be learned and actions that can be taken. The model also defines the set of fixed arguments that might be modified, e.g. <code>dt</code> or <code>horizon</code>. Those arguments are not learned by the model, but might be overwritten for a specific <code>infer</code> call. All of this information must be explicitly documented by a model designer (us in the beginning).</p><h4 id="Response"><a class="docs-heading-anchor" href="#Response">Response</a><a id="Response-1"></a><a class="docs-heading-anchor-permalink" href="#Response" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;model_id&quot;: &quot;123e4567-e89b-12d3-a456-426614174000&quot;
+}</code></pre><p>A user will now be able to use this <code>model_id</code> to send data to the model, plan actions or execute the learning.</p><h3 id="Run-Inference"><a class="docs-heading-anchor" href="#Run-Inference">Run Inference</a><a id="Run-Inference-1"></a><a class="docs-heading-anchor-permalink" href="#Run-Inference" title="Permalink"></a></h3><pre><code class="nohighlight hljs">POST /api/models/{model_id}/infer</code></pre><h4 id="Request-2"><a class="docs-heading-anchor" href="#Request-2">Request</a><a class="docs-heading-anchor-permalink" href="#Request-2" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;observation&quot;: {
+    &quot;y&quot;: [4, 5, 6]
+  },
+  &quot;goal&quot;: {
+    &quot;y[end]&quot;: [5, 6, 7]
+  },
+  &quot;timestamp&quot;: 1234567890,         // (required) Observation timestamp
+  &quot;episode_id&quot;: &quot;default&quot;,          // (optional) Episode identifier
+  &quot;arguments&quot;: {                    // (optional) Override model arguments
+    &quot;horizon&quot;: 100
+  }
+}</code></pre><p>Notes:</p><ul><li>The <code>observation</code> is a dictionary of the data to be sent to the model as defined in the model schema.</li><li>The <code>timestamp</code> field is the timestamp of the data, not the time when the data was received by the server. Certain models assume a certain frequency of the data, e.g. every <code>dt</code> seconds. In that case the server will use the <code>timestamp</code> to determine the time of the data to order them in time and to determine if any of the data is missing.</li><li>The <code>episode_id</code> is the id of the episode to which the data belongs. Can be omitted, <code>default</code> is used if not provided.</li><li>The idea of the episode is to group data into chunks, from which the model can learn independently. An agent can also decide to learn from a particular episode only once for efficiency or discard certain episodes if they are too old for example.</li><li>The syntax for the <code>goal</code> is currently structured for MPC-like behavior, setting a single goal at the end of the horizon. In future versions, we may expand this to support more complex goal specifications for true AIF.</li><li>The <code>arguments</code> are the arguments that are passed to the model. They are not learned by the model, but might be overwritten for a specific <code>infer</code> call.</li></ul><h4 id="Response-2"><a class="docs-heading-anchor" href="#Response-2">Response</a><a class="docs-heading-anchor-permalink" href="#Response-2" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;posterior&quot;: {
+    &quot;u&quot;: {
+      &quot;distribution_type&quot;: &quot;NormalMeanVariance&quot;,
+      &quot;mean&quot;: [0.1, 0.2, 0.3],
+      &quot;variance&quot;: [0.01, 0.02, 0.03]
+    }
+  }
+}</code></pre><p>The purpose of the <code>posterior</code> is to provide the user with a distribution over the actions that can be taken. The user can then use this distribution to take an action or to sample an action.</p><h3 id="Store-Action"><a class="docs-heading-anchor" href="#Store-Action">Store Action</a><a id="Store-Action-1"></a><a class="docs-heading-anchor-permalink" href="#Store-Action" title="Permalink"></a></h3><p>As noted in the original question, both observations and actions need to be stored to properly learn model parameters. The following endpoint allows storing the actions that were actually taken:</p><pre><code class="nohighlight hljs">POST /api/models/{model_id}/actions</code></pre><h4 id="Request-3"><a class="docs-heading-anchor" href="#Request-3">Request</a><a class="docs-heading-anchor-permalink" href="#Request-3" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;timestamp&quot;: 1234567890,
+  &quot;episode_id&quot;: &quot;default&quot;,
+  &quot;action&quot;: {
+    &quot;u&quot;: [0.1, 0.2, 0.3]
+  }
+}</code></pre><h4 id="Response-3"><a class="docs-heading-anchor" href="#Response-3">Response</a><a class="docs-heading-anchor-permalink" href="#Response-3" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;status&quot;: &quot;success&quot;
+}</code></pre><h3 id="Learn-Parameters"><a class="docs-heading-anchor" href="#Learn-Parameters">Learn Parameters</a><a id="Learn-Parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Learn-Parameters" title="Permalink"></a></h3><p>A model can have parameters that can be learned from data. For example state transition matrices can be learned, or observational noise can be learned. Those are specified in the model&#39;s schema. During the <code>infer</code> call most of the model&#39;s parameters are fixed and not updated. This endpoint is used specifically to update the parameters of the model based on the data saved in the episodes.</p><pre><code class="nohighlight hljs">POST /api/models/{model_id}/learn</code></pre><h4 id="Request-4"><a class="docs-heading-anchor" href="#Request-4">Request</a><a class="docs-heading-anchor-permalink" href="#Request-4" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;episode_ids&quot;: [&quot;default&quot;, &quot;episode2&quot;], // (optional) Episodes to learn from
+  &quot;relearn_episodes&quot;: false,              // (optional) Relearn from all data points
+  &quot;parameters&quot;: [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;]           // (optional) Parameters to learn
+}</code></pre><p>The idea of the <code>episode_ids</code> is to specify the episodes to learn from. If not provided, all episodes will be used. By default, if a model learned from a particular episode, it will not be used again unless the <code>relearn_episodes</code> flag is set to <code>true</code>. Or if the episode has new data it will be used again, but only the portion of the episode that has not been learned yet. Basically each episode should track whenever it has been used for learning or not. Which data has been used for learning or not. And what was the outcome of the learning.</p><p>An example of how it might work:</p><ul><li>Suppose we have episode with id &quot;episode1&quot; and it has 1000 data points and it hasn&#39;t been used for learning yet.</li><li>The server receives the <code>/api/models/{model_id}/learn</code> request with <code>episode_ids</code> set to <code>[&quot;episode1&quot;]</code>.</li><li>The server uses the data saved in the episode &quot;episode1&quot; to learn new posteriors over the parameters of the model and saves it. It also saves the fact that it has been used for learning and it saves that exactly <code>1000</code> data points have been used for learning.</li><li>The server progress forward in time and receives new data into the episode &quot;episode1&quot;.</li><li>The server receives the <code>/api/models/{model_id}/learn</code> request with <code>episode_ids</code> set to <code>[&quot;episode1&quot;]</code>.</li><li>The server has already learned from the first 1000 data points, so it will only learn from the new data.</li><li>To do that it uses previously learned posteriors as a prior and learns the new posteriors using the new data only.</li><li>The server progresses forward in time and receives new data into the episode &quot;episode1&quot;.</li><li>The server receives the <code>/api/models/{model_id}/learn</code> request with <code>episode_ids</code> set to <code>[&quot;episode1&quot;]</code> and <code>relearn_episodes</code> set to <code>true</code>.</li><li>The server will discard previously learned posteriors and will learn from all the data saved in the episode &quot;episode1&quot; again.</li></ul><p>What to do with multiple episodes?</p><ul><li>The server learns from episode with id &quot;episode1&quot; and gets &quot;posterior1&quot;.</li><li>The server learns from episode with id &quot;episode2&quot; and gets &quot;posterior2&quot;.</li><li>The server learns from episode with id &quot;episode3&quot; and gets &quot;posterior3&quot;.</li><li>The server can now compute the product of all the posteriors and get the final posterior.</li></ul><h4 id="Response-4"><a class="docs-heading-anchor" href="#Response-4">Response</a><a class="docs-heading-anchor-permalink" href="#Response-4" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;status&quot;: &quot;success&quot;
+}</code></pre><p>After that all next invocations of the <code>/api/models/{model_id}/infer</code> endpoint will use the new posteriors for the learned parameters.</p><h3 id="List-Models"><a class="docs-heading-anchor" href="#List-Models">List Models</a><a id="List-Models-1"></a><a class="docs-heading-anchor-permalink" href="#List-Models" title="Permalink"></a></h3><pre><code class="nohighlight hljs">GET /api/models</code></pre><h4 id="Response-5"><a class="docs-heading-anchor" href="#Response-5">Response</a><a class="docs-heading-anchor-permalink" href="#Response-5" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;models&quot;: [
+    {
+      &quot;model_id&quot;: &quot;123e4567-e89b-12d3-a456-426614174000&quot;,
+      &quot;model&quot;: &quot;drone-v1&quot;,
+      &quot;description&quot;: &quot;Drone model (testing)&quot;,
+      &quot;created_at&quot;: &quot;2023-04-01T12:00:00Z&quot;,
+      &quot;episode_count&quot;: 2
+    }
+  ],
+  &quot;total&quot;: 1
+}</code></pre><h3 id="Get-Model-Details"><a class="docs-heading-anchor" href="#Get-Model-Details">Get Model Details</a><a id="Get-Model-Details-1"></a><a class="docs-heading-anchor-permalink" href="#Get-Model-Details" title="Permalink"></a></h3><pre><code class="nohighlight hljs">GET /api/models/{model_id}</code></pre><h4 id="Response-6"><a class="docs-heading-anchor" href="#Response-6">Response</a><a class="docs-heading-anchor-permalink" href="#Response-6" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;model_id&quot;: &quot;123e4567-e89b-12d3-a456-426614174000&quot;,
+  &quot;model&quot;: &quot;drone-v1&quot;,
+  &quot;description&quot;: &quot;Drone model (testing)&quot;,
+  &quot;created_at&quot;: &quot;2023-04-01T12:00:00Z&quot;,
+  &quot;arguments&quot;: {
+    &quot;dt&quot;: 0.1,
+    &quot;horizon&quot;: 10
+  },
+  &quot;parameters&quot;: {
+    &quot;A&quot;: {&quot;learned&quot;: true, &quot;last_updated&quot;: &quot;2023-04-01T14:20:00Z&quot;},
+    &quot;B&quot;: {&quot;learned&quot;: true, &quot;last_updated&quot;: &quot;2023-04-01T14:20:00Z&quot;},
+    &quot;C&quot;: {&quot;learned&quot;: false}
+  }
+}</code></pre><h3 id="Delete-Model"><a class="docs-heading-anchor" href="#Delete-Model">Delete Model</a><a id="Delete-Model-1"></a><a class="docs-heading-anchor-permalink" href="#Delete-Model" title="Permalink"></a></h3><pre><code class="nohighlight hljs">DELETE /api/models/{model_id}</code></pre><h4 id="Response-7"><a class="docs-heading-anchor" href="#Response-7">Response</a><a class="docs-heading-anchor-permalink" href="#Response-7" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;message&quot;: &quot;Model deleted successfully&quot;
+}</code></pre><h3 id="List-Episodes"><a class="docs-heading-anchor" href="#List-Episodes">List Episodes</a><a id="List-Episodes-1"></a><a class="docs-heading-anchor-permalink" href="#List-Episodes" title="Permalink"></a></h3><pre><code class="nohighlight hljs">GET /api/models/{model_id}/episodes</code></pre><h4 id="Response-8"><a class="docs-heading-anchor" href="#Response-8">Response</a><a class="docs-heading-anchor-permalink" href="#Response-8" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;episodes&quot;: [
+    {
+      &quot;episode_id&quot;: &quot;default&quot;,
+      &quot;data_points&quot;: 120,
+      &quot;learned_points&quot;: 100,
+      &quot;start_timestamp&quot;: 1234567800,
+      &quot;end_timestamp&quot;: 1234568800,
+      &quot;last_updated&quot;: &quot;2023-04-01T13:45:00Z&quot;
+    }
+  ],
+  &quot;total&quot;: 1
+}</code></pre><h3 id="Get-Available-Model-Types"><a class="docs-heading-anchor" href="#Get-Available-Model-Types">Get Available Model Types</a><a id="Get-Available-Model-Types-1"></a><a class="docs-heading-anchor-permalink" href="#Get-Available-Model-Types" title="Permalink"></a></h3><pre><code class="nohighlight hljs">GET /api/model-types</code></pre><h4 id="Response-9"><a class="docs-heading-anchor" href="#Response-9">Response</a><a class="docs-heading-anchor-permalink" href="#Response-9" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;model_types&quot;: [
+    {
+      &quot;name&quot;: &quot;drone-v1&quot;,
+      &quot;description&quot;: &quot;Dynamical model of a drone&quot;,
+      &quot;schema_url&quot;: &quot;/api/model-types/drone-v1/schema&quot;,
+      &quot;category&quot;: &quot;robotics&quot;
+    }
+  ]
+}</code></pre><h3 id="Get-Model-Type-Schema"><a class="docs-heading-anchor" href="#Get-Model-Type-Schema">Get Model Type Schema</a><a id="Get-Model-Type-Schema-1"></a><a class="docs-heading-anchor-permalink" href="#Get-Model-Type-Schema" title="Permalink"></a></h3><pre><code class="nohighlight hljs">GET /api/model-types/{model_name}/schema</code></pre><h4 id="Response-10"><a class="docs-heading-anchor" href="#Response-10">Response</a><a class="docs-heading-anchor-permalink" href="#Response-10" title="Permalink"></a></h4><pre><code class="language-json hljs">{
+  &quot;name&quot;: &quot;drone-v1&quot;,
+  &quot;description&quot;: &quot;Dynamical model of a drone&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;arguments&quot;: {
+    &quot;dt&quot;: {
+      &quot;type&quot;: &quot;float&quot;,
+      &quot;description&quot;: &quot;Time step duration&quot;,
+      &quot;default&quot;: 0.1,
+      &quot;min&quot;: 0.01,
+      &quot;max&quot;: 1.0
+    },
+    &quot;horizon&quot;: {
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;description&quot;: &quot;Planning horizon length&quot;,
+      &quot;default&quot;: 10,
+      &quot;min&quot;: 1,
+      &quot;max&quot;: 100
+    }
+  },
+  &quot;parameters&quot;: {
+    &quot;A&quot;: {
+      &quot;type&quot;: &quot;matrix&quot;,
+      &quot;description&quot;: &quot;State transition matrix&quot;,
+      &quot;dimensions&quot;: [6, 6],
+      &quot;learnable&quot;: true
+    },
+    &quot;B&quot;: {
+      &quot;type&quot;: &quot;matrix&quot;,
+      &quot;description&quot;: &quot;Control input matrix&quot;,
+      &quot;dimensions&quot;: [6, 3],
+      &quot;learnable&quot;: true
+    },
+    &quot;C&quot;: {
+      &quot;type&quot;: &quot;matrix&quot;,
+      &quot;description&quot;: &quot;Observation matrix&quot;,
+      &quot;dimensions&quot;: [3, 6],
+      &quot;learnable&quot;: true
+    }
+  },
+  &quot;observation_schema&quot;: {
+    &quot;y&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;description&quot;: &quot;Position measurements&quot;,
+      &quot;dimensions&quot;: [3],
+      &quot;example&quot;: [0.0, 0.0, 1.0]
+    }
+  },
+  &quot;action_schema&quot;: {
+    &quot;u&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;description&quot;: &quot;Control inputs&quot;,
+      &quot;dimensions&quot;: [3],
+      &quot;example&quot;: [0.1, 0.0, 0.2]
+    }
+  },
+  &quot;goal_schema&quot;: {
+    &quot;y[end]&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;description&quot;: &quot;Target position at end of horizon&quot;,
+      &quot;dimensions&quot;: [3],
+      &quot;example&quot;: [1.0, 1.0, 2.0]
+    }
+  }
+}</code></pre><h2 id="Error-Handling"><a class="docs-heading-anchor" href="#Error-Handling">Error Handling</a><a id="Error-Handling-1"></a><a class="docs-heading-anchor-permalink" href="#Error-Handling" title="Permalink"></a></h2><p>All API endpoints return consistent error responses:</p><pre><code class="language-json hljs">{
+  &quot;error_code&quot;: &quot;ERROR_CODE&quot;,
+  &quot;error_description&quot;: &quot;Human-readable error description&quot;
+}</code></pre><h3 id="Common-Error-Codes"><a class="docs-heading-anchor" href="#Common-Error-Codes">Common Error Codes</a><a id="Common-Error-Codes-1"></a><a class="docs-heading-anchor-permalink" href="#Common-Error-Codes" title="Permalink"></a></h3><pre><code class="nohighlight hljs">MODEL_NOT_FOUND             - The model does not exist
+DATA_NOT_FOUND              - The data is missing in the request
+DATA_INCOMPLETE             - The data is incomplete (missing required fields)
+DATA_LAYOUT_NOT_COMPATIBLE  - The data layout is not compatible with the model schema
+DATA_NOT_VALID              - The data is not valid (e.g. `NaN`, `Inf` or negative values where positive values are expected)
+INVALID_REQUEST             - The request is malformed</code></pre><h2 id="Authentication"><a class="docs-heading-anchor" href="#Authentication">Authentication</a><a id="Authentication-1"></a><a class="docs-heading-anchor-permalink" href="#Authentication" title="Permalink"></a></h2><p>Simple API key authentication:</p><pre><code class="nohighlight hljs">Authorization: Bearer &lt;api_key&gt;</code></pre><p>In the beginning we simply provide an API endpoint to generate a new API key:</p><pre><code class="nohighlight hljs">POST /api/generate-api-key</code></pre><p>Response:</p><pre><code class="language-json hljs">{
+  &quot;api_key&quot;: &quot;your-new-api-key&quot;
+}</code></pre><h2 id="Distribution-Representation"><a class="docs-heading-anchor" href="#Distribution-Representation">Distribution Representation</a><a id="Distribution-Representation-1"></a><a class="docs-heading-anchor-permalink" href="#Distribution-Representation" title="Permalink"></a></h2><p>Since RxInfer works with probabilistic models, it&#39;s essential to represent distributions and uncertainty properly in the API responses. The API supports multiple formats for representing distributions:</p><h3 id="Normal-Distribution"><a class="docs-heading-anchor" href="#Normal-Distribution">Normal Distribution</a><a id="Normal-Distribution-1"></a><a class="docs-heading-anchor-permalink" href="#Normal-Distribution" title="Permalink"></a></h3><pre><code class="language-json hljs">{
+  &quot;distribution_type&quot;: &quot;NormalMeanVariance&quot;,
+  &quot;mean&quot;: [1.5, 2.3, 0.7],
+  &quot;variance&quot;: [0.1, 0.2, 0.15]
+}</code></pre><h3 id="Multivariate-Normal-Distribution"><a class="docs-heading-anchor" href="#Multivariate-Normal-Distribution">Multivariate Normal Distribution</a><a id="Multivariate-Normal-Distribution-1"></a><a class="docs-heading-anchor-permalink" href="#Multivariate-Normal-Distribution" title="Permalink"></a></h3><pre><code class="language-json hljs">{
+  &quot;distribution_type&quot;: &quot;MvNormalMeanCovariance&quot;,
+  &quot;mean&quot;: [1.5, 2.3, 0.7],
+  &quot;covariance&quot;: [
+    [0.1, 0.01, 0.0],
+    [0.01, 0.2, 0.02],
+    [0.0, 0.02, 0.15]
+  ]
+}</code></pre><h3 id="Samples-from-Posterior"><a class="docs-heading-anchor" href="#Samples-from-Posterior">Samples from Posterior</a><a id="Samples-from-Posterior-1"></a><a class="docs-heading-anchor-permalink" href="#Samples-from-Posterior" title="Permalink"></a></h3><pre><code class="language-json hljs">{
+  &quot;distribution_type&quot;: &quot;SampleList&quot;,
+  &quot;samples&quot;: [
+    [1.42, 2.31, 0.68],
+    [1.51, 2.33, 0.71],
+    [1.49, 2.28, 0.72]
+  ],
+  &quot;weights&quot;: [0.33, 0.33, 0.34]  // Optional, uniform if not provided
+}</code></pre><h3 id="Categorical-Distribution"><a class="docs-heading-anchor" href="#Categorical-Distribution">Categorical Distribution</a><a id="Categorical-Distribution-1"></a><a class="docs-heading-anchor-permalink" href="#Categorical-Distribution" title="Permalink"></a></h3><pre><code class="language-json hljs">{
+  &quot;distribution_type&quot;: &quot;Categorical&quot;,
+  &quot;probabilities&quot;: [0.2, 0.5, 0.3]
+}</code></pre><h2 id="Data-Validation-and-Handling"><a class="docs-heading-anchor" href="#Data-Validation-and-Handling">Data Validation and Handling</a><a id="Data-Validation-and-Handling-1"></a><a class="docs-heading-anchor-permalink" href="#Data-Validation-and-Handling" title="Permalink"></a></h2><p>More comprehensive data validation should be implemented:</p><ol><li><strong>Type Validation</strong>: Ensure all data matches the expected types</li><li><strong>Range Validation</strong>: Verify that values fall within acceptable ranges</li><li><strong>Dimension Validation</strong>: Check that arrays/matrices have the correct dimensions</li><li><strong>Missing Data Handling</strong>: Define behavior for missing data points</li></ol><h3 id="Time-Series-Interpolation"><a class="docs-heading-anchor" href="#Time-Series-Interpolation">Time Series Interpolation</a><a id="Time-Series-Interpolation-1"></a><a class="docs-heading-anchor-permalink" href="#Time-Series-Interpolation" title="Permalink"></a></h3><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>This is to discuss! I propose to do simple interpolation for now to what the model needs. Less relevant for discrete models &amp; environments.</p></div></div><p>For handling irregularly-sampled time series data:</p><ol><li><strong>Gap Detection</strong>: Identify gaps in timestamp sequences</li><li><strong>Interpolation</strong>: Optionally interpolate missing data points</li><li><strong>Configurable Policies</strong>: Allow configuration of how missing data is handled</li></ol><h2 id="Client-Example"><a class="docs-heading-anchor" href="#Client-Example">Client Example</a><a id="Client-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Client-Example" title="Permalink"></a></h2><pre><code class="language-python hljs">from rxinfer.client import RxInferClient
+
+# Create client
+client = RxInferClient(api_key=&quot;your-api-key&quot;)
+
+# Create model
+model = client.create_model(&quot;drone-v1&quot;, 
+                           description=&quot;Drone control model&quot;,
+                           arguments={&quot;dt&quot;: 0.1, &quot;horizon&quot;: 10})
+
+# Run inference
+posterior = model.infer(observation={&quot;y&quot;: [4, 5, 6]}, 
+                       goal={&quot;y[end]&quot;: [5, 6, 7]},
+                       timestamp=1234567890)
+
+# Get action
+action = posterior.sample()
+
+# Store action
+model.store_action(action={&quot;u&quot;: action}, timestamp=1234567890)
+
+# Learn parameters
+model.learn()</code></pre><h2 id="Implementation-Notes"><a class="docs-heading-anchor" href="#Implementation-Notes">Implementation Notes</a><a id="Implementation-Notes-1"></a><a class="docs-heading-anchor-permalink" href="#Implementation-Notes" title="Permalink"></a></h2><p>To support this I think we need to be able to define models in the way such that it accepts an argument <code>N</code> that specifies the number of time steps that the model will be created with. In the <code>infer</code> call the <code>N</code> will be set to <code>horizon+1</code>, the very first state will be the current state with the attached observation and the rest will be pure imagination based on the currently learned parameters into the future where we set goals at the end and create MPC control-like behavior. In the <code>learn</code> call the <code>N</code> will be set to the number of data points in a particular episode and all data will be used in a smoothing regime to learn the parameters.</p><p>TLDR:</p><ul><li>During <code>infer</code>: parameters are point masses -&gt; infer actions with horizon <code>N</code> = <code>horizon+1</code>, with the first state as current state</li><li>During <code>learn</code>: observations and actions are point masses from <code>N</code> data points -&gt; learn parameters (where <code>N</code> = number of data points in the episode)</li></ul><p>This requires a model <em>at least</em> in the form of:</p><pre><code class="language-julia hljs">@model function some_model(N, arguments, ...)
+  # ...
+  # arguments[:dt]
+end</code></pre><div class="admonition is-category-question"><header class="admonition-header">Question</header><div class="admonition-body"><p>To learn the parameter we need to have both data and the action taken! We then need to also save the action taken in the database.</p></div></div><h2 id="Future-Considerations"><a class="docs-heading-anchor" href="#Future-Considerations">Future Considerations</a><a id="Future-Considerations-1"></a><a class="docs-heading-anchor-permalink" href="#Future-Considerations" title="Permalink"></a></h2><ol><li><p><strong>API Versioning</strong>: As the API evolves, we may need to implement versioning through URL paths (e.g., <code>/v1/api/models</code>).</p></li><li><p><strong>Asynchronous Operations</strong>: For complex models, learning might take a long time. We may need to implement asynchronous endpoints for long-running operations.</p></li><li><p><strong>Improved Security</strong>: More robust authentication and authorization with different access levels may be needed as the service grows.</p></li></ol><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({
+    startOnLoad: true,
+    theme: "neutral"
+});
+</script></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting-started/">« Getting Started</a><a class="docs-footer-nextpage" href="../../configuration/">Configuration »</a><div class="flexbox-break"></div><p class="footer-message">Created by <a href="https://github.com/ReactiveBayes">ReactiveBayes</a>, fully sponsored by <a href="https://lazydynamics.com/">LazyDynamics</a>, powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.9.0 on <span class="colophon-date" title="Wednesday 19 March 2025 11:13">Wednesday 19 March 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

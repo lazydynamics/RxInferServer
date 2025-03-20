@@ -35,8 +35,10 @@ Class | Method
 *ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info)<br/>**GET** /models/{model_id}/info<br/>Get model information
 *ModelsApi* | [**get_model_state**](docs/ModelsApi.md#get_model_state)<br/>**GET** /models/{model_id}/state<br/>Get the state of a model
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models)<br/>**GET** /models<br/>Get models
+*ModelsApi* | [**run_action**](docs/ModelsApi.md#run_action)<br/>**POST** /models/{model_id}/act<br/>Run action on a model
 *ModelsApi* | [**run_inference**](docs/ModelsApi.md#run_inference)<br/>**POST** /models/{model_id}/infer<br/>Run inference on a model
 *ModelsApi* | [**run_learning**](docs/ModelsApi.md#run_learning)<br/>**POST** /models/{model_id}/learn<br/>Learn from previous observations
+*ModelsApi* | [**run_planning**](docs/ModelsApi.md#run_planning)<br/>**POST** /models/{model_id}/plan<br/>Run planning on a model
 *ModelsApi* | [**wipe_episode**](docs/ModelsApi.md#wipe_episode)<br/>**POST** /models/{model_id}/episodes/{episode_name}/wipe<br/>Wipe all events from an episode
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info)<br/>**GET** /info<br/>Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server)<br/>**GET** /ping<br/>Health check endpoint
@@ -44,6 +46,8 @@ Class | Method
 
 ## Models
 
+ - [ActRequest](docs/ActRequest.md)
+ - [ActResponse](docs/ActResponse.md)
  - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [CreateModelRequest](docs/CreateModelRequest.md)
  - [CreateModelResponse](docs/CreateModelResponse.md)
@@ -61,6 +65,8 @@ Class | Method
  - [ModelState](docs/ModelState.md)
  - [NotFoundResponse](docs/NotFoundResponse.md)
  - [PingResponse](docs/PingResponse.md)
+ - [PlanningRequest](docs/PlanningRequest.md)
+ - [PlanningResponse](docs/PlanningResponse.md)
  - [ServerInfo](docs/ServerInfo.md)
  - [SuccessResponse](docs/SuccessResponse.md)
  - [TokenResponse](docs/TokenResponse.md)

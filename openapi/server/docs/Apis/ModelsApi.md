@@ -16,8 +16,10 @@ All URIs are relative to *http://localhost:8000/v1*
 | [**getModelInfo**](ModelsApi.md#getModelInfo) | **GET** /models/{model_id}/info | Get model information |
 | [**getModelState**](ModelsApi.md#getModelState) | **GET** /models/{model_id}/state | Get the state of a model |
 | [**getModels**](ModelsApi.md#getModels) | **GET** /models | Get models |
+| [**runAction**](ModelsApi.md#runAction) | **POST** /models/{model_id}/act | Run action on a model |
 | [**runInference**](ModelsApi.md#runInference) | **POST** /models/{model_id}/infer | Run inference on a model |
 | [**runLearning**](ModelsApi.md#runLearning) | **POST** /models/{model_id}/learn | Learn from previous observations |
+| [**runPlanning**](ModelsApi.md#runPlanning) | **POST** /models/{model_id}/plan | Run planning on a model |
 | [**wipeEpisode**](ModelsApi.md#wipeEpisode) | **POST** /models/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
 
 
@@ -345,6 +347,34 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
+<a name="runAction"></a>
+# **runAction**
+> ActResponse runAction(model\_id, ActRequest)
+
+Run action on a model
+
+    Run action on a specific model instance
+
+### Parameters
+
+|Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **model\_id** | **UUID**| ID of the model to run action on | [default to null] |
+| **ActRequest** | [**ActRequest**](../Models/ActRequest.md)|  | |
+
+### Return type
+
+[**ActResponse**](../Models/ActResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
 <a name="runInference"></a>
 # **runInference**
 > InferResponse runInference(model\_id, InferRequest)
@@ -391,6 +421,34 @@ Learn from previous observations
 ### Return type
 
 [**LearnResponse**](../Models/LearnResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+<a name="runPlanning"></a>
+# **runPlanning**
+> PlanningResponse runPlanning(model\_id, PlanningRequest)
+
+Run planning on a model
+
+    Run planning on a specific model instance
+
+### Parameters
+
+|Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **model\_id** | **UUID**| ID of the model to run planning on | [default to null] |
+| **PlanningRequest** | [**PlanningRequest**](../Models/PlanningRequest.md)|  | |
+
+### Return type
+
+[**PlanningResponse**](../Models/PlanningResponse.md)
 
 ### Authorization
 

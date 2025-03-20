@@ -413,6 +413,40 @@ function get_models(_api::ModelsApi, response_stream::Channel; _mediaType=nothin
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_run_action_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => ActResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_run_action(_api::ModelsApi, model_id::String, act_request::ActRequest; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_run_action_ModelsApi, "/models/{model_id}/act", ["ApiKeyAuth", ], act_request)
+    OpenAPI.Clients.set_param(_ctx.path, "model_id", model_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? ["application/json", ] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Run action on a model
+
+Run action on a specific model instance
+
+Params:
+- model_id::String (required)
+- act_request::ActRequest (required)
+
+Return: ActResponse, OpenAPI.Clients.ApiResponse
+"""
+function run_action(_api::ModelsApi, model_id::String, act_request::ActRequest; _mediaType=nothing)
+    _ctx = _oacinternal_run_action(_api, model_id, act_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function run_action(_api::ModelsApi, response_stream::Channel, model_id::String, act_request::ActRequest; _mediaType=nothing)
+    _ctx = _oacinternal_run_action(_api, model_id, act_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_run_inference_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => InferResponse,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
@@ -481,6 +515,40 @@ function run_learning(_api::ModelsApi, response_stream::Channel, model_id::Strin
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_run_planning_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => PlanningResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_run_planning(_api::ModelsApi, model_id::String, planning_request::PlanningRequest; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_run_planning_ModelsApi, "/models/{model_id}/plan", ["ApiKeyAuth", ], planning_request)
+    OpenAPI.Clients.set_param(_ctx.path, "model_id", model_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? ["application/json", ] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Run planning on a model
+
+Run planning on a specific model instance
+
+Params:
+- model_id::String (required)
+- planning_request::PlanningRequest (required)
+
+Return: PlanningResponse, OpenAPI.Clients.ApiResponse
+"""
+function run_planning(_api::ModelsApi, model_id::String, planning_request::PlanningRequest; _mediaType=nothing)
+    _ctx = _oacinternal_run_planning(_api, model_id, planning_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function run_planning(_api::ModelsApi, response_stream::Channel, model_id::String, planning_request::PlanningRequest; _mediaType=nothing)
+    _ctx = _oacinternal_run_planning(_api, model_id, planning_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_wipe_episode_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => SuccessResponse,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
@@ -528,6 +596,8 @@ export get_model_details
 export get_model_info
 export get_model_state
 export get_models
+export run_action
 export run_inference
 export run_learning
+export run_planning
 export wipe_episode

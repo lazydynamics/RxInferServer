@@ -1,4 +1,6 @@
 README.md
+docs/ActRequest.md
+docs/ActResponse.md
 docs/AttachMetadataToEventRequest.md
 docs/AuthenticationApi.md
 docs/CreateModelRequest.md
@@ -18,6 +20,8 @@ docs/ModelState.md
 docs/ModelsApi.md
 docs/NotFoundResponse.md
 docs/PingResponse.md
+docs/PlanningRequest.md
+docs/PlanningResponse.md
 docs/ServerApi.md
 docs/ServerInfo.md
 docs/SuccessResponse.md
@@ -28,6 +32,8 @@ src/apis/api_AuthenticationApi.jl
 src/apis/api_ModelsApi.jl
 src/apis/api_ServerApi.jl
 src/modelincludes.jl
+src/models/model_ActRequest.jl
+src/models/model_ActResponse.jl
 src/models/model_AttachMetadataToEventRequest.jl
 src/models/model_CreateModelRequest.jl
 src/models/model_CreateModelResponse.jl
@@ -45,6 +51,8 @@ src/models/model_ModelList.jl
 src/models/model_ModelState.jl
 src/models/model_NotFoundResponse.jl
 src/models/model_PingResponse.jl
+src/models/model_PlanningRequest.jl
+src/models/model_PlanningResponse.jl
 src/models/model_ServerInfo.jl
 src/models/model_SuccessResponse.jl
 src/models/model_TokenResponse.jl

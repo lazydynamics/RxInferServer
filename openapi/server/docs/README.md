@@ -20,8 +20,10 @@ All URIs are relative to *http://localhost:8000/v1*
 *ModelsApi* | [**getModelInfo**](Apis/ModelsApi.md#getmodelinfo) | **GET** /models/{model_id}/info | Get model information |
 *ModelsApi* | [**getModelState**](Apis/ModelsApi.md#getmodelstate) | **GET** /models/{model_id}/state | Get the state of a model |
 *ModelsApi* | [**getModels**](Apis/ModelsApi.md#getmodels) | **GET** /models | Get models |
+*ModelsApi* | [**runAction**](Apis/ModelsApi.md#runaction) | **POST** /models/{model_id}/act | Run action on a model |
 *ModelsApi* | [**runInference**](Apis/ModelsApi.md#runinference) | **POST** /models/{model_id}/infer | Run inference on a model |
 *ModelsApi* | [**runLearning**](Apis/ModelsApi.md#runlearning) | **POST** /models/{model_id}/learn | Learn from previous observations |
+*ModelsApi* | [**runPlanning**](Apis/ModelsApi.md#runplanning) | **POST** /models/{model_id}/plan | Run planning on a model |
 *ModelsApi* | [**wipeEpisode**](Apis/ModelsApi.md#wipeepisode) | **POST** /models/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
 | *ServerApi* | [**getServerInfo**](Apis/ServerApi.md#getserverinfo) | **GET** /info | Get server information |
 *ServerApi* | [**pingServer**](Apis/ServerApi.md#pingserver) | **GET** /ping | Health check endpoint |
@@ -30,6 +32,8 @@ All URIs are relative to *http://localhost:8000/v1*
 <a name="documentation-for-models"></a>
 ## Documentation for Models
 
+ - [ActRequest](./Models/ActRequest.md)
+ - [ActResponse](./Models/ActResponse.md)
  - [AttachMetadataToEventRequest](./Models/AttachMetadataToEventRequest.md)
  - [CreateModelRequest](./Models/CreateModelRequest.md)
  - [CreateModelResponse](./Models/CreateModelResponse.md)
@@ -47,6 +51,8 @@ All URIs are relative to *http://localhost:8000/v1*
  - [ModelState](./Models/ModelState.md)
  - [NotFoundResponse](./Models/NotFoundResponse.md)
  - [PingResponse](./Models/PingResponse.md)
+ - [PlanningRequest](./Models/PlanningRequest.md)
+ - [PlanningResponse](./Models/PlanningResponse.md)
  - [ServerInfo](./Models/ServerInfo.md)
  - [SuccessResponse](./Models/SuccessResponse.md)
  - [TokenResponse](./Models/TokenResponse.md)

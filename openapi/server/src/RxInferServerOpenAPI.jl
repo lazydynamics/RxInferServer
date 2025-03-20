@@ -46,12 +46,18 @@ The following server methods must be implemented:
 - **get_models**
     - *invocation:* GET /models
     - *signature:* get_models(req::HTTP.Request;) -> ModelList
+- **run_action**
+    - *invocation:* POST /models/{model_id}/act
+    - *signature:* run_action(req::HTTP.Request, model_id::String, act_request::ActRequest;) -> ActResponse
 - **run_inference**
     - *invocation:* POST /models/{model_id}/infer
     - *signature:* run_inference(req::HTTP.Request, model_id::String, infer_request::InferRequest;) -> InferResponse
 - **run_learning**
     - *invocation:* POST /models/{model_id}/learn
     - *signature:* run_learning(req::HTTP.Request, model_id::String, learn_request::LearnRequest;) -> LearnResponse
+- **run_planning**
+    - *invocation:* POST /models/{model_id}/plan
+    - *signature:* run_planning(req::HTTP.Request, model_id::String, planning_request::PlanningRequest;) -> PlanningResponse
 - **wipe_episode**
     - *invocation:* POST /models/{model_id}/episodes/{episode_name}/wipe
     - *signature:* wipe_episode(req::HTTP.Request, model_id::String, episode_name::String;) -> SuccessResponse

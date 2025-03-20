@@ -56,8 +56,10 @@ Class | Method | HTTP request | Description
 *ModelsApi* | [**get_model_info**](docs/ModelsApi.md#get_model_info) | **GET** /models/{model_id}/info | Get model information
 *ModelsApi* | [**get_model_state**](docs/ModelsApi.md#get_model_state) | **GET** /models/{model_id}/state | Get the state of a model
 *ModelsApi* | [**get_models**](docs/ModelsApi.md#get_models) | **GET** /models | Get models
+*ModelsApi* | [**run_action**](docs/ModelsApi.md#run_action) | **POST** /models/{model_id}/act | Run action on a model
 *ModelsApi* | [**run_inference**](docs/ModelsApi.md#run_inference) | **POST** /models/{model_id}/infer | Run inference on a model
 *ModelsApi* | [**run_learning**](docs/ModelsApi.md#run_learning) | **POST** /models/{model_id}/learn | Learn from previous observations
+*ModelsApi* | [**run_planning**](docs/ModelsApi.md#run_planning) | **POST** /models/{model_id}/plan | Run planning on a model
 *ModelsApi* | [**wipe_episode**](docs/ModelsApi.md#wipe_episode) | **POST** /models/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode
 *ServerApi* | [**get_server_info**](docs/ServerApi.md#get_server_info) | **GET** /info | Get server information
 *ServerApi* | [**ping_server**](docs/ServerApi.md#ping_server) | **GET** /ping | Health check endpoint
@@ -66,6 +68,8 @@ Class | Method | HTTP request | Description
 
 ## Models
 
+ - [ActRequest](docs/ActRequest.md)
+ - [ActResponse](docs/ActResponse.md)
  - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [CreateModelRequest](docs/CreateModelRequest.md)
  - [CreateModelResponse](docs/CreateModelResponse.md)
@@ -83,6 +87,8 @@ Class | Method | HTTP request | Description
  - [ModelState](docs/ModelState.md)
  - [NotFoundResponse](docs/NotFoundResponse.md)
  - [PingResponse](docs/PingResponse.md)
+ - [PlanningRequest](docs/PlanningRequest.md)
+ - [PlanningResponse](docs/PlanningResponse.md)
  - [ServerInfo](docs/ServerInfo.md)
  - [SuccessResponse](docs/SuccessResponse.md)
  - [TokenResponse](docs/TokenResponse.md)

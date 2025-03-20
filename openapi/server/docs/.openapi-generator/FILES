@@ -2,6 +2,8 @@
 Apis/AuthenticationApi.md
 Apis/ModelsApi.md
 Apis/ServerApi.md
+Models/ActRequest.md
+Models/ActResponse.md
 Models/AttachMetadataToEventRequest.md
 Models/CreateModelRequest.md
 Models/CreateModelResponse.md
@@ -19,6 +21,8 @@ Models/ModelList.md
 Models/ModelState.md
 Models/NotFoundResponse.md
 Models/PingResponse.md
+Models/PlanningRequest.md
+Models/PlanningResponse.md
 Models/ServerInfo.md
 Models/SuccessResponse.md
 Models/TokenResponse.md

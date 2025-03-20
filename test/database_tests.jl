@@ -92,12 +92,14 @@ end
     end
 end
 
-
 @testitem "Database.hidden_url should  hide the user and password from MongoDB URL" begin
     using Mongoc
     RxInferServer.Database.with_connection() do
-        @test RxInferServer.Database.hidden_url("mongodb://localhost:27017/?directConnection=true") == "mongodb://localhost:27017/?directConnection=true"
-        @test RxInferServer.Database.hidden_url("mongodb://user:password@localhost:27017/?directConnection=true") == "mongodb://****:****@localhost:27017/?directConnection=true"
-        @test RxInferServer.Database.hidden_url("mongodb://user:password@some.server.com") == "mongodb://****:****@some.server.com"
+        @test RxInferServer.Database.hidden_url("mongodb://localhost:27017/?directConnection=true") ==
+            "mongodb://localhost:27017/?directConnection=true"
+        @test RxInferServer.Database.hidden_url("mongodb://user:password@localhost:27017/?directConnection=true") ==
+            "mongodb://****:****@localhost:27017/?directConnection=true"
+        @test RxInferServer.Database.hidden_url("mongodb://user:password@some.server.com") ==
+            "mongodb://****:****@some.server.com"
     end
 end

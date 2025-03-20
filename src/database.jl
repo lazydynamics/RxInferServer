@@ -226,6 +226,13 @@ function inject_tls_ca_file(url::String)::String
         return url * url_append_symbol * "tlsCAFile=$tls_ca_file"
     end
 
+    if isempty(tls_ca_file)
+        @warn """No CA certificate found. The server will not be able to establish a secure connection to the MongoDB server.
+        Please set the `RXINFER_SERVER_SSL_CA_FILE` environment variable to the path of your CA certificate file or include the `tlsCAFile` parameter in the database URL.
+        See MongoDB documentation https://www.mongodb.com/docs/manual/core/security-transport-encryption/ for more information.
+        """
+    end
+
     # If no CA file found, return original URL
     return url
 end
@@ -309,7 +316,7 @@ function find_ssl_certificates()::Dict{String, Vector{String}}
             "/usr/share/ca-certificates"          # Additional certs
         )
         push!(
-            client_cert_paths, 
+            client_cert_paths,
             "/etc/ssl/certs",                    # Standard directory
             "/etc/pki/tls/certs",                # RHEL/CentOS 
             joinpath(homedir(), ".ssl", "certs") # User certs

@@ -69,6 +69,8 @@ For remote MongoDB connections (not localhost), RxInferServer can automatically 
 RxInferServer.Database.RXINFER_SERVER_SSL_CA_FILE
 ```
 
+See more details in the [Database](@ref database) section.
+
 ## Using MongoDB Compass
 
 If you're using [MongoDB Compass](https://www.mongodb.com/products/compass) to connect to and manage your MongoDB database during development:

@@ -137,14 +137,14 @@ function hidden_url(url::String)::String
     if !contains(url, '@')
         return url
     end
-    
-    protocol_part, rest = split(url, "://", limit=2)
-    
+
+    protocol_part, rest = split(url, "://", limit = 2)
+
     if contains(rest, '@')
-        credentials_part, server_part = split(rest, '@', limit=2)
+        credentials_part, server_part = split(rest, '@', limit = 2)
         return "$protocol_part://****:****@$server_part"
     end
-    
+
     return url
 end
 

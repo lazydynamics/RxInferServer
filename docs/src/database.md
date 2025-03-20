@@ -17,4 +17,5 @@ RxInferServer.Database.with_connection
 RxInferServer.Database.client
 RxInferServer.Database.database
 RxInferServer.Database.collection
+RxInferServer.Database.hidden_url
 ```

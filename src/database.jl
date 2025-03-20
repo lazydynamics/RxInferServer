@@ -235,10 +235,14 @@ end
 
 Searches for SSL certificates in default locations based on the operating system.
 Returns a dictionary with keys for different certificate types and values as vectors of found file paths.
+Certificate locations are prioritized with standard system locations first.
 
 The function searches for:
 - CA certificates (trusted root certificates)
 - Client certificates (for client authentication)
+
+For Linux systems, it prioritizes locations where certificates are installed via package managers
+(e.g., `apt-get install ca-certificates`).
 
 # Returns
 - `Dict{String, Vector{String}}`: Dictionary with keys "ca_certs" and "client_certs"
@@ -262,48 +266,54 @@ function find_ssl_certificates()::Dict{String, Vector{String}}
     client_cert_paths = String[]
 
     if os_name == "windows"
-        # Windows certificate locations
+        # Windows certificate locations - prioritize system store
         push!(
             ca_cert_paths,
             "C:\\Windows\\System32\\certmgr.msc",
             "C:\\ProgramData\\Microsoft\\Crypto\\RSA\\MachineKeys",
-            joinpath(homedir(), "AppData", "Roaming", "Microsoft", "Crypto", "RSA"),
-            "C:\\OpenSSL\\certs"
+            "C:\\OpenSSL\\certs",
+            joinpath(homedir(), "AppData", "Roaming", "Microsoft", "Crypto", "RSA")
         )
         push!(
             client_cert_paths,
             "C:\\ProgramData\\Microsoft\\Crypto\\RSA\\MachineKeys",
-            joinpath(homedir(), "AppData", "Roaming", "Microsoft", "Crypto", "RSA"),
-            "C:\\OpenSSL\\certs"
+            "C:\\OpenSSL\\certs",
+            joinpath(homedir(), "AppData", "Roaming", "Microsoft", "Crypto", "RSA")
         )
     elseif os_name == "macos"
-        # macOS certificate locations
+        # macOS certificate locations - prioritize system certs
         push!(
             ca_cert_paths,
-            "/etc/ssl/certs",
-            "/etc/ssl/cert.pem",
-            joinpath(homedir(), "Library", "Application Support", "Certificates"),
-            "/usr/local/etc/openssl/certs",
-            "/usr/local/etc/openssl@1.1/certs"
+            "/etc/ssl/cert.pem",            # Main system bundle
+            "/etc/ssl/certs",               # System certs directory
+            "/usr/local/etc/openssl/certs", # Homebrew OpenSSL
+            "/usr/local/etc/openssl@1.1/certs",
+            joinpath(homedir(), "Library", "Application Support", "Certificates")
         )
         push!(
             client_cert_paths,
-            joinpath(homedir(), "Library", "Application Support", "Certificates"),
+            "/etc/ssl/certs",
             "/usr/local/etc/openssl/certs",
             "/usr/local/etc/openssl@1.1/certs",
-            "/etc/ssl/certs"
+            joinpath(homedir(), "Library", "Application Support", "Certificates")
         )
     elseif os_name == "linux"
-        # Linux certificate locations
+        # Linux certificate locations - prioritize standard package manager locations
+        # These are typically installed via apt-get install ca-certificates
         push!(
             ca_cert_paths,
-            "/etc/ssl/certs",
-            "/etc/ssl/certs/ca-certificates.crt",
-            "/etc/pki/tls/certs",
-            "/etc/pki/tls/certs/ca-bundle.crt",
-            "/usr/share/ca-certificates"
+            "/etc/ssl/certs/ca-certificates.crt", # Debian/Ubuntu main bundle
+            "/etc/ssl/certs",                     # Standard directory 
+            "/etc/pki/tls/certs/ca-bundle.crt",   # RHEL/CentOS main bundle
+            "/etc/pki/tls/certs",                 # RHEL/CentOS directory
+            "/usr/share/ca-certificates"          # Additional certs
         )
-        push!(client_cert_paths, "/etc/ssl/certs", "/etc/pki/tls/certs", joinpath(homedir(), ".ssl", "certs"))
+        push!(
+            client_cert_paths, 
+            "/etc/ssl/certs",                    # Standard directory
+            "/etc/pki/tls/certs",                # RHEL/CentOS 
+            joinpath(homedir(), ".ssl", "certs") # User certs
+        )
     end
 
     # Search for CA certificates

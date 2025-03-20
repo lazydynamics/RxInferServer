@@ -62,14 +62,15 @@ function with_connection(
 ) where {F}
     _client = Mongoc.Client(url)::Mongoc.Client
     _database = _client[database]::Mongoc.Database
+    _hidden_url = hidden_url(url)
     if check_connection
         try
             ping = Mongoc.ping(_client)
             if !isone(ping["ok"])
-                error("Failed to connect to MongoDB server at $url")
+                error(lazy"Failed to connect to MongoDB server at $_hidden_url")
             end
         catch e
-            @error "Failed to connect to MongoDB server at $url. Is the server running? If running locally, use `make docker` to start the Docker compose environment with local MongoDB database."
+            @error lazy"Failed to connect to MongoDB server at $_hidden_url. Is the server running? If running locally, use `make docker` to start the Docker compose environment with local MongoDB database."
             rethrow(e)
         end
     end
@@ -115,6 +116,36 @@ See also [`RxInferServer.Database.client`](@ref), [`RxInferServer.Database.datab
 """
 function collection(name::String)::Mongoc.Collection
     return database()[name]
+end
+
+"""
+    hidden_url(url::String)::String
+
+Returns the MongoDB URL with username and password hidden for logging and display purposes.
+If the URL contains credentials (username:password), they will be replaced with "****:****".
+
+# Arguments
+- `url::String`: The MongoDB connection URL
+
+# Examples
+```julia
+hidden_url("mongodb://user:password@localhost:27017") # returns "mongodb://****:****@localhost:27017"
+hidden_url("mongodb://localhost:27017") # returns "mongodb://localhost:27017"
+```
+"""
+function hidden_url(url::String)::String
+    if !contains(url, '@')
+        return url
+    end
+
+    protocol_part, rest = split(url, "://", limit = 2)
+
+    if contains(rest, '@')
+        credentials_part, server_part = split(rest, '@', limit = 2)
+        return "$protocol_part://****:****@$server_part"
+    end
+
+    return url
 end
 
 end

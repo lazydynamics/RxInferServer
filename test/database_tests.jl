@@ -38,7 +38,7 @@ end
         @test false
     end
     @test_throws "No suitable servers found" RxInferServer.Database.with_connection(
-        url = "mongodb://non-existing-host:27017"
+        url = "mongodb://non-existing-host:27017/"
     ) do
         @test false
     end

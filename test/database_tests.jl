@@ -103,3 +103,132 @@ end
             "mongodb://****:****@some.server.com"
     end
 end
+
+@testitem "Database.hidden_url should hide tlsCertificateKeyFile path in MongoDB URL" begin
+    using Mongoc
+    RxInferServer.Database.with_connection() do
+        # Test with only tlsCertificateKeyFile
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://cluster.mongodb.net/?tlsCertificateKeyFile=/tmp/cert.pem"
+        ) == "mongodb+srv://cluster.mongodb.net/?tlsCertificateKeyFile=****"
+
+        # Test with tlsCertificateKeyFile in the middle of other parameters
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCertificateKeyFile=/tmp/cert.pem&retryWrites=true"
+        ) == "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCertificateKeyFile=****&retryWrites=true"
+
+        # Test with both credentials and tlsCertificateKeyFile
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://user:password@cluster.mongodb.net/?authSource=%24external&tlsCertificateKeyFile=/tmp/cert.pem"
+        ) == "mongodb+srv://****:****@cluster.mongodb.net/?authSource=%24external&tlsCertificateKeyFile=****"
+    end
+end
+
+@testitem "Database.hidden_url should hide tlsCAFile path in MongoDB URL" begin
+    using Mongoc
+    RxInferServer.Database.with_connection() do
+        # Test with only tlsCAFile
+        @test RxInferServer.Database.hidden_url("mongodb+srv://cluster.mongodb.net/?tlsCAFile=/tmp/ca.pem") ==
+            "mongodb+srv://cluster.mongodb.net/?tlsCAFile=****"
+
+        # Test with tlsCAFile in the middle of other parameters
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCAFile=/tmp/ca.pem&retryWrites=true"
+        ) == "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCAFile=****&retryWrites=true"
+
+        # Test with both credentials and tlsCAFile
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://user:password@cluster.mongodb.net/?authSource=%24external&tlsCAFile=/tmp/ca.pem"
+        ) == "mongodb+srv://****:****@cluster.mongodb.net/?authSource=%24external&tlsCAFile=****"
+    end
+end
+
+@testitem "Database.hidden_url should hide both certificate paths in MongoDB URL" begin
+    using Mongoc
+    RxInferServer.Database.with_connection() do
+        # Test with both certificate parameters
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://cluster.mongodb.net/?tlsCertificateKeyFile=/tmp/cert.pem&tlsCAFile=/tmp/ca.pem"
+        ) == "mongodb+srv://cluster.mongodb.net/?tlsCertificateKeyFile=****&tlsCAFile=****"
+
+        # Test with both certificate parameters and credentials
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://user:password@cluster.mongodb.net/?tlsCertificateKeyFile=/tmp/cert.pem&tlsCAFile=/tmp/ca.pem"
+        ) == "mongodb+srv://****:****@cluster.mongodb.net/?tlsCertificateKeyFile=****&tlsCAFile=****"
+
+        # Test with both certificate parameters and other parameters
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCAFile=/tmp/ca.pem&retryWrites=true&tlsCertificateKeyFile=/tmp/cert.pem"
+        ) ==
+            "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCAFile=****&retryWrites=true&tlsCertificateKeyFile=****"
+    end
+end
+
+@testitem "Database.inject_tls_ca_file should add TLS CA file to MongoDB URL" begin
+    using Mongoc
+
+    # With empty RXINFER_SERVER_SSL_CA_FILE, the function should automatically 
+    # find and use a suitable certificate for remote connections
+    withenv("RXINFER_SERVER_SSL_CA_FILE" => "") do
+        url = "mongodb://example.com:27017"
+        @test occursin("?tlsCAFile=", RxInferServer.Database.inject_tls_ca_file(url))
+    end
+
+    # For URLs with existing query parameters, it should append with &
+    # rather than ? when automatically discovering certificates
+    withenv("RXINFER_SERVER_SSL_CA_FILE" => "") do
+        url = "mongodb://example.com:27017?retryWrites=true"
+        @test occursin("&tlsCAFile=", RxInferServer.Database.inject_tls_ca_file(url))
+    end
+
+    # Localhost connections should remain unchanged, even with 
+    # automatic certificate discovery enabled
+    withenv("RXINFER_SERVER_SSL_CA_FILE" => "") do
+        url = "mongodb://localhost:27017"
+        @test RxInferServer.Database.inject_tls_ca_file(url) == url
+    end
+
+    # Loopback IP connections should also remain unchanged
+    withenv("RXINFER_SERVER_SSL_CA_FILE" => "") do
+        url = "mongodb://127.0.0.1:27017"
+        @test RxInferServer.Database.inject_tls_ca_file(url) == url
+    end
+
+    # URLs that already have a tlsCAFile parameter should remain unchanged,
+    # regardless of automatic discovery settings
+    withenv("RXINFER_SERVER_SSL_CA_FILE" => "") do
+        url = "mongodb://127.0.0.1:27017?tlsCAFile=/existing/ca.pem"
+        @test RxInferServer.Database.inject_tls_ca_file(url) == url
+    end
+
+    # Test cases using explicitly set CA file path via environment variable,
+    # which should take precedence over automatic discovery
+    withenv("RXINFER_SERVER_SSL_CA_FILE" => "/path/to/ca.pem") do
+        # Localhost connections should remain unchanged even with explicit CA file
+        localhost_url = "mongodb://localhost:27017"
+        @test RxInferServer.Database.inject_tls_ca_file(localhost_url) == localhost_url
+
+        # Loopback IP connections should remain unchanged
+        loopback_url = "mongodb://127.0.0.1:27017"
+        @test RxInferServer.Database.inject_tls_ca_file(loopback_url) == loopback_url
+
+        # Remote connections should have the explicit CA file added with ?
+        remote_url = "mongodb://example.com:27017"
+        @test RxInferServer.Database.inject_tls_ca_file(remote_url) ==
+            "mongodb://example.com:27017?tlsCAFile=/path/to/ca.pem"
+
+        # URLs with existing parameters should have CA file appended with &
+        remote_url_with_params = "mongodb://example.com:27017?retryWrites=true"
+        @test RxInferServer.Database.inject_tls_ca_file(remote_url_with_params) ==
+            "mongodb://example.com:27017?retryWrites=true&tlsCAFile=/path/to/ca.pem"
+
+        # URLs that already have a tlsCAFile parameter should remain unchanged
+        url_with_ca = "mongodb://example.com:27017?tlsCAFile=/existing/ca.pem"
+        @test RxInferServer.Database.inject_tls_ca_file(url_with_ca) == url_with_ca
+
+        # Complex URLs with credentials and multiple parameters
+        complex_url = "mongodb+srv://user:password@cluster.mongodb.net/?retryWrites=true&w=majority"
+        @test RxInferServer.Database.inject_tls_ca_file(complex_url) ==
+            "mongodb+srv://user:password@cluster.mongodb.net/?retryWrites=true&w=majority&tlsCAFile=/path/to/ca.pem"
+    end
+end

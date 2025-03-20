@@ -30,18 +30,12 @@ RxInferServer.serve()
 RXINFER_SERVER_MONGODB_DATABASE() = get(ENV, "RXINFER_SERVER_MONGODB_DATABASE", "rxinferserver")
 
 """
-The path to the SSL CA file to use for the MongoDB connection.
+The SSL/TLS CA file path to use for MongoDB connections.
 This can be configured using the `RXINFER_SERVER_SSL_CA_FILE` environment variable.
-Defaults to an empty string if not specified.
-
-If not specified and the MongoDB connection string does not contain the "localhost" or "127.0.0.1" address, 
-RxInferServer will try to find the SSL CA file in the default locations based on the operating system using 
-the [`RxInferServer.Database.find_ssl_certificates`](@ref) function and inject it using the [`RxInferServer.Database.inject_tls_ca_file`](@ref) function.
-
-!!! note
-    This setting is ignored if the MongoDB connection string already contains the `tlsCAFile` parameter.
+If not specified, the system will try to automatically find a suitable CA certificate.
 
 ```julia
+# Set SSL CA file path via environment variable
 ENV["RXINFER_SERVER_SSL_CA_FILE"] = "/path/to/ca.pem"
 RxInferServer.serve()
 ```
@@ -149,14 +143,6 @@ Additionally, sensitive query parameters like `tlsCertificateKeyFile` and `tlsCA
 
 # Arguments
 - `url::String`: The MongoDB connection URL
-
-# Examples
-```julia
-hidden_url("mongodb://user:password@localhost:27017") # returns "mongodb://****:****@localhost:27017"
-hidden_url("mongodb://localhost:27017") # returns "mongodb://localhost:27017"
-hidden_url("mongodb+srv://host.mongodb.net/?tlsCertificateKeyFile=/path/to/cert.pem") # returns "mongodb+srv://host.mongodb.net/?tlsCertificateKeyFile=****"
-hidden_url("mongodb+srv://host.mongodb.net/?tlsCAFile=/path/to/ca.pem") # returns "mongodb+srv://host.mongodb.net/?tlsCAFile=****"
-```
 """
 function hidden_url(url::String)::String
     result = url
@@ -203,15 +189,45 @@ end
 """
     inject_tls_ca_file(url::String)::String
 
-Injects the TLS CA file into the URL if it is not already present.
+Injects the TLS CA file into the MongoDB connection URL if it's not already present.
+This function adds the tlsCAFile parameter to the URL in the following priority:
+1. Uses RXINFER_SERVER_SSL_CA_FILE environment variable if set
+2. Automatically finds SSL certificates if the environment variable is empty and the connection is not to localhost
+3. Leaves the URL unchanged if it already contains a tlsCAFile parameter or points to localhost/127.0.0.1
+
+# Arguments
+- `url::String`: The MongoDB connection URL
+
+# Returns
+- `String`: The MongoDB connection URL with tlsCAFile parameter added if needed
 """
 function inject_tls_ca_file(url::String)::String
-    tls_ca_file = RXINFER_SERVER_SSL_CA_FILE()
-    if isempty(tls_ca_file) || contains(url, "localhost") || contains(url, "127.0.0.1") || !contains(url, "tlsCAFile")
+    # If URL already has tlsCAFile or is localhost, don't modify
+    if contains(url, "tlsCAFile") || contains(url, "localhost") || contains(url, "127.0.0.1")
         return url
     end
-    url_append_symbol = contains(url, "?") ? "&" : "?"
-    return url * url_append_symbol * "tlsCAFile=$tls_ca_file"
+    
+    # Try to get CA file path from environment variable
+    tls_ca_file = RXINFER_SERVER_SSL_CA_FILE()
+    
+    # If environment variable is empty, try to find certificates automatically
+    if isempty(tls_ca_file)
+        certificates = find_ssl_certificates()
+        if !isempty(certificates["ca_certs"])
+            # Use the first CA certificate found
+            tls_ca_file = first(certificates["ca_certs"])
+            @info "Automatically using CA certificate: $tls_ca_file"
+        end
+    end
+    
+    # If we have a CA file (either from env or auto-discovery), append it to URL
+    if !isempty(tls_ca_file)
+        url_append_symbol = contains(url, "?") ? "&" : "?"
+        return url * url_append_symbol * "tlsCAFile=$tls_ca_file"
+    end
+    
+    # If no CA file found, return original URL
+    return url
 end
 
 """

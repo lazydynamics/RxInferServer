@@ -146,31 +146,31 @@ Additionally, sensitive query parameters like `tlsCertificateKeyFile` and `tlsCA
 """
 function hidden_url(url::String)::String
     result = url
-    
+
     # Hide username:password
     if contains(url, '@')
-        protocol_part, rest = split(url, "://", limit=2)
-        
+        protocol_part, rest = split(url, "://", limit = 2)
+
         if contains(rest, '@')
-            credentials_part, server_part = split(rest, '@', limit=2)
+            credentials_part, server_part = split(rest, '@', limit = 2)
             result = "$protocol_part://****:****@$server_part"
         end
     end
-    
+
     # Hide sensitive parameters if URL contains query string
     sensitive_params = ["tlsCertificateKeyFile", "tlsCAFile"]
-    
+
     if any(param -> contains(result, "$param="), sensitive_params) && contains(result, "?")
-        base_url, query_string = split(result, "?", limit=2)
-        
+        base_url, query_string = split(result, "?", limit = 2)
+
         # Split query parameters
         query_params = split(query_string, "&")
-        
+
         # Process each parameter
         for (i, param) in enumerate(query_params)
             for sensitive_param in sensitive_params
                 if startswith(param, "$sensitive_param=")
-                    key_value = split(param, "=", limit=2)
+                    key_value = split(param, "=", limit = 2)
                     if length(key_value) == 2
                         query_params[i] = "$(key_value[1])=****"
                     end
@@ -178,11 +178,11 @@ function hidden_url(url::String)::String
                 end
             end
         end
-        
+
         # Reassemble URL
         result = base_url * "?" * join(query_params, "&")
     end
-    
+
     return result
 end
 
@@ -206,10 +206,10 @@ function inject_tls_ca_file(url::String)::String
     if contains(url, "tlsCAFile") || contains(url, "localhost") || contains(url, "127.0.0.1")
         return url
     end
-    
+
     # Try to get CA file path from environment variable
     tls_ca_file = RXINFER_SERVER_SSL_CA_FILE()
-    
+
     # If environment variable is empty, try to find certificates automatically
     if isempty(tls_ca_file)
         certificates = find_ssl_certificates()
@@ -219,13 +219,13 @@ function inject_tls_ca_file(url::String)::String
             @info "Automatically using CA certificate: $tls_ca_file"
         end
     end
-    
+
     # If we have a CA file (either from env or auto-discovery), append it to URL
     if !isempty(tls_ca_file)
         url_append_symbol = contains(url, "?") ? "&" : "?"
         return url * url_append_symbol * "tlsCAFile=$tls_ca_file"
     end
-    
+
     # If no CA file found, return original URL
     return url
 end
@@ -244,43 +244,50 @@ The function searches for:
 - `Dict{String, Vector{String}}`: Dictionary with keys "ca_certs" and "client_certs"
 """
 function find_ssl_certificates()::Dict{String, Vector{String}}
-    result = Dict{String, Vector{String}}(
-        "ca_certs" => String[],
-        "client_certs" => String[]
-    )
-    
+    result = Dict{String, Vector{String}}("ca_certs" => String[], "client_certs" => String[])
+
     # Determine OS
-    os_name = Sys.iswindows() ? "windows" : 
-              Sys.isapple() ? "macos" : 
-              Sys.islinux() ? "linux" : "unknown"
-    
+    os_name = if Sys.iswindows()
+        "windows"
+    elseif Sys.isapple()
+        "macos"
+    elseif Sys.islinux()
+        "linux"
+    else
+        "unknown"
+    end
+
     # Define search paths based on OS
     ca_cert_paths = String[]
     client_cert_paths = String[]
-    
+
     if os_name == "windows"
         # Windows certificate locations
-        push!(ca_cert_paths, 
+        push!(
+            ca_cert_paths,
             "C:\\Windows\\System32\\certmgr.msc",
             "C:\\ProgramData\\Microsoft\\Crypto\\RSA\\MachineKeys",
             joinpath(homedir(), "AppData", "Roaming", "Microsoft", "Crypto", "RSA"),
             "C:\\OpenSSL\\certs"
         )
-        push!(client_cert_paths,
+        push!(
+            client_cert_paths,
             "C:\\ProgramData\\Microsoft\\Crypto\\RSA\\MachineKeys",
             joinpath(homedir(), "AppData", "Roaming", "Microsoft", "Crypto", "RSA"),
             "C:\\OpenSSL\\certs"
         )
     elseif os_name == "macos"
         # macOS certificate locations
-        push!(ca_cert_paths, 
+        push!(
+            ca_cert_paths,
             "/etc/ssl/certs",
             "/etc/ssl/cert.pem",
             joinpath(homedir(), "Library", "Application Support", "Certificates"),
             "/usr/local/etc/openssl/certs",
             "/usr/local/etc/openssl@1.1/certs"
         )
-        push!(client_cert_paths,
+        push!(
+            client_cert_paths,
             joinpath(homedir(), "Library", "Application Support", "Certificates"),
             "/usr/local/etc/openssl/certs",
             "/usr/local/etc/openssl@1.1/certs",
@@ -288,48 +295,51 @@ function find_ssl_certificates()::Dict{String, Vector{String}}
         )
     elseif os_name == "linux"
         # Linux certificate locations
-        push!(ca_cert_paths, 
+        push!(
+            ca_cert_paths,
             "/etc/ssl/certs",
             "/etc/ssl/certs/ca-certificates.crt",
             "/etc/pki/tls/certs",
             "/etc/pki/tls/certs/ca-bundle.crt",
             "/usr/share/ca-certificates"
         )
-        push!(client_cert_paths,
-            "/etc/ssl/certs",
-            "/etc/pki/tls/certs",
-            joinpath(homedir(), ".ssl", "certs")
-        )
+        push!(client_cert_paths, "/etc/ssl/certs", "/etc/pki/tls/certs", joinpath(homedir(), ".ssl", "certs"))
     end
-    
+
     # Search for CA certificates
     for path in ca_cert_paths
         if isfile(path) && (endswith(path, ".crt") || endswith(path, ".pem"))
             push!(result["ca_certs"], path)
         elseif isdir(path)
             # Look for .crt and .pem files in the directory
-            for file in readdir(path, join=true)
+            for file in readdir(path, join = true)
                 if isfile(file) && (endswith(file, ".crt") || endswith(file, ".pem"))
                     push!(result["ca_certs"], file)
                 end
             end
         end
     end
-    
+
     # Search for client certificates
     for path in client_cert_paths
         if isfile(path) && (endswith(path, ".crt") || endswith(path, ".pem") || endswith(path, ".key"))
             push!(result["client_certs"], path)
         elseif isdir(path)
             # Look for .crt, .pem, and .key files in the directory
-            for file in readdir(path, join=true)
-                if isfile(file) && (endswith(file, ".crt") || endswith(file, ".pem") || endswith(file, ".key") || endswith(file, ".pfx") || endswith(file, ".p12"))
+            for file in readdir(path, join = true)
+                if isfile(file) && (
+                    endswith(file, ".crt") ||
+                    endswith(file, ".pem") ||
+                    endswith(file, ".key") ||
+                    endswith(file, ".pfx") ||
+                    endswith(file, ".p12")
+                )
                     push!(result["client_certs"], file)
                 end
             end
         end
     end
-    
+
     return result
 end
 

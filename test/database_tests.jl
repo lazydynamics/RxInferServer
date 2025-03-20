@@ -103,3 +103,57 @@ end
             "mongodb://****:****@some.server.com"
     end
 end
+
+@testitem "Database.hidden_url should hide tlsCertificateKeyFile path in MongoDB URL" begin
+    using Mongoc
+    RxInferServer.Database.with_connection() do
+        # Test with only tlsCertificateKeyFile
+        @test RxInferServer.Database.hidden_url("mongodb+srv://cluster.mongodb.net/?tlsCertificateKeyFile=/tmp/cert.pem") == 
+            "mongodb+srv://cluster.mongodb.net/?tlsCertificateKeyFile=****"
+        
+        # Test with tlsCertificateKeyFile in the middle of other parameters
+        @test RxInferServer.Database.hidden_url("mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCertificateKeyFile=/tmp/cert.pem&retryWrites=true") == 
+            "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCertificateKeyFile=****&retryWrites=true"
+        
+        # Test with both credentials and tlsCertificateKeyFile
+        @test RxInferServer.Database.hidden_url("mongodb+srv://user:password@cluster.mongodb.net/?authSource=%24external&tlsCertificateKeyFile=/tmp/cert.pem") == 
+            "mongodb+srv://****:****@cluster.mongodb.net/?authSource=%24external&tlsCertificateKeyFile=****"
+    end
+end
+
+@testitem "Database.hidden_url should hide tlsCAFile path in MongoDB URL" begin
+    using Mongoc
+    RxInferServer.Database.with_connection() do
+        # Test with only tlsCAFile
+        @test RxInferServer.Database.hidden_url("mongodb+srv://cluster.mongodb.net/?tlsCAFile=/tmp/ca.pem") == 
+            "mongodb+srv://cluster.mongodb.net/?tlsCAFile=****"
+        
+        # Test with tlsCAFile in the middle of other parameters
+        @test RxInferServer.Database.hidden_url("mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCAFile=/tmp/ca.pem&retryWrites=true") == 
+            "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCAFile=****&retryWrites=true"
+        
+        # Test with both credentials and tlsCAFile
+        @test RxInferServer.Database.hidden_url("mongodb+srv://user:password@cluster.mongodb.net/?authSource=%24external&tlsCAFile=/tmp/ca.pem") == 
+            "mongodb+srv://****:****@cluster.mongodb.net/?authSource=%24external&tlsCAFile=****"
+    end
+end
+
+@testitem "Database.hidden_url should hide both certificate paths in MongoDB URL" begin
+    using Mongoc
+    RxInferServer.Database.with_connection() do
+        # Test with both certificate parameters
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://cluster.mongodb.net/?tlsCertificateKeyFile=/tmp/cert.pem&tlsCAFile=/tmp/ca.pem"
+        ) == "mongodb+srv://cluster.mongodb.net/?tlsCertificateKeyFile=****&tlsCAFile=****"
+        
+        # Test with both certificate parameters and credentials
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://user:password@cluster.mongodb.net/?tlsCertificateKeyFile=/tmp/cert.pem&tlsCAFile=/tmp/ca.pem"
+        ) == "mongodb+srv://****:****@cluster.mongodb.net/?tlsCertificateKeyFile=****&tlsCAFile=****"
+        
+        # Test with both certificate parameters and other parameters
+        @test RxInferServer.Database.hidden_url(
+            "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCAFile=/tmp/ca.pem&retryWrites=true&tlsCertificateKeyFile=/tmp/cert.pem"
+        ) == "mongodb+srv://cluster.mongodb.net/?authSource=%24external&tlsCAFile=****&retryWrites=true&tlsCertificateKeyFile=****" 
+    end
+end

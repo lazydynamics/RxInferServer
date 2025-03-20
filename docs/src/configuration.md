@@ -53,9 +53,14 @@ The MongoDB connection can be configured using the following environment variabl
 ```@docs
 RxInferServer.Database.RXINFER_SERVER_MONGODB_URL
 RxInferServer.Database.RXINFER_SERVER_MONGODB_DATABASE
+RxInferServer.Database.RXINFER_SERVER_SSL_CA_FILE
 ```
 
 The default connection URL for the Docker development environment is `mongodb://database:27017`, which connects to the MongoDB Atlas Local instance running in the Docker Compose environment. When deploying to production, you should set this to your actual MongoDB Atlas connection string or other MongoDB instance.
+
+## SSL Certificates for MongoDB
+
+When connecting to MongoDB servers with SSL/TLS enabled, you'll need to provide appropriate certificate files. RxInferServer includes functionality to help find SSL certificates on your system (see [`RxInferServer.Database.find_ssl_certificates`](@ref)). You can ovveride the default behaviour by setting the [`RxInferServer.Database.RXINFER_SERVER_SSL_CA_FILE`](@ref) environment variable to your own MongoDB connection string. Read more about it in the [Database section](@ref database).
 
 ## Using MongoDB Compass
 

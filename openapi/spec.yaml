@@ -9,6 +9,8 @@ info:
 servers:
   - url: 'http://localhost:8000/v1'
     description: Local development server
+  - url: 'https://rxinfer.lazydynamics.app/v1'
+    description: Public server provided by Lazy Dynamics team - https://lazydynamics.com/
 tags:
   - name: Server
     description: Server management endpoints

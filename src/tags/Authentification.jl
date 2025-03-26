@@ -10,7 +10,7 @@ function token_generate(req::HTTP.Request)
 
     @debug "New token request"
     token = string(UUIDs.uuid4())
-    document = Mongoc.BSON("token" => token, "created_at" => Dates.now(), "roles" => [ "user" ])
+    document = Mongoc.BSON("token" => token, "created_at" => Dates.now(), "roles" => ["user"])
     collection = Database.collection("tokens")
     insert_result = Mongoc.insert_one(collection, document)
 

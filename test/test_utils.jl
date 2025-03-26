@@ -29,7 +29,7 @@
         return _client
     end
 
-    function with_temporary_token(f::Function; roles::Vector{String} = [ "user" ])
+    function with_temporary_token(f::Function; roles::Vector{String} = ["user"])
         _client = TestClient(authorized = false)
 
         auth = RxInferClientOpenAPI.AuthenticationApi(_client)
@@ -82,7 +82,7 @@ end
 
     created_token = Ref{String}("")
     default_token = TestUtils.current_test_token()
-    TestUtils.with_temporary_token(roles = [ "arbitrary", "arbitrary2" ]) do
+    TestUtils.with_temporary_token(roles = ["arbitrary", "arbitrary2"]) do
         client = TestUtils.TestClient()
         temporary_token = TestUtils.current_test_token()
         @test temporary_token != default_token
@@ -94,7 +94,7 @@ end
             collection = RxInferServer.Database.collection("tokens")
             query = Mongoc.BSON("token" => created_token[])
             result = Mongoc.find_one(collection, query)
-            @test result["roles"] == [ "arbitrary", "arbitrary2" ]
+            @test result["roles"] == ["arbitrary", "arbitrary2"]
         end
     end
 

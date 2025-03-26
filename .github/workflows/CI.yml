@@ -72,6 +72,16 @@ jobs:
       - uses: julia-actions/cache@v2
       - name: Build documentation
         run: |
+          # Start the docker compose environment
+          make docker-start
+
+          # Precompile deps before running the server and tests 
+          make deps
+          
+          # Start the Julia server in the background with trace compilation
+          make serve &
+
+          # Build the documentation
           make docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

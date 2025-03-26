@@ -3,10 +3,17 @@
 .PHONY: help docs docs-serve docs-clean docs-build deps test serve docker-start docker-stop clean format check-format generate-client generate-server generate-all
 
 # Colors for terminal output
+ifdef NO_COLOR
+GREEN  :=
+YELLOW :=
+WHITE  :=
+RESET  :=
+else
 GREEN  := $(shell tput -Txterm setaf 2)
 YELLOW := $(shell tput -Txterm setaf 3)
 WHITE  := $(shell tput -Txterm setaf 7)
 RESET  := $(shell tput -Txterm sgr0)
+endif
 
 # Default target
 .DEFAULT_GOAL := help
@@ -39,6 +46,9 @@ help:
 	@echo ''
 	@echo '${GREEN}Help:${RESET}'
 	@echo '  ${YELLOW}help${RESET}                 Show this help message'
+	@echo ''
+	@echo '${GREEN}Environment variables:${RESET}'
+	@echo '  ${YELLOW}NO_COLOR${RESET}             Set this variable to any value to disable colored output'
 	@echo ''
 
 ## Documentation commands:

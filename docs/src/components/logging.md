@@ -2,6 +2,10 @@
 
 The RxInfer Server uses a logging system that divides logs by functional groups and stores them in separate files.
 
+## Configuration
+
+For logging configuration options, see [Logging Configuration](@ref logging-configuration) in the main configuration documentation.
+
 ## Architecture
 
 The logging functionality is encapsulated in the `Logging` module (`src/logging.jl`), which:
@@ -28,10 +32,6 @@ Log groups are automatically derived from the file basename. For example:
 - Messages from `src/tags/Models.jl` belong to the `:Models` group
 
 The system routes logs to the appropriate files based on these groups without requiring explicit group specification.
-
-## Configuration
-
-For logging configuration options, see [Logging Configuration](@ref logging-configuration) in the main configuration documentation.
 
 ## API Reference
 

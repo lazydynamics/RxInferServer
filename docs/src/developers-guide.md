@@ -6,12 +6,12 @@ This section describes the development process for the RxInferServer.jl project 
 
 This repository includes an OpenAPI specification for the RxInferServer.jl API and tools to generate Julia server and client code from it.
 
-### Prerequisites
+## Prerequisites
 
 - Docker and Docker Compose installed on your system
 - Visual Studio Code (or your preferred code editor) for editing the OpenAPI specification
 
-### Development environment with Docker
+## Development environment with Docker
 
 To start the development environment with Docker, from the root directory of the repository, run:
 
@@ -41,7 +41,7 @@ The `docker-compose.yaml` currently has the following services:
 - Swagger UI: a web interface for visualizing and testing the OpenAPI specification, the UI is available at `http://localhost:8080` and allows to test the API endpoints, the endpoints can also be tested in VSCode by opening `spec.yaml` directly and clicking on the "Try it" button
 - MongoDB Atlas Local: a local MongoDB instance running on `localhost:27017` that mimics MongoDB Atlas functionality for development and testing purposes
 
-### Starting the RxInferServer
+## Starting the RxInferServer
 
 Unlike the Docker services, RxInferServer now needs to be started manually. To start the server, run:
 
@@ -71,11 +71,11 @@ If the server is running correctly, this should return a successful response.
 !!! note
     Server supports hot-reloading, which automatically updates endpoints when code changes are detected. This feature is enabled by default but can be disabled using preferences. See [Hot Reloading](@ref hot-reloading-configuration) for more details.
 
-### Hot-Reloading
+## Hot-Reloading
 
 RxInferServer includes built-in hot-reloading that automatically applies code changes without requiring server restarts.
 
-#### Overview
+### Overview
 
 The server uses two separate hot-reloading mechanisms:
 - **Source Code Hot-Reloading**: Updates API endpoints and server code
@@ -83,7 +83,7 @@ The server uses two separate hot-reloading mechanisms:
 
 Both mechanisms monitor files for changes using `Revise.jl` and automatically apply updates when detected. Console logs with the `[HOT-RELOAD]` prefix indicate reloading activity.
 
-#### Controlling Hot-Reloading
+### Controlling Hot-Reloading
 
 Hot reloading can be controlled through the `RXINFER_SERVER_ENABLE_HOT_RELOAD` environment variable:
 
@@ -98,7 +98,7 @@ make serve
 !!! note
     Hot reloading requires `Revise.jl` to be loaded in the current Julia session. If `Revise.jl` is not loaded, hot reloading will be disabled even if enabled through the environment variable.
 
-#### Best Practices and Troubleshooting
+### Best Practices and Troubleshooting
 
 - Hot-reloading works best for typical code changes but complex structural changes may require server restart
 - Disable hot-reloading in production environments by setting `RXINFER_SERVER_ENABLE_HOT_RELOAD="false"`
@@ -107,7 +107,7 @@ make serve
 
 See [Hot Reloading](@ref hot-reloading-configuration) for more details.
 
-### Development Workflow with Makefile
+## Development Workflow with Makefile
 
 The project includes a Makefile with various commands to streamline common development tasks. Here are some of the most useful commands:
 
@@ -152,11 +152,11 @@ For a full list of available commands, run:
 make help
 ```
 
-### MongoDB in Development
+## MongoDB in Development
 
 The development environment includes a MongoDB Atlas Local instance that's accessible to the RxInferServer service. The connection is pre-configured and available through the environment variable `RXINFER_MONGODB_URL`.
 
-#### Connecting with MongoDB Compass
+### Connecting with MongoDB Compass
 
 [MongoDB Compass](https://www.mongodb.com/products/compass) is a GUI for MongoDB that allows you to explore and manipulate your data visually. To connect to the development MongoDB instance:
 
@@ -172,7 +172,7 @@ Note that when connecting from your host machine (outside the Docker network), y
 
 When running in the Docker development environment, the connection URL will automatically point to the MongoDB container (`mongodb://database:27017`).
 
-### Editing the OpenAPI Specification
+## Editing the OpenAPI Specification
 
 Edit the `openapi/spec.yaml` file directly in VSCode or your preferred code editor. The OpenAPI specification uses the YAML format and follows the [OpenAPI 3](https://swagger.io/specification/) standard.
 
@@ -187,7 +187,7 @@ Open your browser and navigate to: http://localhost:8080
 
 The Swagger UI will automatically load the `openapi/spec.yaml` file, allowing you to visualize and test your API without leaving your browser. Alternatively, you can test the API endpoints in VSCode by opening `spec.yaml` directly and clicking on the "Try it" button.
 
-#### Testing Authenticated Endpoints
+## Testing Authenticated Endpoints
 
 The API uses standard Bearer token authentication with the `Authorization` header. Here's how to test authenticated endpoints:
 
@@ -211,11 +211,11 @@ The API uses standard Bearer token authentication with the `Authorization` heade
 
 See [Configuration](@ref configuration) for more details on setting up authentication for development and production.
 
-### Generating Code from OpenAPI Specification
+## Generating Code from OpenAPI Specification
 
 You can generate both server and client code from the OpenAPI specification using the provided scripts and Makefile commands.
 
-#### Using Makefile Commands
+### Generating Code with Makefile
 
 The project includes several convenient Makefile commands for code generation:
 
@@ -232,7 +232,7 @@ make generate-all
 
 These commands use the underlying combined script to perform the code generation with appropriate settings.
 
-#### Using the Generation Script Directly
+### Using the Generation Script Directly
 
 You can also run the generation script directly with various options:
 
@@ -252,7 +252,7 @@ OPENAPI_OUTPUT_DIR="/path/to/output" ./openapi/generate.sh all
 
 The script checks if Docker is running, then uses the OpenAPI Generator Docker image to generate Julia code based on the OpenAPI specification.
 
-##### Customizing Output Location
+### Customizing Output Location
 
 By default, generated code is placed in the `openapi/client` and `openapi/server` directories. You can customize this by setting the `OPENAPI_OUTPUT_DIR` environment variable:
 
@@ -266,9 +266,9 @@ The script will create `client` and `server` subdirectories under the specified 
 !!! note
     After the re-generation of the server code, the initial startup time will be longer due to initial compilation of the generated code.
 
-### Working with the Generated Code
+## Working with the Generated Code
 
-#### Server Code
+### Server Code
 
 The generated server code will be placed in the `openapi/server` directory as a separate Julia module and should never be modified directly. The `RxInferServer.jl` package will automatically load the generated code when the package is loaded. 
 
@@ -294,11 +294,11 @@ end
 This tells you that you need to implement the `get_server_info` function that must return a `ServerInfo` object as defined in the `openapi/spec.yaml` file.
 You however, can also return other types of objects, for example `ErrorResponse` or `UnauthorizedResponse`. Those will be converted to the appropriate HTTP response codes by the server.
 
-#### Client Code
+### Client Code
 
 The generated client code will be placed in the `openapi/client` directory as a separate Julia module. This client code can be used to interact with the RxInfer API from Julia applications. The client provides Julia functions that correspond to each API endpoint defined in the OpenAPI specification.
 
-### Customizing the OpenAPI Specification
+## Customizing the OpenAPI Specification
 
 Edit the `openapi/spec.yaml` file directly in your code editor to customize your API specification. 
 
@@ -318,7 +318,7 @@ Failing to regenerate the code after changes to the OpenAPI specification will r
 - [Julia Server Template](https://openapi-generator.tech/docs/generators/julia-server)
 - [Julia Client Template](https://openapi-generator.tech/docs/generators/julia)
 
-### Working with Authorization in Endpoints
+## Working with Authorization in Endpoints
 
 Most endpoints in RxInferServer require authentication. The middleware automatically handles token validation, but your endpoint implementation often needs to access the current user's token or roles for authorization decisions.
 
@@ -328,7 +328,7 @@ RxInferServer.current_token
 RxInferServer.current_roles
 ```
 
-#### Using `current_token()` and `current_roles()`
+### Using `current_token()` and `current_roles()`
 
 RxInferServer provides two helper functions for accessing the authenticated user's information:
 
@@ -358,7 +358,7 @@ function get_protected_resource(req::HTTP.Request)::HTTP.Response
 end
 ```
 
-#### Example: Role-Based Resource Filtering
+### Example: Role-Based Resource Filtering
 
 Here's a real example from the `get_models` endpoint that filters models based on user roles:
 

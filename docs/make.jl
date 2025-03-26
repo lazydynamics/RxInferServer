@@ -40,8 +40,8 @@ function get_operation_ids()
     operation_ids = [match.captures[1] for match in matches]
 
     # Prepare docfixes for the URLs and the operation IDs
-    docfixes_url = Any[ string("md#", id) => string("md#**", snake_case(id), "**") for id in operation_ids]
-    docfixes_ops = Any[ id => snake_case(id; joinwith = "\\_") for id in operation_ids]
+    docfixes_url = Any[string("md#", id) => string("md#**", snake_case(id), "**") for id in operation_ids]
+    docfixes_ops = Any[id => snake_case(id; joinwith = "\\_") for id in operation_ids]
 
     docfixes = vcat(docfixes_url, docfixes_ops)
 
@@ -85,7 +85,7 @@ function copy_openapi_docs(; subdirectory = "server")
     # Function to recursively find all markdown files
     function find_markdown_files(dir)
         files = []
-        for entry in readdir(dir; join=true)
+        for entry in readdir(dir; join = true)
             if isfile(entry) && endswith(entry, ".md")
                 push!(files, relpath(entry, openapi_source_dir))
             elseif isdir(entry) && !endswith(entry, ".openapi-generator")
@@ -139,7 +139,7 @@ function copy_openapi_docs(; subdirectory = "server")
         # Create nested structure for pages
         parts = splitpath(file)
         page_name = replace(last(parts), ".md" => "")
-        
+
         # Create the page entry preserving the folder structure
         if length(parts) == 1
             # Root level files
@@ -210,7 +210,7 @@ makedocs(;
     ),
     pages = [
         "Home" => "index.md",
-        "Getting Started" => "getting-started.md",
+        "Getting started" => "getting-started.md",
         "API design" => [
             "Authentication" => "api/authentication.md",
             "Model management" => "api/model-management.md",
@@ -220,18 +220,20 @@ makedocs(;
             "Proposal (outdated)" => "api/design-proposal.md"
         ],
         "Configuration" => "configuration.md",
+        "Server components" => [
+            "Models" => "components/models.md", 
+            "Database" => "components/database.md", 
+            "Logging" => "components/logging.md"
+        ],
         "Developers guide" => "developers-guide.md",
-        "Models" => "models.md",
-        "Database" => "database.md",
-        "Logging" => "logging.md",
-        "OpenAPI Documentation" => [ 
-            "Overview" => "openapi.md",
-            "Server" => openapi_server_pages,
-            "Client" => openapi_client_pages,
-        ]
+        "OpenAPI documentation" =>
+            ["Overview" => "openapi.md", "Server" => openapi_server_pages, "Client" => openapi_client_pages]
     ]
 )
 
 deploydocs(;
-    repo = "github.com/lazydynamics/RxInferServer.jl", devbranch = "main", forcepush = true, cname = "server.rxinfer.com"
+    repo = "github.com/lazydynamics/RxInferServer.jl",
+    devbranch = "main",
+    forcepush = true,
+    cname = "server.rxinfer.com"
 )

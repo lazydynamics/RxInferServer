@@ -22,20 +22,6 @@ The repository includes a Makefile for convenience. To check the available comma
 make help
 ```
 
-```@eval 
-using Documenter
-p = joinpath(@__DIR__, "..", "..", "Makefile")
-io = IOBuffer()
-run(pipeline(setenv(`make help -f $p`, "NO_COLOR" => "1"), stdout=io, stderr=io))
-makehelpoutput = String(take!(io))
-s = """
-\`\`\`
-$makehelpoutput
-\`\`\`
-"""
-md = Documenter.Markdown.parse(s)
-```
-
 ## Database setup
 
 The server requires a database to store model and inference related information. Read more about the database in the [Database](@ref database) section. For development purposes, the server can be started with `make docker` command which will automatically start the database in a docker container

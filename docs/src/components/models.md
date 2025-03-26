@@ -2,6 +2,10 @@
 
 RxInferServer provides a flexible system for loading, managing, and exposing RxInfer probabilistic models through the API. This section explains how models work in the server, how to create them, and how the model discovery and loading process works.
 
+## Configuration
+
+Read more about the configuration of the models in the [Models Configuration](@ref models-configuration) section.
+
 ## Model Overview
 
 Models in RxInferServer are self-contained probabilistic models built with RxInfer.jl that can be loaded by the server and exposed through the API. Each model:

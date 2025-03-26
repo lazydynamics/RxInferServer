@@ -109,24 +109,47 @@ See [Hot Reloading](@ref hot-reloading-configuration) for more details.
 
 ## Development Workflow with Makefile
 
-The project includes a Makefile with various commands to streamline common development tasks. For a full list of available commands, run:
+The project includes a Makefile with various commands to streamline common development tasks. Here are some of the most useful commands:
+
+```bash
+# Start the Docker environment (Swagger UI and MongoDB)
+make docker-start
+
+# Stop the Docker environment
+make docker-stop
+
+# Start the RxInferServer, with debug logs enabled
+make serve
+
+# Run the test suite
+make test
+
+# Install dependencies
+make deps
+
+# Build documentation
+make docs
+
+# Generate OpenAPI client code
+make generate-client
+
+# Generate OpenAPI server code
+make generate-server
+
+# Generate both client and server code
+make generate-all
+
+# Format Julia code
+make format
+
+# Check code formatting without modifying files
+make check-format
+```
+
+For a full list of available commands, run:
 
 ```bash
 make help
-```
-
-```@eval 
-using Documenter
-p = joinpath(@__DIR__, "..", "..", "Makefile")
-io = IOBuffer()
-run(pipeline(setenv(`make help -f $p`, "NO_COLOR" => "1"), stdout=io, stderr=io))
-makehelpoutput = String(take!(io))
-s = """
-\`\`\`
-$makehelpoutput
-\`\`\`
-"""
-md = Documenter.Markdown.parse(s)
 ```
 
 ## MongoDB in Development

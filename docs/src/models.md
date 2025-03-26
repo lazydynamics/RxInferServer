@@ -63,12 +63,7 @@ The `model.jl` file contains the Julia code implementing the model's logic. Each
 
 ## Exposing Models via API
 
-Models are exposed through the API endpoints defined in the OpenAPI specification. The main endpoints are:
-
-- `GET /models` - List all available models
-- `GET /models/{model_name}/info` - Get detailed information about a specific model
-
-When a client requests model information or executes a model, the server:
+Models are exposed through the API endpoints defined in the OpenAPI specification. Read the [Model management](@ref model-management-api) section to know more about how to create models with client API. When a client requests model information or executes a model, the server:
 
 1. Looks up the requested model by name
 2. If found, returns the model's metadata

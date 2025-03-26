@@ -215,6 +215,8 @@ makedocs(;
             "Authentication" => "api/authentication.md",
             "Model management" => "api/model-management.md",
             "Learning parameters of a model" => "api/learning.md",
+            "Status codes and error handling" => "api/status-codes.md",
+            "Server details and version" => "api/server-info.md",
             "Proposal (outdated)" => "api/design-proposal.md"
         ],
         "Configuration" => "configuration.md",

@@ -5,6 +5,10 @@
 
 A Julia package that provides RESTful HTTP server functionality for deploying [RxInfer.jl](https://github.com/biaslab/RxInfer.jl) probabilistic models as web services.
 
+## Documentation
+
+The documentation for the server API and usage is available at [server.rxinfer.com](https://server.rxinfer.com).
+
 ## Planned features
 
 - Deploy RxInfer models as HTTP endpoints

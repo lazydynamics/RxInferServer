@@ -1,4 +1,4 @@
-# Authentication
+# [Authentication](@id authentication-api)
 
 The RxInferServer uses token-based authentication to secure access to its endpoints. This guide explains how to obtain and use authentication tokens, understand token roles, and manage model access.
 
@@ -10,7 +10,7 @@ Most endpoints in RxInferServer require authentication, with a few exceptions. T
 
 ### Obtaining a Token
 
-To authenticate with the server, you first need to obtain a token using the `tokenGenerate` operation. This endpoint supports both user authentication and API key authentication.
+To authenticate with the server, you first need to obtain a token using the `token_generate` operation. This endpoint supports both user authentication and API key authentication.
 
 ```@example auth-generate-token
 import RxInferClientOpenAPI
@@ -51,7 +51,7 @@ set_header(client, "Authorization", "Bearer $(response.token)")
 
 ### Viewing Token Roles
 
-Each token comes with a set of assigned roles that determine its access permissions. You can retrieve the roles associated with your token using the `tokenRoles` operation:
+Each token comes with a set of assigned roles that determine its access permissions. You can retrieve the roles associated with your token using the `token_roles` operation:
 
 ```@example auth-generate-token
 import RxInferClientOpenAPI: token_roles
@@ -88,6 +88,8 @@ response, _ = get_model_details(models_api, response.models[1].name)
 
 response.config["roles"]
 ```
+
+Read more about the Models API in the [Models](@ref models-api) section.
 
 
 

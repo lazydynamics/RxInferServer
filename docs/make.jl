@@ -213,6 +213,7 @@ makedocs(;
         "Getting Started" => "getting-started.md",
         "API design" => [
             "Authentication" => "api/authentication.md",
+            "Models" => "api/models.md",
             "Proposal (outdated)" => "api/design-proposal.md"
         ],
         "Configuration" => "configuration.md",

@@ -2,8 +2,8 @@
 # Do not modify this file directly. Modify the OpenAPI specification instead.
 
 
-function generate_token_read(handler)
-    function generate_token_read_handler(req::HTTP.Request)
+function token_generate_read(handler)
+    function token_generate_read_handler(req::HTTP.Request)
         openapi_params = Dict{String,Any}()
         req.context[:openapi_params] = openapi_params
 
@@ -11,18 +11,44 @@ function generate_token_read(handler)
     end
 end
 
-function generate_token_validate(handler)
-    function generate_token_validate_handler(req::HTTP.Request)
+function token_generate_validate(handler)
+    function token_generate_validate_handler(req::HTTP.Request)
         openapi_params = req.context[:openapi_params]
         
         return handler(req)
     end
 end
 
-function generate_token_invoke(impl; post_invoke=nothing)
-    function generate_token_invoke_handler(req::HTTP.Request)
+function token_generate_invoke(impl; post_invoke=nothing)
+    function token_generate_invoke_handler(req::HTTP.Request)
         openapi_params = req.context[:openapi_params]
-        ret = impl.generate_token(req::HTTP.Request;)
+        ret = impl.token_generate(req::HTTP.Request;)
+        resp = OpenAPI.Servers.server_response(ret)
+        return (post_invoke === nothing) ? resp : post_invoke(req, resp)
+    end
+end
+
+function token_roles_read(handler)
+    function token_roles_read_handler(req::HTTP.Request)
+        openapi_params = Dict{String,Any}()
+        req.context[:openapi_params] = openapi_params
+
+        return handler(req)
+    end
+end
+
+function token_roles_validate(handler)
+    function token_roles_validate_handler(req::HTTP.Request)
+        openapi_params = req.context[:openapi_params]
+        
+        return handler(req)
+    end
+end
+
+function token_roles_invoke(impl; post_invoke=nothing)
+    function token_roles_invoke_handler(req::HTTP.Request)
+        openapi_params = req.context[:openapi_params]
+        ret = impl.token_roles(req::HTTP.Request;)
         resp = OpenAPI.Servers.server_response(ret)
         return (post_invoke === nothing) ? resp : post_invoke(req, resp)
     end
@@ -30,6 +56,7 @@ end
 
 
 function registerAuthenticationApi(router::HTTP.Router, impl; path_prefix::String="", optional_middlewares...)
-    HTTP.register!(router, "POST", path_prefix * "/generate-token", OpenAPI.Servers.middleware(impl, generate_token_read, generate_token_validate, generate_token_invoke; optional_middlewares...))
+    HTTP.register!(router, "POST", path_prefix * "/token/generate", OpenAPI.Servers.middleware(impl, token_generate_read, token_generate_validate, token_generate_invoke; optional_middlewares...))
+    HTTP.register!(router, "GET", path_prefix * "/token/roles", OpenAPI.Servers.middleware(impl, token_roles_read, token_roles_validate, token_roles_invoke; optional_middlewares...))
     return router
 end

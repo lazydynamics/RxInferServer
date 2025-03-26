@@ -139,12 +139,12 @@ paths:
                 $ref: '#/components/schemas/PingResponse'
               example:
                 status: "ok"
-  /generate-token:
+  /token/generate:
     post:
       tags:
         - Authentication
       summary: Generate authentication token
-      operationId: generateToken
+      operationId: tokenGenerate
       description: Generates a new authentication token for accessing protected endpoints
       # This endpoint doesn't require authentication
       security: []
@@ -164,6 +164,31 @@ paths:
               example:
                 error: "Bad Request"
                 message: "Unable to generate token due to internal error"
+  /token/roles:
+    get:
+      tags:
+        - Authentication
+      summary: Get token roles
+      operationId: tokenRoles
+      description: Retrieve the list of roles for a specific token
+      responses:
+        '200':
+          description: Successfully retrieved token roles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRolesResponse'
+              examples:
+                user:
+                  value:
+                    roles:
+                      - "user"
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
   /models/create:
     post:
       tags:
@@ -693,6 +718,19 @@ components:
       scheme: bearer
       description: Simple token authentication. Use the Authorization header with the Bearer scheme.
   schemas:
+    TokenRolesResponse:
+      type: object
+      required:
+        - roles
+      properties:
+        roles:
+          type: array
+          description: List of roles for the token
+          items:
+            type: string
+            description: Role identifier
+          example:
+            - "user"
     ServerInfo:
       type: object
       required:

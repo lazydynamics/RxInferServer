@@ -43,7 +43,8 @@ The following server methods must be implemented:
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token) | **POST** /generate-token | Generate authentication token
+*AuthenticationApi* | [**token_generate**](docs/AuthenticationApi.md#token_generate) | **POST** /token/generate | Generate authentication token
+*AuthenticationApi* | [**token_roles**](docs/AuthenticationApi.md#token_roles) | **GET** /token/roles | Get token roles
 *ModelsApi* | [**attach_metadata_to_event**](docs/ModelsApi.md#attach_metadata_to_event) | **POST** /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event
 *ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode) | **POST** /models/{model_id}/episodes/{episode_name}/create | Create a new episode for a model
 *ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model) | **POST** /models/create | Create a new model instance
@@ -86,6 +87,7 @@ Class | Method | HTTP request | Description
  - [ServerInfo](docs/ServerInfo.md)
  - [SuccessResponse](docs/SuccessResponse.md)
  - [TokenResponse](docs/TokenResponse.md)
+ - [TokenRolesResponse](docs/TokenRolesResponse.md)
  - [UnauthorizedResponse](docs/UnauthorizedResponse.md)
 
 

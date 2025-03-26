@@ -21,5 +21,6 @@ Models/PingResponse.md
 Models/ServerInfo.md
 Models/SuccessResponse.md
 Models/TokenResponse.md
+Models/TokenRolesResponse.md
 Models/UnauthorizedResponse.md
 README.md

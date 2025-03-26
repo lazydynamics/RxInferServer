@@ -7,7 +7,8 @@ All URIs are relative to *http://localhost:8000/v1*
 
 | Class | Method | HTTP request | Description |
 |------------ | ------------- | ------------- | -------------|
-| *AuthenticationApi* | [**generateToken**](Apis/AuthenticationApi.md#generatetoken) | **POST** /generate-token | Generate authentication token |
+| *AuthenticationApi* | [**tokenGenerate**](Apis/AuthenticationApi.md#tokengenerate) | **POST** /token/generate | Generate authentication token |
+*AuthenticationApi* | [**tokenRoles**](Apis/AuthenticationApi.md#tokenroles) | **GET** /token/roles | Get token roles |
 | *ModelsApi* | [**attachMetadataToEvent**](Apis/ModelsApi.md#attachmetadatatoevent) | **POST** /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
 *ModelsApi* | [**createEpisode**](Apis/ModelsApi.md#createepisode) | **POST** /models/{model_id}/episodes/{episode_name}/create | Create a new episode for a model |
 *ModelsApi* | [**createModel**](Apis/ModelsApi.md#createmodel) | **POST** /models/create | Create a new model instance |
@@ -50,6 +51,7 @@ All URIs are relative to *http://localhost:8000/v1*
  - [ServerInfo](./Models/ServerInfo.md)
  - [SuccessResponse](./Models/SuccessResponse.md)
  - [TokenResponse](./Models/TokenResponse.md)
+ - [TokenRolesResponse](./Models/TokenRolesResponse.md)
  - [UnauthorizedResponse](./Models/UnauthorizedResponse.md)
 
 

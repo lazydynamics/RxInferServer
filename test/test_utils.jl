@@ -29,14 +29,14 @@
         return _client
     end
 
-    function with_temporary_token(f::Function; role::String = "user")
+    function with_temporary_token(f::Function; roles::Vector{String} = [ "user" ])
         _client = TestClient(authorized = false)
 
         auth = RxInferClientOpenAPI.AuthenticationApi(_client)
-        response, info = RxInferClientOpenAPI.generate_token(auth)
+        response, info = RxInferClientOpenAPI.token_generate(auth)
 
         if info.status != 200
-            error("Failed to generate a temporary token for role `$role`")
+            error("Failed to generate a temporary token for roles `$roles`")
         end
 
         token = string(response.token)
@@ -45,11 +45,11 @@
         RxInferServer.Database.with_connection() do
             collection = RxInferServer.Database.collection("tokens")
             query = Mongoc.BSON("token" => token)
-            update = Mongoc.BSON("\$set" => Mongoc.BSON("role" => role))
+            update = Mongoc.BSON("\$set" => Mongoc.BSON("roles" => roles))
             result = Mongoc.update_one(collection, query, update)
 
             if result["matchedCount"] != 1
-                error("Failed to update token with role `$role`", result)
+                error("Failed to update token with roles `$roles`", result)
             end
         end
 
@@ -82,7 +82,7 @@ end
 
     created_token = Ref{String}("")
     default_token = TestUtils.current_test_token()
-    TestUtils.with_temporary_token(role = "arbitrary,arbitrary2") do
+    TestUtils.with_temporary_token(roles = [ "arbitrary", "arbitrary2" ]) do
         client = TestUtils.TestClient()
         temporary_token = TestUtils.current_test_token()
         @test temporary_token != default_token
@@ -94,7 +94,7 @@ end
             collection = RxInferServer.Database.collection("tokens")
             query = Mongoc.BSON("token" => created_token[])
             result = Mongoc.find_one(collection, query)
-            @test result["role"] == "arbitrary,arbitrary2"
+            @test result["roles"] == [ "arbitrary", "arbitrary2" ]
         end
     end
 

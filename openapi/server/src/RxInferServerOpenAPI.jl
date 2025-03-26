@@ -7,9 +7,12 @@ Encapsulates generated server code for RxInferServerOpenAPI
 
 The following server methods must be implemented:
 
-- **generate_token**
-    - *invocation:* POST /generate-token
-    - *signature:* generate_token(req::HTTP.Request;) -> TokenResponse
+- **token_generate**
+    - *invocation:* POST /token/generate
+    - *signature:* token_generate(req::HTTP.Request;) -> TokenResponse
+- **token_roles**
+    - *invocation:* GET /token/roles
+    - *signature:* token_roles(req::HTTP.Request;) -> TokenRolesResponse
 - **attach_metadata_to_event**
     - *invocation:* POST /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata
     - *signature:* attach_metadata_to_event(req::HTTP.Request, model_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest;) -> SuccessResponse

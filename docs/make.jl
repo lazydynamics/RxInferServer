@@ -206,18 +206,22 @@ makedocs(;
         edit_link = "main",
         assets = [],
         description = "A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models.",
-        footer = "Created by [ReactiveBayes](https://github.com/ReactiveBayes), fully sponsored by [LazyDynamics](https://lazydynamics.com/), powered by [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl) and the [Julia Programming Language](https://julialang.org/)."
+        footer = "Created and sponsored by [LazyDynamics](https://lazydynamics.com/), powered by [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl) and the [Julia Programming Language](https://julialang.org/). Licensed under [AGPL-3.0](http://github.com/lazydynamics/RxInferServer?tab=readme-ov-file#license)."
     ),
     pages = [
         "Home" => "index.md",
         "Getting Started" => "getting-started.md",
-        "API design" => "api/design-proposal.md",
+        "API design" => [
+            "Authentication" => "api/authentication.md",
+            "Proposal (outdated)" => "api/design-proposal.md"
+        ],
         "Configuration" => "configuration.md",
         "Developers guide" => "developers-guide.md",
         "Models" => "models.md",
         "Database" => "database.md",
         "Logging" => "logging.md",
         "OpenAPI Documentation" => [ 
+            "Overview" => "openapi.md",
             "Server" => openapi_server_pages,
             "Client" => openapi_client_pages,
         ]

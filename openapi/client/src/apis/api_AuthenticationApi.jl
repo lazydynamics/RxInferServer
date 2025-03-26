@@ -11,13 +11,13 @@ This can be used to construct the `OpenAPI.Clients.Client` instance.
 """
 basepath(::Type{ AuthenticationApi }) = "http://localhost:8000/v1"
 
-const _returntypes_generate_token_AuthenticationApi = Dict{Regex,Type}(
+const _returntypes_token_generate_AuthenticationApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => TokenResponse,
     Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
 )
 
-function _oacinternal_generate_token(_api::AuthenticationApi; _mediaType=nothing)
-    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_generate_token_AuthenticationApi, "/generate-token", [])
+function _oacinternal_token_generate(_api::AuthenticationApi; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_token_generate_AuthenticationApi, "/token/generate", [])
     OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
     OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
     return _ctx
@@ -31,14 +31,45 @@ Params:
 
 Return: TokenResponse, OpenAPI.Clients.ApiResponse
 """
-function generate_token(_api::AuthenticationApi; _mediaType=nothing)
-    _ctx = _oacinternal_generate_token(_api; _mediaType=_mediaType)
+function token_generate(_api::AuthenticationApi; _mediaType=nothing)
+    _ctx = _oacinternal_token_generate(_api; _mediaType=_mediaType)
     return OpenAPI.Clients.exec(_ctx)
 end
 
-function generate_token(_api::AuthenticationApi, response_stream::Channel; _mediaType=nothing)
-    _ctx = _oacinternal_generate_token(_api; _mediaType=_mediaType)
+function token_generate(_api::AuthenticationApi, response_stream::Channel; _mediaType=nothing)
+    _ctx = _oacinternal_token_generate(_api; _mediaType=_mediaType)
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
-export generate_token
+const _returntypes_token_roles_AuthenticationApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => TokenRolesResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+)
+
+function _oacinternal_token_roles(_api::AuthenticationApi; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_token_roles_AuthenticationApi, "/token/roles", ["ApiKeyAuth", ])
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Get token roles
+
+Retrieve the list of roles for a specific token
+
+Params:
+
+Return: TokenRolesResponse, OpenAPI.Clients.ApiResponse
+"""
+function token_roles(_api::AuthenticationApi; _mediaType=nothing)
+    _ctx = _oacinternal_token_roles(_api; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function token_roles(_api::AuthenticationApi, response_stream::Channel; _mediaType=nothing)
+    _ctx = _oacinternal_token_roles(_api; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
+export token_generate
+export token_roles

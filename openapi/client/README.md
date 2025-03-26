@@ -22,7 +22,8 @@ Documentation is also embedded in Julia which can be used with a Julia specific 
 
 Class | Method
 ------------ | -------------
-*AuthenticationApi* | [**generate_token**](docs/AuthenticationApi.md#generate_token)<br/>**POST** /generate-token<br/>Generate authentication token
+*AuthenticationApi* | [**token_generate**](docs/AuthenticationApi.md#token_generate)<br/>**POST** /token/generate<br/>Generate authentication token
+*AuthenticationApi* | [**token_roles**](docs/AuthenticationApi.md#token_roles)<br/>**GET** /token/roles<br/>Get token roles
 *ModelsApi* | [**attach_metadata_to_event**](docs/ModelsApi.md#attach_metadata_to_event)<br/>**POST** /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata<br/>Attach metadata to an event
 *ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode)<br/>**POST** /models/{model_id}/episodes/{episode_name}/create<br/>Create a new episode for a model
 *ModelsApi* | [**create_model**](docs/ModelsApi.md#create_model)<br/>**POST** /models/create<br/>Create a new model instance
@@ -64,6 +65,7 @@ Class | Method
  - [ServerInfo](docs/ServerInfo.md)
  - [SuccessResponse](docs/SuccessResponse.md)
  - [TokenResponse](docs/TokenResponse.md)
+ - [TokenRolesResponse](docs/TokenRolesResponse.md)
  - [UnauthorizedResponse](docs/UnauthorizedResponse.md)
 
 

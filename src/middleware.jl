@@ -158,7 +158,7 @@ See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref), [`RXI
 is_dev_token(token) = is_dev_token_enabled() && token == RXINFER_SERVER_DEV_TOKEN()
 
 # List of URL paths that are exempt from authentication
-const AUTH_EXEMPT_PATHS = [string(API_PATH_PREFIX, "/generate-token"), string(API_PATH_PREFIX, "/ping")]
+const AUTH_EXEMPT_PATHS = [string(API_PATH_PREFIX, "/token/generate"), string(API_PATH_PREFIX, "/ping")]
 
 # Determine if a request should bypass authentication checks.
 # Returns true if the request path is in the AUTH_EXEMPT_PATHS list.
@@ -201,7 +201,7 @@ function middleware_extract_token(req::HTTP.Request, cache = nothing)::Union{Not
     collection = Database.collection("tokens")
     query      = Mongoc.BSON("token" => token)
     result     = Mongoc.find_one(collection, query)
-    roles      = collect(split(result["role"], ","))
+    roles      = result["roles"]
 
     if !isnothing(result) && !isnothing(cache)
         cache[token] = roles

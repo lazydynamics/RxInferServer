@@ -50,7 +50,7 @@ docs-build: ## Build the documentation
 
 docs-serve: ## Serve documentation locally for preview in browser (requires LiveServer.jl installed globally, ignores changes to auto-generated openapi documentation)
 	julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
-	julia --project=docs -e 'using LiveServer; servedocs()'
+	julia --project=docs -e 'using LiveServer; servedocs(port=8001, skip_dirs=[joinpath("docs", "src", "openapi")])'
   
 docs-clean: ## Clean the documentation build directory
 	rm -rf docs/build/

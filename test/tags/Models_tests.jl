@@ -11,7 +11,7 @@
 end
 
 @testitem "200 on /models endpoint but arbitrary role should return empty list" setup = [TestUtils] begin
-    TestUtils.with_temporary_token(role = "arbitrary") do
+    TestUtils.with_temporary_token(roles = [ "arbitrary" ]) do
         client = TestUtils.TestClient()
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
         response, info = TestUtils.RxInferClientOpenAPI.get_models(models_api)
@@ -21,8 +21,8 @@ end
 end
 
 @testitem "200 on /models endpoint with mixed roles should return non-empty list" setup = [TestUtils] begin
-    for role in ["arbitrary,user", "user,arbitrary"]
-        TestUtils.with_temporary_token(role = role) do
+    for roles in [ [ "arbitrary", "user" ], [ "user", "arbitrary" ] ]
+        TestUtils.with_temporary_token(roles = roles) do
             client = TestUtils.TestClient()
             models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
             response, info = TestUtils.RxInferClientOpenAPI.get_models(models_api)
@@ -71,7 +71,7 @@ end
 end
 
 @testitem "404 on model info endpoint if user's role does not have access" setup = [TestUtils] begin
-    TestUtils.with_temporary_token(role = "arbitrary") do
+    TestUtils.with_temporary_token(roles = [ "arbitrary" ]) do
         client = TestUtils.TestClient()
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
         response, info = TestUtils.RxInferClientOpenAPI.get_model_details(models_api, "BetaBernoulli-v1")
@@ -83,8 +83,8 @@ end
 end
 
 @testitem "200 on model info endpoint with mixed roles" setup = [TestUtils] begin
-    for role in ["arbitrary,user", "user,arbitrary"]
-        TestUtils.with_temporary_token(role = role) do
+    for roles in [ [ "arbitrary", "user" ], [ "user", "arbitrary" ] ]
+        TestUtils.with_temporary_token(roles = roles) do
             client = TestUtils.TestClient()
             models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
             response, info = TestUtils.RxInferClientOpenAPI.get_model_details(models_api, "BetaBernoulli-v1")
@@ -227,7 +227,7 @@ end
 end
 
 @testitem "404 on create model endpoint with temporary token that has no access to model" setup = [TestUtils] begin
-    TestUtils.with_temporary_token(role = "arbitrary") do
+    TestUtils.with_temporary_token(roles = [ "arbitrary" ]) do
         client = TestUtils.TestClient()
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 

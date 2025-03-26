@@ -47,7 +47,7 @@ set_header(client, "Authorization", "Bearer $(response.token)")
     - Implement proper token rotation and management in production
     - Remember that models are associated with the token used to create them
 
-## Understanding Token Roles
+## [Understanding Token Roles](@id authentication-api-roles)
 
 ### Viewing Token Roles
 
@@ -89,7 +89,7 @@ response, _ = get_model_details(models_api, response.models[1].name)
 response.config["roles"]
 ```
 
-Read more about the Models API in the [Models](@ref models-api) section.
+Read more about how to create and manage models in the [Models management](@ref model-management-api) section.
 
 
 

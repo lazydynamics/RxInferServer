@@ -25,7 +25,7 @@ help:
 	@echo ''
 	@echo '${GREEN}Documentation commands:${RESET}'
 	@echo '  ${YELLOW}docs${RESET}                 Build the documentation (same as docs-build)'
-	@echo '  ${YELLOW}docs-build${RESET}           Build the documentation'
+	@echo '  ${YELLOW}docs-build${RESET}           Build the documentation (requires a running server to run checks)'
 	@echo '  ${YELLOW}docs-serve${RESET}           Serve documentation locally for preview in browser'
 	@echo '  ${YELLOW}docs-clean${RESET}           Clean the documentation build directory'
 	@echo ''

@@ -1,5 +1,7 @@
 # [Getting Started](@id getting-started)
 
+RxInferServer is a web server that provides a REST API for running Bayesian inference using the [RxInfer.jl](https://github.com/ReactiveBayes/RxInfer.jl) package. It allows users to define probabilistic models, upload data, and run inference through HTTP requests. This guide will walk you through the installation process and shows how to start the server.
+
 ## Installation
 
 To begin using RxInferServer, first clone the repository:
@@ -8,11 +10,14 @@ To begin using RxInferServer, first clone the repository:
 git clone git@github.com:lazydynamics/RxInferServer.git
 ```
 
-Navigate to the repository:
+and navigate to the repository's directory by running:
 
 ```bash
 cd RxInferServer
 ```
+
+!!! note
+    While the server is technically implemented as a Julia package, it relies on locally auto-generated code from the OpenAPI specification. This makes it more challenging (though not impossible) to use it as a direct dependency in another Julia project. For the same reason, the server is not registered as a Julia package and cannot be installed using Pkg.jl. Please refer to the Pkg.jl documentation for more information on working with such packages.
 
 ## Makefile 
 
@@ -55,6 +60,10 @@ julia> RxInferServer.serve()
 ```
 
 Note that the [`RxInferServer.serve`](@ref) is a blocking function and will keep the REPL busy. To start the server in the background, you can use the `@async` or `Threads.@spawn` macros. Read more about the `@async` and `Threads.@spawn` macros in the [Julia Documentation](https://docs.julialang.org/en/v1/manual/parallel-computing/).
+
+## Configuration 
+
+To change the configuration of the server, you can set the environment variables before starting the server. Read more about the configuration in the [Configuration](@ref configuration) section. Alternatively, you can change the configuration using the [`.env` files](@ref environment-configuration-with-env-files).
 
 ## Closing the Server
 

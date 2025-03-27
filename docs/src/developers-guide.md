@@ -294,6 +294,18 @@ end
 This tells you that you need to implement the `get_server_info` function that must return a `ServerInfo` object as defined in the `openapi/spec.yaml` file.
 You however, can also return other types of objects, for example `ErrorResponse` or `UnauthorizedResponse`. Those will be converted to the appropriate HTTP response codes by the server.
 
+### Implementing API Endpoints
+
+To implement a new API endpoint, you'll need to create a handler function that processes HTTP requests and returns appropriate responses. Each endpoint function should match the signature defined in the OpenAPI specification. You'll need to implement these functions with your business logic. Endpoints typically involve parsing request parameters, performing operations (like database queries), and formatting responses according to the API specification. For authenticated endpoints, you can use [`RxInferServer.current_token()`](@ref) and [`RxInferServer.current_roles()`](@ref) to access authentication information. 
+
+#### Using the `@expect` macro
+
+The `@expect` macro is a helper macro that allows you to handle errors and return a default value from a function when an unexpected value is encountered.
+
+```@docs
+RxInferServer.@expect
+```
+
 ### Client Code
 
 The generated client code will be placed in the `openapi/client` directory as a separate Julia module. This client code can be used to interact with the RxInfer API from Julia applications. The client provides Julia functions that correspond to each API endpoint defined in the OpenAPI specification.

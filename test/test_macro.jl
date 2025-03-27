@@ -25,3 +25,17 @@ end
 
     @test f() == 2
 end
+
+@testitem "@expect should have a higher priority than outside return" begin
+    import RxInferServer: @expect
+
+    function g()
+        return nothing
+    end
+
+    function f()
+        return @expect g() || 2
+    end
+
+    @test f() == 2
+end

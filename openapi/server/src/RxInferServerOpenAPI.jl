@@ -17,13 +17,13 @@ The following server methods must be implemented:
     - *invocation:* POST /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata
     - *signature:* attach_metadata_to_event(req::HTTP.Request, instance_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest;) -> SuccessResponse
 - **create_episode**
-    - *invocation:* POST /models/i/{instance_id}/episodes/{episode_name}/create
+    - *invocation:* POST /models/i/{instance_id}/create-episode
     - *signature:* create_episode(req::HTTP.Request, instance_id::String, episode_name::String;) -> EpisodeInfo
 - **create_model_instance**
     - *invocation:* POST /models/create-instance
     - *signature:* create_model_instance(req::HTTP.Request, create_model_instance_request::CreateModelInstanceRequest;) -> CreateModelInstanceResponse
 - **delete_episode**
-    - *invocation:* DELETE /models/i/{instance_id}/episodes/{episode_name}/delete
+    - *invocation:* DELETE /models/i/{instance_id}/episodes/{episode_name}
     - *signature:* delete_episode(req::HTTP.Request, instance_id::String, episode_name::String;) -> SuccessResponse
 - **delete_model_instance**
     - *invocation:* DELETE /models/i/{instance_id}
@@ -34,12 +34,12 @@ The following server methods must be implemented:
 - **get_available_models**
     - *invocation:* GET /models/available
     - *signature:* get_available_models(req::HTTP.Request;) -> Vector{AvailableModel}
+- **get_created_episodes**
+    - *invocation:* GET /models/i/{instance_id}/created-episodes
+    - *signature:* get_created_episodes(req::HTTP.Request, instance_id::String;) -> Vector{EpisodeInfo}
 - **get_episode_info**
     - *invocation:* GET /models/i/{instance_id}/episodes/{episode_name}
     - *signature:* get_episode_info(req::HTTP.Request, instance_id::String, episode_name::String;) -> EpisodeInfo
-- **get_episodes**
-    - *invocation:* GET /models/i/{instance_id}/episodes
-    - *signature:* get_episodes(req::HTTP.Request, instance_id::String;) -> Vector{EpisodeInfo}
 - **get_model_instance**
     - *invocation:* GET /models/i/{instance_id}
     - *signature:* get_model_instance(req::HTTP.Request, instance_id::String;) -> ModelInstance

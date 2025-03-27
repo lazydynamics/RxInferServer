@@ -451,13 +451,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'    
 
-  /models/i/{instance_id}/episodes:
+  /models/i/{instance_id}/create-episode:
+    post:
+      tags:
+        - Models
+      summary: Create a new episode for a model instance
+      operationId: createEpisode
+      description: | 
+        Create a new episode for a specific model instance.
+        Note that the default episode is created automatically when the model instance is created. 
+        When a new episode is created, it becomes the current episode for the model instance.
+      parameters:
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model instance to create episode for
+        - name: episode_name
+          in: path
+          required: true
+          schema:
+            type: string  
+          description: Name of the episode to create
+      responses:
+        '200':
+          description: Successfully created episode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpisodeInfo'
+        '400':
+          description: Episode cannot be created, e.g. it already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Bad Request"
+                message: "The requested episode already exists"
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model instance not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'  
+
+  /models/i/{instance_id}/created-episodes:
     get:
       tags:
         - Models
-      summary: Get all episodes for a model
-      operationId: getEpisodes
-      description: Retrieve all episodes for a specific model
+      summary: Get all created episodes for a model instance
+      operationId: getCreatedEpisodes
+      description: Retrieve all created episodes for a specific model instance
       parameters:
         - name: instance_id
           in: path
@@ -528,64 +581,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-
-  /models/i/{instance_id}/episodes/{episode_name}/create:
-    post:
-      tags:
-        - Models
-      summary: Create a new episode for a model
-      operationId: createEpisode
-      description: Create a new episode for a specific model, note that the default episode cannot be created, but you can wipe data from it. When created, the new episode becomes the current episode for the model.
-      parameters:
-        - name: instance_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID of the model instance to create episode for
-        - name: episode_name
-          in: path
-          required: true
-          schema:
-            type: string  
-          description: Name of the episode to create
-      responses:
-        '200':
-          description: Successfully created episode
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EpisodeInfo'
-        '400':
-          description: Episode cannot be created, e.g. it already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "Bad Request"
-                message: "The requested episode already exists"
-        '401':
-          description: Access token is missing, invalid or has no access to the specific model
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-        '404':
-          description: Model not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundResponse'  
-                
-  /models/i/{instance_id}/episodes/{episode_name}/delete:
     delete:
       tags:
         - Models
       summary: Delete an episode for a model
       operationId: deleteEpisode
-      description: Delete a specific episode for a model, note that the default episode cannot be deleted, but you can wipe data from it. If the deleted episode was the current episode, the default episode will become the current episode.
+      description: | 
+        Delete a specific episode for a model instance.
+        Note that the default episode cannot be deleted, but you can wipe data from it.
+        If the deleted episode was the current episode, the default episode will become the current episode.
       parameters:
         - name: instance_id
           in: path
@@ -628,6 +632,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
+    
 
   /models/i/{instance_id}/episodes/{episode_name}/wipe:
     post:

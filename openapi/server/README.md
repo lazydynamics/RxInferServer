@@ -48,14 +48,14 @@ Class | Method | HTTP request | Description
 *AuthenticationApi* | [**token_generate**](docs/AuthenticationApi.md#token_generate) | **POST** /token/generate | Generate authentication token
 *AuthenticationApi* | [**token_roles**](docs/AuthenticationApi.md#token_roles) | **GET** /token/roles | Get token roles
 *ModelsApi* | [**attach_metadata_to_event**](docs/ModelsApi.md#attach_metadata_to_event) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event
-*ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/create | Create a new episode for a model
+*ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode) | **POST** /models/i/{instance_id}/create-episode | Create a new episode for a model instance
 *ModelsApi* | [**create_model_instance**](docs/ModelsApi.md#create_model_instance) | **POST** /models/create-instance | Create a new model instance
-*ModelsApi* | [**delete_episode**](docs/ModelsApi.md#delete_episode) | **DELETE** /models/i/{instance_id}/episodes/{episode_name}/delete | Delete an episode for a model
+*ModelsApi* | [**delete_episode**](docs/ModelsApi.md#delete_episode) | **DELETE** /models/i/{instance_id}/episodes/{episode_name} | Delete an episode for a model
 *ModelsApi* | [**delete_model_instance**](docs/ModelsApi.md#delete_model_instance) | **DELETE** /models/i/{instance_id} | Delete a model instance
 *ModelsApi* | [**get_available_model**](docs/ModelsApi.md#get_available_model) | **GET** /models/available/{model_name} | Get information about a specific model available for creation
 *ModelsApi* | [**get_available_models**](docs/ModelsApi.md#get_available_models) | **GET** /models/available | Get models available for creation
+*ModelsApi* | [**get_created_episodes**](docs/ModelsApi.md#get_created_episodes) | **GET** /models/i/{instance_id}/created-episodes | Get all created episodes for a model instance
 *ModelsApi* | [**get_episode_info**](docs/ModelsApi.md#get_episode_info) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information
-*ModelsApi* | [**get_episodes**](docs/ModelsApi.md#get_episodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model
 *ModelsApi* | [**get_model_instance**](docs/ModelsApi.md#get_model_instance) | **GET** /models/i/{instance_id} | Get model instance information
 *ModelsApi* | [**get_model_instance_state**](docs/ModelsApi.md#get_model_instance_state) | **GET** /models/i/{instance_id}/state | Get the state of a model instance
 *ModelsApi* | [**get_model_instances**](docs/ModelsApi.md#get_model_instances) | **GET** /models/created-instances | Get all created model instances

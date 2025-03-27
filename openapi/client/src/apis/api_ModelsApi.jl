@@ -57,7 +57,7 @@ const _returntypes_create_episode_ModelsApi = Dict{Regex,Type}(
 )
 
 function _oacinternal_create_episode(_api::ModelsApi, instance_id::String, episode_name::String; _mediaType=nothing)
-    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_create_episode_ModelsApi, "/models/i/{instance_id}/episodes/{episode_name}/create", ["ApiKeyAuth", ])
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_create_episode_ModelsApi, "/models/i/{instance_id}/create-episode", ["ApiKeyAuth", ])
     OpenAPI.Clients.set_param(_ctx.path, "instance_id", instance_id)  # type String
     OpenAPI.Clients.set_param(_ctx.path, "episode_name", episode_name)  # type String
     OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
@@ -65,9 +65,9 @@ function _oacinternal_create_episode(_api::ModelsApi, instance_id::String, episo
     return _ctx
 end
 
-@doc raw"""Create a new episode for a model
+@doc raw"""Create a new episode for a model instance
 
-Create a new episode for a specific model, note that the default episode cannot be created, but you can wipe data from it. When created, the new episode becomes the current episode for the model.
+Create a new episode for a specific model instance. Note that the default episode is created automatically when the model instance is created.  When a new episode is created, it becomes the current episode for the model instance. 
 
 Params:
 - instance_id::String (required)
@@ -125,7 +125,7 @@ const _returntypes_delete_episode_ModelsApi = Dict{Regex,Type}(
 )
 
 function _oacinternal_delete_episode(_api::ModelsApi, instance_id::String, episode_name::String; _mediaType=nothing)
-    _ctx = OpenAPI.Clients.Ctx(_api.client, "DELETE", _returntypes_delete_episode_ModelsApi, "/models/i/{instance_id}/episodes/{episode_name}/delete", ["ApiKeyAuth", ])
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "DELETE", _returntypes_delete_episode_ModelsApi, "/models/i/{instance_id}/episodes/{episode_name}", ["ApiKeyAuth", ])
     OpenAPI.Clients.set_param(_ctx.path, "instance_id", instance_id)  # type String
     OpenAPI.Clients.set_param(_ctx.path, "episode_name", episode_name)  # type String
     OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
@@ -135,7 +135,7 @@ end
 
 @doc raw"""Delete an episode for a model
 
-Delete a specific episode for a model, note that the default episode cannot be deleted, but you can wipe data from it. If the deleted episode was the current episode, the default episode will become the current episode.
+Delete a specific episode for a model instance. Note that the default episode cannot be deleted, but you can wipe data from it. If the deleted episode was the current episode, the default episode will become the current episode. 
 
 Params:
 - instance_id::String (required)
@@ -249,6 +249,39 @@ function get_available_models(_api::ModelsApi, response_stream::Channel; _mediaT
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_get_created_episodes_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => Vector{EpisodeInfo},
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_get_created_episodes(_api::ModelsApi, instance_id::String; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_created_episodes_ModelsApi, "/models/i/{instance_id}/created-episodes", ["ApiKeyAuth", ])
+    OpenAPI.Clients.set_param(_ctx.path, "instance_id", instance_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Get all created episodes for a model instance
+
+Retrieve all created episodes for a specific model instance
+
+Params:
+- instance_id::String (required)
+
+Return: Vector{EpisodeInfo}, OpenAPI.Clients.ApiResponse
+"""
+function get_created_episodes(_api::ModelsApi, instance_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_created_episodes(_api, instance_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function get_created_episodes(_api::ModelsApi, response_stream::Channel, instance_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_created_episodes(_api, instance_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_get_episode_info_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => EpisodeInfo,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
@@ -281,39 +314,6 @@ end
 
 function get_episode_info(_api::ModelsApi, response_stream::Channel, instance_id::String, episode_name::String; _mediaType=nothing)
     _ctx = _oacinternal_get_episode_info(_api, instance_id, episode_name; _mediaType=_mediaType)
-    return OpenAPI.Clients.exec(_ctx, response_stream)
-end
-
-const _returntypes_get_episodes_ModelsApi = Dict{Regex,Type}(
-    Regex("^" * replace("200", "x"=>".") * "\$") => Vector{EpisodeInfo},
-    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
-    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
-)
-
-function _oacinternal_get_episodes(_api::ModelsApi, instance_id::String; _mediaType=nothing)
-    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_episodes_ModelsApi, "/models/i/{instance_id}/episodes", ["ApiKeyAuth", ])
-    OpenAPI.Clients.set_param(_ctx.path, "instance_id", instance_id)  # type String
-    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
-    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
-    return _ctx
-end
-
-@doc raw"""Get all episodes for a model
-
-Retrieve all episodes for a specific model
-
-Params:
-- instance_id::String (required)
-
-Return: Vector{EpisodeInfo}, OpenAPI.Clients.ApiResponse
-"""
-function get_episodes(_api::ModelsApi, instance_id::String; _mediaType=nothing)
-    _ctx = _oacinternal_get_episodes(_api, instance_id; _mediaType=_mediaType)
-    return OpenAPI.Clients.exec(_ctx)
-end
-
-function get_episodes(_api::ModelsApi, response_stream::Channel, instance_id::String; _mediaType=nothing)
-    _ctx = _oacinternal_get_episodes(_api, instance_id; _mediaType=_mediaType)
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
@@ -523,8 +523,8 @@ export delete_episode
 export delete_model_instance
 export get_available_model
 export get_available_models
+export get_created_episodes
 export get_episode_info
-export get_episodes
 export get_model_instance
 export get_model_instance_state
 export get_model_instances

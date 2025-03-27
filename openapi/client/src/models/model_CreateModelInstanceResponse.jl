@@ -5,31 +5,31 @@
 @doc raw"""CreateModelInstanceResponse
 
     CreateModelInstanceResponse(;
-        model_id=nothing,
+        instance_id=nothing,
     )
 
-    - model_id::String : Unique identifier for the created model instance
+    - instance_id::String : Unique identifier for the created model instance
 """
 Base.@kwdef mutable struct CreateModelInstanceResponse <: OpenAPI.APIModel
-    model_id::Union{Nothing, String} = nothing
+    instance_id::Union{Nothing, String} = nothing
 
-    function CreateModelInstanceResponse(model_id, )
-        OpenAPI.validate_property(CreateModelInstanceResponse, Symbol("model_id"), model_id)
-        return new(model_id, )
+    function CreateModelInstanceResponse(instance_id, )
+        OpenAPI.validate_property(CreateModelInstanceResponse, Symbol("instance_id"), instance_id)
+        return new(instance_id, )
     end
 end # type CreateModelInstanceResponse
 
-const _property_types_CreateModelInstanceResponse = Dict{Symbol,String}(Symbol("model_id")=>"String", )
+const _property_types_CreateModelInstanceResponse = Dict{Symbol,String}(Symbol("instance_id")=>"String", )
 OpenAPI.property_type(::Type{ CreateModelInstanceResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_CreateModelInstanceResponse[name]))}
 
 function check_required(o::CreateModelInstanceResponse)
-    o.model_id === nothing && (return false)
+    o.instance_id === nothing && (return false)
     true
 end
 
 function OpenAPI.validate_property(::Type{ CreateModelInstanceResponse }, name::Symbol, val)
 
-    if name === Symbol("model_id")
+    if name === Symbol("instance_id")
         OpenAPI.validate_param(name, "CreateModelInstanceResponse", :format, val, "uuid")
     end
 end

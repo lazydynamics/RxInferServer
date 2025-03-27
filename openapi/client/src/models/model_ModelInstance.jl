@@ -5,7 +5,7 @@
 @doc raw"""ModelInstance
 
     ModelInstance(;
-        model_id=nothing,
+        instance_id=nothing,
         model_name=nothing,
         created_at=nothing,
         description=nothing,
@@ -13,7 +13,7 @@
         current_episode=nothing,
     )
 
-    - model_id::String : Unique identifier for the created model instance
+    - instance_id::String : Unique identifier for the created model instance
     - model_name::String : Name of the model (including version identifier if applicable, e.g. \&quot;BetaBernoulli-v1\&quot;)
     - created_at::ZonedDateTime : Timestamp of when the model was created
     - description::String : Description of the created model instance
@@ -21,29 +21,29 @@
     - current_episode::String : Name of the current episode for this model
 """
 Base.@kwdef mutable struct ModelInstance <: OpenAPI.APIModel
-    model_id::Union{Nothing, String} = nothing
+    instance_id::Union{Nothing, String} = nothing
     model_name::Union{Nothing, String} = nothing
     created_at::Union{Nothing, ZonedDateTime} = nothing
     description::Union{Nothing, String} = nothing
     arguments::Union{Nothing, Dict{String, Any}} = nothing
     current_episode::Union{Nothing, String} = nothing
 
-    function ModelInstance(model_id, model_name, created_at, description, arguments, current_episode, )
-        OpenAPI.validate_property(ModelInstance, Symbol("model_id"), model_id)
+    function ModelInstance(instance_id, model_name, created_at, description, arguments, current_episode, )
+        OpenAPI.validate_property(ModelInstance, Symbol("instance_id"), instance_id)
         OpenAPI.validate_property(ModelInstance, Symbol("model_name"), model_name)
         OpenAPI.validate_property(ModelInstance, Symbol("created_at"), created_at)
         OpenAPI.validate_property(ModelInstance, Symbol("description"), description)
         OpenAPI.validate_property(ModelInstance, Symbol("arguments"), arguments)
         OpenAPI.validate_property(ModelInstance, Symbol("current_episode"), current_episode)
-        return new(model_id, model_name, created_at, description, arguments, current_episode, )
+        return new(instance_id, model_name, created_at, description, arguments, current_episode, )
     end
 end # type ModelInstance
 
-const _property_types_ModelInstance = Dict{Symbol,String}(Symbol("model_id")=>"String", Symbol("model_name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("description")=>"String", Symbol("arguments")=>"Dict{String, Any}", Symbol("current_episode")=>"String", )
+const _property_types_ModelInstance = Dict{Symbol,String}(Symbol("instance_id")=>"String", Symbol("model_name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("description")=>"String", Symbol("arguments")=>"Dict{String, Any}", Symbol("current_episode")=>"String", )
 OpenAPI.property_type(::Type{ ModelInstance }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_ModelInstance[name]))}
 
 function check_required(o::ModelInstance)
-    o.model_id === nothing && (return false)
+    o.instance_id === nothing && (return false)
     o.model_name === nothing && (return false)
     o.created_at === nothing && (return false)
     o.description === nothing && (return false)
@@ -54,7 +54,7 @@ end
 
 function OpenAPI.validate_property(::Type{ ModelInstance }, name::Symbol, val)
 
-    if name === Symbol("model_id")
+    if name === Symbol("instance_id")
         OpenAPI.validate_param(name, "ModelInstance", :format, val, "uuid")
     end
 

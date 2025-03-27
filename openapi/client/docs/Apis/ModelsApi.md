@@ -4,26 +4,26 @@ All URIs are relative to *http://localhost:8000/v1*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**attachMetadataToEvent**](ModelsApi.md#attachMetadataToEvent) | **POST** /models/i/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
-| [**createEpisode**](ModelsApi.md#createEpisode) | **POST** /models/i/{model_id}/episodes/{episode_name}/create | Create a new episode for a model |
+| [**attachMetadataToEvent**](ModelsApi.md#attachMetadataToEvent) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
+| [**createEpisode**](ModelsApi.md#createEpisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/create | Create a new episode for a model |
 | [**createModelInstance**](ModelsApi.md#createModelInstance) | **POST** /models/create-instance | Create a new model instance |
-| [**deleteEpisode**](ModelsApi.md#deleteEpisode) | **DELETE** /models/i/{model_id}/episodes/{episode_name}/delete | Delete an episode for a model |
-| [**deleteModelInstance**](ModelsApi.md#deleteModelInstance) | **DELETE** /models/i/{model_id} | Delete a model instance |
+| [**deleteEpisode**](ModelsApi.md#deleteEpisode) | **DELETE** /models/i/{instance_id}/episodes/{episode_name}/delete | Delete an episode for a model |
+| [**deleteModelInstance**](ModelsApi.md#deleteModelInstance) | **DELETE** /models/i/{instance_id} | Delete a model instance |
 | [**getAvailableModel**](ModelsApi.md#getAvailableModel) | **GET** /models/available/{model_name} | Get information about a specific model available for creation |
 | [**getAvailableModels**](ModelsApi.md#getAvailableModels) | **GET** /models/available | Get models available for creation |
-| [**getEpisodeInfo**](ModelsApi.md#getEpisodeInfo) | **GET** /models/i/{model_id}/episodes/{episode_name} | Get episode information |
-| [**getEpisodes**](ModelsApi.md#getEpisodes) | **GET** /models/i/{model_id}/episodes | Get all episodes for a model |
-| [**getModelInstance**](ModelsApi.md#getModelInstance) | **GET** /models/i/{model_id} | Get model instance information |
-| [**getModelInstanceState**](ModelsApi.md#getModelInstanceState) | **GET** /models/i/{model_id}/state | Get the state of a model instance |
+| [**getEpisodeInfo**](ModelsApi.md#getEpisodeInfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
+| [**getEpisodes**](ModelsApi.md#getEpisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model |
+| [**getModelInstance**](ModelsApi.md#getModelInstance) | **GET** /models/i/{instance_id} | Get model instance information |
+| [**getModelInstanceState**](ModelsApi.md#getModelInstanceState) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
 | [**getModelInstances**](ModelsApi.md#getModelInstances) | **GET** /models/created-instances | Get all created model instances |
-| [**runInference**](ModelsApi.md#runInference) | **POST** /models/i/{model_id}/infer | Run inference |
-| [**runLearning**](ModelsApi.md#runLearning) | **POST** /models/i/{model_id}/learn | Learn from previous observations |
-| [**wipeEpisode**](ModelsApi.md#wipeEpisode) | **POST** /models/i/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
+| [**runInference**](ModelsApi.md#runInference) | **POST** /models/i/{instance_id}/infer | Run inference |
+| [**runLearning**](ModelsApi.md#runLearning) | **POST** /models/i/{instance_id}/learn | Learn from previous observations |
+| [**wipeEpisode**](ModelsApi.md#wipeEpisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
 
 
 <a name="attachMetadataToEvent"></a>
 # **attachMetadataToEvent**
-> SuccessResponse attachMetadataToEvent(model\_id, episode\_name, event\_id, AttachMetadataToEventRequest)
+> SuccessResponse attachMetadataToEvent(instance\_id, episode\_name, event\_id, AttachMetadataToEventRequest)
 
 Attach metadata to an event
 
@@ -33,7 +33,7 @@ Attach metadata to an event
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to attach metadata to | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to attach metadata to | [default to null] |
 | **episode\_name** | **String**| Name of the episode to attach metadata to | [default to null] |
 | **event\_id** | **Long**| ID of the event to attach metadata to | [default to null] |
 | **AttachMetadataToEventRequest** | [**AttachMetadataToEventRequest**](../Models/AttachMetadataToEventRequest.md)|  | |
@@ -53,7 +53,7 @@ Attach metadata to an event
 
 <a name="createEpisode"></a>
 # **createEpisode**
-> EpisodeInfo createEpisode(model\_id, episode\_name)
+> EpisodeInfo createEpisode(instance\_id, episode\_name)
 
 Create a new episode for a model
 
@@ -63,7 +63,7 @@ Create a new episode for a model
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to create episode for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to create episode for | [default to null] |
 | **episode\_name** | **String**| Name of the episode to create | [default to null] |
 
 ### Return type
@@ -108,7 +108,7 @@ Create a new model instance
 
 <a name="deleteEpisode"></a>
 # **deleteEpisode**
-> SuccessResponse deleteEpisode(model\_id, episode\_name)
+> SuccessResponse deleteEpisode(instance\_id, episode\_name)
 
 Delete an episode for a model
 
@@ -118,7 +118,7 @@ Delete an episode for a model
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to delete episode for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to delete episode for | [default to null] |
 | **episode\_name** | **String**| Name of the episode to delete | [default to null] |
 
 ### Return type
@@ -136,7 +136,7 @@ Delete an episode for a model
 
 <a name="deleteModelInstance"></a>
 # **deleteModelInstance**
-> SuccessResponse deleteModelInstance(model\_id)
+> SuccessResponse deleteModelInstance(instance\_id)
 
 Delete a model instance
 
@@ -146,7 +146,7 @@ Delete a model instance
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to delete | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to delete | [default to null] |
 
 ### Return type
 
@@ -214,7 +214,7 @@ This endpoint does not need any parameter.
 
 <a name="getEpisodeInfo"></a>
 # **getEpisodeInfo**
-> EpisodeInfo getEpisodeInfo(model\_id, episode\_name)
+> EpisodeInfo getEpisodeInfo(instance\_id, episode\_name)
 
 Get episode information
 
@@ -224,7 +224,7 @@ Get episode information
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to retrieve episode for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to retrieve episode for | [default to null] |
 | **episode\_name** | **String**| Name of the episode to retrieve | [default to null] |
 
 ### Return type
@@ -242,7 +242,7 @@ Get episode information
 
 <a name="getEpisodes"></a>
 # **getEpisodes**
-> List getEpisodes(model\_id)
+> List getEpisodes(instance\_id)
 
 Get all episodes for a model
 
@@ -252,7 +252,7 @@ Get all episodes for a model
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to retrieve episodes for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to retrieve episodes for | [default to null] |
 
 ### Return type
 
@@ -269,7 +269,7 @@ Get all episodes for a model
 
 <a name="getModelInstance"></a>
 # **getModelInstance**
-> ModelInstance getModelInstance(model\_id)
+> ModelInstance getModelInstance(instance\_id)
 
 Get model instance information
 
@@ -279,7 +279,7 @@ Get model instance information
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to retrieve information for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to retrieve information for | [default to null] |
 
 ### Return type
 
@@ -296,7 +296,7 @@ Get model instance information
 
 <a name="getModelInstanceState"></a>
 # **getModelInstanceState**
-> ModelInstanceState getModelInstanceState(model\_id)
+> ModelInstanceState getModelInstanceState(instance\_id)
 
 Get the state of a model instance
 
@@ -306,7 +306,7 @@ Get the state of a model instance
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to retrieve state for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to retrieve state for | [default to null] |
 
 ### Return type
 
@@ -347,7 +347,7 @@ This endpoint does not need any parameter.
 
 <a name="runInference"></a>
 # **runInference**
-> InferResponse runInference(model\_id, InferRequest)
+> InferResponse runInference(instance\_id, InferRequest)
 
 Run inference
 
@@ -357,7 +357,7 @@ Run inference
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to run inference on | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to run inference on | [default to null] |
 | **InferRequest** | [**InferRequest**](../Models/InferRequest.md)|  | |
 
 ### Return type
@@ -375,7 +375,7 @@ Run inference
 
 <a name="runLearning"></a>
 # **runLearning**
-> LearnResponse runLearning(model\_id, LearnRequest)
+> LearnResponse runLearning(instance\_id, LearnRequest)
 
 Learn from previous observations
 
@@ -385,7 +385,7 @@ Learn from previous observations
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**|  | [default to null] |
+| **instance\_id** | **UUID**|  | [default to null] |
 | **LearnRequest** | [**LearnRequest**](../Models/LearnRequest.md)|  | |
 
 ### Return type
@@ -403,7 +403,7 @@ Learn from previous observations
 
 <a name="wipeEpisode"></a>
 # **wipeEpisode**
-> SuccessResponse wipeEpisode(model\_id, episode\_name)
+> SuccessResponse wipeEpisode(instance\_id, episode\_name)
 
 Wipe all events from an episode
 
@@ -413,7 +413,7 @@ Wipe all events from an episode
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to wipe episode for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to wipe episode for | [default to null] |
 | **episode\_name** | **String**| Name of the episode to wipe | [default to null] |
 
 ### Return type

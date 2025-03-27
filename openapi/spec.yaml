@@ -263,7 +263,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
 
-  /models/i/{model_id}:
+  /models/i/{instance_id}:
     get:
       tags:
         - Models
@@ -271,13 +271,13 @@ paths:
       operationId: getModelInstance
       description: Retrieve detailed information about a specific model instance
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to retrieve information for
+          description: ID of the model instance to retrieve information for
       responses:
         '200':
           description: Successfully retrieved model information
@@ -304,13 +304,13 @@ paths:
       operationId: deleteModelInstance
       description: Delete a specific model instance by its ID
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to delete
+          description: ID of the model instance to delete
       responses:
         '200':
           description: Model successfully deleted
@@ -333,7 +333,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
     
-  /models/i/{model_id}/state:
+  /models/i/{instance_id}/state:
     get:
       tags:
         - Models
@@ -341,13 +341,13 @@ paths:
       operationId: getModelInstanceState
       description: Retrieve the state of a specific model instance
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to retrieve state for
+          description: ID of the model instance to retrieve state for
       responses:
         '200':
           description: Successfully retrieved model state. Each model has its own state, which is a dictionary of arbitrary key-value pairs. Check model-specific documentation for more details.
@@ -368,7 +368,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
 
-  /models/i/{model_id}/infer:
+  /models/i/{instance_id}/infer:
     post:
       tags:
         - Models
@@ -376,13 +376,13 @@ paths:
       operationId: runInference
       description: Run inference on a specific model instance
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to run inference on
+          description: ID of the model instance to run inference on
       requestBody:
         required: true
         content:
@@ -409,7 +409,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
 
-  /models/i/{model_id}/learn:
+  /models/i/{instance_id}/learn:
     post:
       tags:
         - Models
@@ -417,7 +417,7 @@ paths:
       operationId: runLearning
       description: Learn from previous episodes for a specific model
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
@@ -449,7 +449,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'    
 
-  /models/i/{model_id}/episodes:
+  /models/i/{instance_id}/episodes:
     get:
       tags:
         - Models
@@ -457,13 +457,13 @@ paths:
       operationId: getEpisodes
       description: Retrieve all episodes for a specific model
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to retrieve episodes for
+          description: ID of the model instance to retrieve episodes for
       responses:
         '200':
           description: Successfully retrieved list of episodes
@@ -486,7 +486,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
 
-  /models/i/{model_id}/episodes/{episode_name}:
+  /models/i/{instance_id}/episodes/{episode_name}:
     get:
       tags:
         - Models
@@ -494,13 +494,13 @@ paths:
       operationId: getEpisodeInfo
       description: Retrieve information about a specific episode of a model
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to retrieve episode for
+          description: ID of the model instance to retrieve episode for
         - name: episode_name
           in: path
           required: true
@@ -527,7 +527,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
 
-  /models/i/{model_id}/episodes/{episode_name}/create:
+  /models/i/{instance_id}/episodes/{episode_name}/create:
     post:
       tags:
         - Models
@@ -535,13 +535,13 @@ paths:
       operationId: createEpisode
       description: Create a new episode for a specific model, note that the default episode cannot be created, but you can wipe data from it. When created, the new episode becomes the current episode for the model.
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to create episode for
+          description: ID of the model instance to create episode for
         - name: episode_name
           in: path
           required: true
@@ -577,7 +577,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'  
                 
-  /models/i/{model_id}/episodes/{episode_name}/delete:
+  /models/i/{instance_id}/episodes/{episode_name}/delete:
     delete:
       tags:
         - Models
@@ -585,13 +585,13 @@ paths:
       operationId: deleteEpisode
       description: Delete a specific episode for a model, note that the default episode cannot be deleted, but you can wipe data from it. If the deleted episode was the current episode, the default episode will become the current episode.
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to delete episode for
+          description: ID of the model instance to delete episode for
         - name: episode_name
           in: path
           required: true
@@ -627,7 +627,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
 
-  /models/i/{model_id}/episodes/{episode_name}/wipe:
+  /models/i/{instance_id}/episodes/{episode_name}/wipe:
     post:
       tags:
         - Models
@@ -635,13 +635,13 @@ paths:
       operationId: wipeEpisode
       description: Wipe all events from a specific episode for a model
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to wipe episode for
+          description: ID of the model instance to wipe episode for
         - name: episode_name
           in: path
           required: true
@@ -668,7 +668,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'    
 
-  /models/i/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata:
+  /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata:
     post:
       tags:
         - Models
@@ -676,13 +676,13 @@ paths:
       operationId: attachMetadataToEvent
       description: Attach metadata to a specific event for a model
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to attach metadata to
+          description: ID of the model instance to attach metadata to
         - name: episode_name
           in: path
           required: true
@@ -908,9 +908,9 @@ components:
     CreateModelInstanceResponse:
       type: object
       required:
-        - model_id
+        - instance_id
       properties:
-        model_id:
+        instance_id:
           type: string
           format: uuid
           description: Unique identifier for the created model instance
@@ -924,14 +924,14 @@ components:
     ModelInstance:
       type: object
       required:
-        - model_id
+        - instance_id
         - model_name
         - created_at
         - description
         - arguments
         - current_episode
       properties:
-        model_id:
+        instance_id:
           type: string
           format: uuid
           description: Unique identifier for the created model instance
@@ -957,12 +957,12 @@ components:
     DeleteModelInstanceRequest:
       type: object
       required:
-        - model_id
+        - instance_id
       properties:
-        model_id:
+        instance_id:
           type: string
           format: uuid
-          description: ID of the model to delete
+          description: ID of the model instance to delete
 
     ModelInstanceState:
       type: object
@@ -1049,15 +1049,15 @@ components:
     EpisodeInfo:
       type: object
       required:
-        - model_id
+        - instance_id
         - name
         - created_at
         - events
       properties:
-        model_id:
+        instance_id:
           type: string
           format: uuid
-          description: ID of the model this episode belongs to
+          description: ID of the model instance this episode belongs to
         name:
           type: string
           description: Name of the episode
@@ -1072,7 +1072,7 @@ components:
             type: object
             additionalProperties: true
       example:
-        model_id: "123e4567-e89b-12d3-a456-426614174000"
+        instance_id: "123e4567-e89b-12d3-a456-426614174000"
         name: "default"
         created_at: "2024-03-20T12:00:00Z"
 

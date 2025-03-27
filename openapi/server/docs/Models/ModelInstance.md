@@ -3,7 +3,7 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-| **model\_id** | **UUID** | Unique identifier for the created model instance | [default to null] |
+| **instance\_id** | **UUID** | Unique identifier for the created model instance | [default to null] |
 | **model\_name** | **String** | Name of the model (including version identifier if applicable, e.g. \&quot;BetaBernoulli-v1\&quot;) | [default to null] |
 | **created\_at** | **Date** | Timestamp of when the model was created | [default to null] |
 | **description** | **String** | Description of the created model instance | [default to null] |

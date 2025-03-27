@@ -14,20 +14,20 @@ The following server methods must be implemented:
     - *invocation:* GET /token/roles
     - *signature:* token_roles(req::HTTP.Request;) -> TokenRolesResponse
 - **attach_metadata_to_event**
-    - *invocation:* POST /models/i/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata
-    - *signature:* attach_metadata_to_event(req::HTTP.Request, model_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest;) -> SuccessResponse
+    - *invocation:* POST /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata
+    - *signature:* attach_metadata_to_event(req::HTTP.Request, instance_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest;) -> SuccessResponse
 - **create_episode**
-    - *invocation:* POST /models/i/{model_id}/episodes/{episode_name}/create
-    - *signature:* create_episode(req::HTTP.Request, model_id::String, episode_name::String;) -> EpisodeInfo
+    - *invocation:* POST /models/i/{instance_id}/episodes/{episode_name}/create
+    - *signature:* create_episode(req::HTTP.Request, instance_id::String, episode_name::String;) -> EpisodeInfo
 - **create_model_instance**
     - *invocation:* POST /models/create-instance
     - *signature:* create_model_instance(req::HTTP.Request, create_model_instance_request::CreateModelInstanceRequest;) -> CreateModelInstanceResponse
 - **delete_episode**
-    - *invocation:* DELETE /models/i/{model_id}/episodes/{episode_name}/delete
-    - *signature:* delete_episode(req::HTTP.Request, model_id::String, episode_name::String;) -> SuccessResponse
+    - *invocation:* DELETE /models/i/{instance_id}/episodes/{episode_name}/delete
+    - *signature:* delete_episode(req::HTTP.Request, instance_id::String, episode_name::String;) -> SuccessResponse
 - **delete_model_instance**
-    - *invocation:* DELETE /models/i/{model_id}
-    - *signature:* delete_model_instance(req::HTTP.Request, model_id::String;) -> SuccessResponse
+    - *invocation:* DELETE /models/i/{instance_id}
+    - *signature:* delete_model_instance(req::HTTP.Request, instance_id::String;) -> SuccessResponse
 - **get_available_model**
     - *invocation:* GET /models/available/{model_name}
     - *signature:* get_available_model(req::HTTP.Request, model_name::String;) -> AvailableModel
@@ -35,29 +35,29 @@ The following server methods must be implemented:
     - *invocation:* GET /models/available
     - *signature:* get_available_models(req::HTTP.Request;) -> Vector{AvailableModel}
 - **get_episode_info**
-    - *invocation:* GET /models/i/{model_id}/episodes/{episode_name}
-    - *signature:* get_episode_info(req::HTTP.Request, model_id::String, episode_name::String;) -> EpisodeInfo
+    - *invocation:* GET /models/i/{instance_id}/episodes/{episode_name}
+    - *signature:* get_episode_info(req::HTTP.Request, instance_id::String, episode_name::String;) -> EpisodeInfo
 - **get_episodes**
-    - *invocation:* GET /models/i/{model_id}/episodes
-    - *signature:* get_episodes(req::HTTP.Request, model_id::String;) -> Vector{EpisodeInfo}
+    - *invocation:* GET /models/i/{instance_id}/episodes
+    - *signature:* get_episodes(req::HTTP.Request, instance_id::String;) -> Vector{EpisodeInfo}
 - **get_model_instance**
-    - *invocation:* GET /models/i/{model_id}
-    - *signature:* get_model_instance(req::HTTP.Request, model_id::String;) -> ModelInstance
+    - *invocation:* GET /models/i/{instance_id}
+    - *signature:* get_model_instance(req::HTTP.Request, instance_id::String;) -> ModelInstance
 - **get_model_instance_state**
-    - *invocation:* GET /models/i/{model_id}/state
-    - *signature:* get_model_instance_state(req::HTTP.Request, model_id::String;) -> ModelInstanceState
+    - *invocation:* GET /models/i/{instance_id}/state
+    - *signature:* get_model_instance_state(req::HTTP.Request, instance_id::String;) -> ModelInstanceState
 - **get_model_instances**
     - *invocation:* GET /models/created-instances
     - *signature:* get_model_instances(req::HTTP.Request;) -> Vector{ModelInstance}
 - **run_inference**
-    - *invocation:* POST /models/i/{model_id}/infer
-    - *signature:* run_inference(req::HTTP.Request, model_id::String, infer_request::InferRequest;) -> InferResponse
+    - *invocation:* POST /models/i/{instance_id}/infer
+    - *signature:* run_inference(req::HTTP.Request, instance_id::String, infer_request::InferRequest;) -> InferResponse
 - **run_learning**
-    - *invocation:* POST /models/i/{model_id}/learn
-    - *signature:* run_learning(req::HTTP.Request, model_id::String, learn_request::LearnRequest;) -> LearnResponse
+    - *invocation:* POST /models/i/{instance_id}/learn
+    - *signature:* run_learning(req::HTTP.Request, instance_id::String, learn_request::LearnRequest;) -> LearnResponse
 - **wipe_episode**
-    - *invocation:* POST /models/i/{model_id}/episodes/{episode_name}/wipe
-    - *signature:* wipe_episode(req::HTTP.Request, model_id::String, episode_name::String;) -> SuccessResponse
+    - *invocation:* POST /models/i/{instance_id}/episodes/{episode_name}/wipe
+    - *signature:* wipe_episode(req::HTTP.Request, instance_id::String, episode_name::String;) -> SuccessResponse
 - **get_server_info**
     - *invocation:* GET /info
     - *signature:* get_server_info(req::HTTP.Request;) -> ServerInfo

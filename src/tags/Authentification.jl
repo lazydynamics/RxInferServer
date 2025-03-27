@@ -10,11 +10,9 @@ function token_generate(req::HTTP.Request)
 
     @debug "New token request"
     token = string(UUIDs.uuid4())
-    document = Mongoc.BSON("token" => token, "created_at" => Dates.now(), "roles" => ["user"])
-    collection = Database.collection("tokens")
-    insert_result = Mongoc.insert_one(collection, document)
+    inserted = __database_op_insert_token(token)
 
-    if insert_result.reply["insertedCount"] != 1
+    if !inserted
         @error "Unable to generate token due to internal error"
         return RxInferServerOpenAPI.ErrorResponse(
             error = "Bad Request", message = "Unable to generate token due to internal error"
@@ -27,4 +25,15 @@ end
 
 function token_roles(req::HTTP.Request)
     return RxInferServerOpenAPI.TokenRolesResponse(roles = current_roles())
+end
+
+# Database operations
+
+const __database_op_default_roles = ["user"]
+# Insert a token into the database, return true if the token was inserted successfully
+function __database_op_insert_token(token::String)::Bool
+    document = Mongoc.BSON("token" => token, "created_at" => Dates.now(), "roles" => __database_op_default_roles)
+    collection = Database.collection("tokens")
+    insert_result = Mongoc.insert_one(collection, document)
+    return insert_result.reply["insertedCount"] == 1
 end

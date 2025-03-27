@@ -33,49 +33,38 @@ function get_available_model(req::HTTP.Request, model_name::String)
 end
 
 function get_model_instances(req::HTTP.Request)
-    token = current_token()
+    token     = current_token()
+    instances = __database_op_get_all_model_instances(; token)
 
-    @debug "Attempting to get model instances" token
-    collection = Database.collection("models")
-    query = Mongoc.BSON("created_by" => token, "deleted" => false)
-    result = Mongoc.find(collection, query)
-
-    @debug "Found model instances" token
-    return map(result) do model
+    return map(instances) do instance
         return RxInferServerOpenAPI.ModelInstance(
-            instance_id = model["instance_id"],
-            model_name = model["model_name"],
-            created_at = ZonedDateTime(model["created_at"], TimeZones.localzone()),
-            description = model["description"],
-            arguments = model["arguments"],
-            current_episode = model["current_episode"]
+            instance_id = instance["instance_id"],
+            model_name = instance["model_name"],
+            created_at = ZonedDateTime(instance["created_at"], TimeZones.localzone()),
+            description = instance["description"],
+            arguments = instance["arguments"],
+            current_episode = instance["current_episode"]
         )
     end
 end
 
 function get_model_instance(req::HTTP.Request, instance_id::String)
     token = current_token()
+    instance = __database_op_get_model_instance(; token, instance_id)
 
-    @debug "Attempting to get model instance" token instance_id
-    collection = Database.collection("models")
-    query = Mongoc.BSON("instance_id" => instance_id, "created_by" => token, "deleted" => false)
-    result = Mongoc.find_one(collection, query)
-
-    if isnothing(result)
-        @debug "Cannot get model instance because the instance does not exist or token has no access to it" token instance_id
+    if isnothing(instance)
         return RxInferServerOpenAPI.NotFoundResponse(
             error = "Not Found", message = "The requested model instance could not be found"
         )
     end
 
-    @debug "Successfully retrieved model instance" token instance_id
     return RxInferServerOpenAPI.ModelInstance(
-        instance_id = result["instance_id"],
-        model_name = result["model_name"],
-        created_at = ZonedDateTime(result["created_at"], TimeZones.localzone()),
-        description = result["description"],
-        arguments = result["arguments"],
-        current_episode = result["current_episode"]
+        instance_id = instance["instance_id"],
+        model_name = instance["model_name"],
+        created_at = ZonedDateTime(instance["created_at"], TimeZones.localzone()),
+        description = instance["description"],
+        arguments = instance["arguments"],
+        current_episode = instance["current_episode"]
     )
 end
 
@@ -116,26 +105,9 @@ function create_model_instance(req::HTTP.Request, create_model_request::RxInferS
     dispatcher    = Models.get_models_dispatcher()
     initial_state = Models.dispatch(dispatcher, model_name, :initial_state, arguments)
 
-    created_at = Dates.now()
+    instance_id = __database_op_create_model_instance(; token, model_name, description, arguments, initial_state)
 
-    @debug "Creating new model instance in the database" model_name token
-    instance_id = string(UUIDs.uuid4())
-    document = Mongoc.BSON(
-        "instance_id" => instance_id,
-        "model_name" => model_name,
-        "created_at" => created_at,
-        "created_by" => token,
-        "arguments" => arguments,
-        "description" => description,
-        "state" => initial_state,
-        "current_episode" => "default",
-        "deleted" => false
-    )
-    collection = Database.collection("models")
-    insert_result = Mongoc.insert_one(collection, document)
-
-    if insert_result.reply["insertedCount"] != 1
-        @error "Unable to create model instance due to internal error" token
+    if isnothing(instance_id)
         return RxInferServerOpenAPI.ErrorResponse(
             error = "Bad Request", message = "Unable to create model instance due to internal error"
         )
@@ -692,4 +664,59 @@ function wipe_episode(req::HTTP.Request, instance_id::String, episode_name::Stri
 
     @debug "Episode wiped successfully" instance_id episode_name
     return RxInferServerOpenAPI.SuccessResponse(message = "Episode wiped successfully")
+end
+
+# Database operations
+
+## Get model instances for a given token
+function __database_op_get_all_model_instances(; token)
+    @debug "Getting model instances for token" token
+    collection = Database.collection("models")
+    query = Mongoc.BSON("created_by" => token, "deleted" => false)
+    result = Mongoc.find(collection, query)
+    return result
+end
+
+## Get a model instance for a given token and instance ID
+function __database_op_get_model_instance(; token, instance_id)
+    @debug "Attempting to get model instance" token instance_id
+
+    collection = Database.collection("models")
+    query = Mongoc.BSON("instance_id" => instance_id, "created_by" => token, "deleted" => false)
+    result = Mongoc.find_one(collection, query)
+
+    if isnothing(result)
+        @debug "Cannot get model instance because the instance does not exist or token has no access to it" token instance_id
+    else 
+        @debug "Successfully retrieved model instance" token instance_id
+    end
+
+    return result
+end
+
+
+function __database_op_create_model_instance(; token, model_name, description, arguments, initial_state)
+    @debug "Creating new model instance in the database" model_name token
+
+    instance_id = string(UUIDs.uuid4())
+    document = Mongoc.BSON(
+        "instance_id" => instance_id,
+        "model_name" => model_name,
+        "description" => description,
+        "created_at" => Dates.now(),
+        "created_by" => token,
+        "arguments" => arguments,
+        "state" => initial_state,
+        "current_episode" => "default",
+        "deleted" => false
+    )
+    collection = Database.collection("models")
+    insert_result = Mongoc.insert_one(collection, document)
+
+    if insert_result.reply["insertedCount"] != 1
+        @error "Unable to create model instance in the database due to an internal error" token model_name
+        return nothing
+    end
+
+    return instance_id
 end

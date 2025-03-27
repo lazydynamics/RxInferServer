@@ -32,8 +32,7 @@ nothing #hide
 
 ## Creating a model instance 
 
-Read more about how to create a model instance in the [Model management](@ref model-management-api) section.
-Here we assume that you have already created a model instance and have its `instance_id`.
+Read more about how to create a model instance in the [Model management](@ref model-management-api) section. Here we assume that you have already created a model instance and have its `instance_id`.
 
 ```@example learning-api
 import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
@@ -90,9 +89,11 @@ response
 Create a new episode for different experiments or training sessions:
 
 ```@example learning-api
-import RxInferClientOpenAPI: create_episode
+import RxInferClientOpenAPI: create_episode, CreateEpisodeRequest
 
-response, _ = create_episode(api, instance_id, "experiment-1")
+create_episode_request = CreateEpisodeRequest(name = "experiment-1")
+
+response, _ = create_episode(api, instance_id, create_episode_request)
 @test !isnothing(response) #hide
 response
 ```
@@ -115,8 +116,8 @@ import RxInferClientOpenAPI: get_episodes
 response, _ = get_episodes(api, instance_id)
 @test !isnothing(response) #hide
 @test length(response) == 2 #hide
-@test "default" in map(episode -> episode.name, response) #hide
-@test "experiment-1" in map(episode -> episode.name, response) #hide
+@test "default" in map(episode -> episode.episode_name, response) #hide
+@test "experiment-1" in map(episode -> episode.episode_name, response) #hide
 response
 ```
 

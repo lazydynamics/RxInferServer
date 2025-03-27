@@ -711,7 +711,7 @@ end
         )
         @test info.status == 404
         @test response.error == "Not Found"
-        @test response.message == "The requested model could not be found"
+        @test response.message == "The requested model instance could not be found"
     end
 end
 
@@ -814,7 +814,7 @@ end
         )
         @test info.status == 404
         @test response.error == "Not Found"
-        @test response.message == "The requested model could not be found"
+        @test response.message == "The requested model instance could not be found"
 
         for event_id in [inference1.event_id, inference2.event_id]
             attach_metadata_request = TestUtils.RxInferClientOpenAPI.AttachMetadataToEventRequest(
@@ -949,7 +949,7 @@ end
             )
             @test info.status == 404
             @test response.error == "Not Found"
-            @test response.message == "The requested model could not be found"
+            @test response.message == "The requested model instance could not be found"
         end
     end
 end
@@ -1061,7 +1061,7 @@ end
             )
             @test info.status == 404
             @test response.error == "Not Found"
-            @test response.message == "The requested model could not be found"
+            @test response.message == "The requested model instance could not be found"
         end
     end
 end
@@ -1115,7 +1115,7 @@ end
         )
         @test info.status == 404
         @test response.error == "Not Found"
-        @test response.message == "The requested model could not be found"
+        @test response.message == "The requested model instance could not be found"
     end
 end
 

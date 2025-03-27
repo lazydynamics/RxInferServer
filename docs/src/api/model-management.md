@@ -120,7 +120,7 @@ response
 
 ## Checking Model State
 
-Monitor the current state of your model with the [**get\_model\_instance\_state**](@ref) operation:
+Monitor the current state of your model with the **get\_model\_instance\_state** operation:
 
 ```@example models-api
 import RxInferClientOpenAPI: get_model_instance_state    

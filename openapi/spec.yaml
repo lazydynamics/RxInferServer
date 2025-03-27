@@ -165,7 +165,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListOfAvailableModels'
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailableModel'
         '401':
           description: Access token is missing or invalid
           content:
@@ -847,12 +849,6 @@ components:
             description: Role identifier
           example:
             - "user"
-     
-    ListOfAvailableModels:
-      type: array
-      description: List of available models
-      items:
-        $ref: '#/components/schemas/AvailableModel'
 
     AvailableModel:
       type: object
@@ -914,12 +910,6 @@ components:
           type: string
           format: uuid
           description: Unique identifier for the created model instance
-        
-    ListOfModelInstances:
-      type: array
-      description: List of created model instances
-      items:
-        $ref: '#/components/schemas/ModelInstance'
 
     ModelInstance:
       type: object

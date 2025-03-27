@@ -90,11 +90,11 @@ response, info = create_model_instance(ModelsApi(client), CreateModelInstanceReq
 @test !isnothing(response) #hide
 
 # Get the model id from the response
-model_id = response.model_id
+instance_id = response.instance_id
 
 # Attempt to delete the default episode, 
 # which should result in a 400 Bad Request error
-response, info = delete_episode(ModelsApi(client), model_id, "default")
+response, info = delete_episode(ModelsApi(client), instance_id, "default")
 @test !isnothing(response) #hide
 @test response.error == "Bad Request" #hide
 @test info.status == 400 #hide

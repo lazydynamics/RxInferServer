@@ -37,11 +37,11 @@ Before creating a model instance, you can explore which model types are availabl
 ```@example models-api
 import RxInferClientOpenAPI: get_available_models
 
-response, _ = get_available_models(api)
-@test !isnothing(response) #hide
-@test length(response.models) > 0 #hide
+available_models, _ = get_available_models(api)
+@test !isnothing(available_models) #hide
+@test length(available_models) > 0 #hide
 
-available_models = response.models
+available_models
 ```
 
 Note that the list of available models depends on the [roles](@ref authentication-api-roles) assigned to the token used to make the request as well as server settings.

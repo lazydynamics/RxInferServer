@@ -70,11 +70,11 @@ Roles control which models a token can access. Here's how to list accessible mod
 import RxInferClientOpenAPI: ModelsApi, get_available_models
 
 models_api = ModelsApi(client)
-response, _ = get_available_models(models_api)
-@test !isnothing(response) #hide
-@test length(response.models) > 0 #hide
+available_models, _ = get_available_models(models_api)
+@test !isnothing(available_models) #hide
+@test length(available_models) > 0 #hide
 
-response.models
+available_models
 ```
 
 To inspect the roles required for a specific model, you can use the `get_available_model` operation:
@@ -83,10 +83,10 @@ To inspect the roles required for a specific model, you can use the `get_availab
 import RxInferClientOpenAPI: ModelsApi, get_available_model
 
 models_api = ModelsApi(client)
-response, _ = get_available_model(models_api, response.models[1].name)
+response, _ = get_available_model(models_api, available_models[1].name)
 @test !isnothing(response) #hide
 
-response.config["roles"]
+response.details
 ```
 
 Read more about how to create and manage models in the [Models management](@ref model-management-api) section.

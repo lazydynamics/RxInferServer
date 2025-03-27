@@ -50,13 +50,10 @@ end
 
 function get_model_instance(req::HTTP.Request, instance_id::String)
     token = current_token()
-    instance = __database_op_get_model_instance(; token, instance_id)
 
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model instance could not be found"
-        )
-    end
+    instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model instance could not be found"
+    )
 
     return RxInferServerOpenAPI.ModelInstance(
         instance_id = instance["instance_id"],
@@ -69,8 +66,6 @@ function get_model_instance(req::HTTP.Request, instance_id::String)
 end
 
 function create_model_instance(req::HTTP.Request, create_model_request::RxInferServerOpenAPI.CreateModelInstanceRequest)
-    @debug "Attempting to create a new model" create_model_request.model_name
-
     token = current_token()
     model_name = create_model_request.model_name
     response = get_available_model(req, model_name)
@@ -105,15 +100,12 @@ function create_model_instance(req::HTTP.Request, create_model_request::RxInferS
     dispatcher    = Models.get_models_dispatcher()
     initial_state = Models.dispatch(dispatcher, model_name, :initial_state, arguments)
 
-    instance_id = __database_op_create_model_instance(; token, model_name, description, arguments, initial_state)
+    instance_id = @expect __database_op_create_model_instance(;
+        token, model_name, description, arguments, initial_state
+    ) || RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to create model instance due to internal error"
+    )
 
-    if isnothing(instance_id)
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to create model instance due to internal error"
-        )
-    end
-
-    @debug "Creating default episode for the model instance" instance_id
     episode = create_episode(req, instance_id, RxInferServerOpenAPI.CreateEpisodeRequest(name = "default"))
 
     if !isa(episode, RxInferServerOpenAPI.EpisodeInfo)
@@ -124,33 +116,22 @@ function create_model_instance(req::HTTP.Request, create_model_request::RxInferS
         )
     end
 
-    @debug "Model instance created successfully" token instance_id
     return RxInferServerOpenAPI.CreateModelInstanceResponse(instance_id = instance_id)
 end
 
 function delete_model_instance(req::HTTP.Request, instance_id::String)
     token = current_token()
-    deleted = __database_op_delete_model_instance(; token, instance_id)
-
-    if !deleted
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model instance could not be found or deleted"
-        )
-    end
-
+    @expect __database_op_delete_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model instance could not be found or deleted"
+    )
     return RxInferServerOpenAPI.SuccessResponse(message = "Model instance deleted successfully")
 end
 
 function get_model_instance_state(req::HTTP.Request, instance_id::String)
     token = current_token()
-    instance = __database_op_get_model_instance(; token, instance_id)
-
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model instance could not be found"
-        )
-    end
-
+    instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model instance could not be found"
+    )
     return RxInferServerOpenAPI.ModelInstanceState(state = instance["state"])
 end
 
@@ -158,27 +139,20 @@ function run_inference(req::HTTP.Request, instance_id::String, infer_request::Rx
     @debug "Attempting to run inference" instance_id
 
     token = current_token()
-    instance = __database_op_get_model_instance(; token, instance_id)
-
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model instance could not be found"
-        )
-    end
+    instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model instance could not be found"
+    )
 
     # Asynchronously attach data to the specified episode
     fill_episode_task = Threads.@spawn begin
-        next_id = __database_op_attach_event_to_episode(
+        next_id = @expect __database_op_attach_event_to_episode(
             instance_id = instance_id,
             episode_name = infer_request.episode_name,
             data = infer_request.data,
             timestamp = DateTime(something(infer_request.timestamp, Dates.now()))
+        ) || RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request", message = "Unable to attach data to the episode due to internal error"
         )
-        if isnothing(next_id)
-            return RxInferServerOpenAPI.ErrorResponse(
-                error = "Bad Request", message = "Unable to attach data to the episode due to internal error"
-            )
-        end
         return next_id
     end
 
@@ -198,12 +172,9 @@ function run_inference(req::HTTP.Request, instance_id::String, infer_request::Rx
             )
 
             # Update the model's state
-            updated = __database_op_update_model_state(; instance_id, new_state)
-            if !updated
-                return RxInferServerOpenAPI.ErrorResponse(
-                    error = "Bad Request", message = "Unable to update model's state due to internal error"
-                )
-            end
+            @expect __database_op_update_model_state(; instance_id, new_state) || RxInferServerOpenAPI.ErrorResponse(
+                error = "Bad Request", message = "Unable to update model's state due to internal error"
+            )
 
             return inference_result
         catch e
@@ -243,13 +214,9 @@ function run_learning(req::HTTP.Request, instance_id::String, learn_request::RxI
     @debug "Attempting to run learning" instance_id
 
     token = current_token()
-    instance = __database_op_get_model_instance(; token, instance_id)
-
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model instance could not be found"
-        )
-    end
+    instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model instance could not be found"
+    )
 
     episodes = @something(learn_request.episodes, ["default"])
 
@@ -261,13 +228,10 @@ function run_learning(req::HTTP.Request, instance_id::String, learn_request::RxI
         )
     end
 
-    episode = __database_op_get_episode(; instance_id, episode_name = episodes[1])
-
-    if isnothing(episode)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested episode could not be found"
-        )
-    end
+    episode = @expect __database_op_get_episode(; instance_id, episode_name = episodes[1]) ||
+        RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested episode could not be found"
+    )
 
     dispatcher = Models.get_models_dispatcher()
 
@@ -281,55 +245,39 @@ function run_learning(req::HTTP.Request, instance_id::String, learn_request::RxI
     )
 
     # Update the model's state
-    updated = __database_op_update_model_state(; instance_id, new_state)
-    if !updated
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to update model's state due to internal error"
-        )
-    end
+    @expect __database_op_update_model_state(; instance_id, new_state) || RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to update model's state due to internal error"
+    )
 
     @debug "Learning completed successfully" instance_id
     return RxInferServerOpenAPI.LearnResponse(learned_parameters = learning_result)
 end
 
 function get_episode_info(req::HTTP.Request, instance_id::String, episode_name::String)
-    @debug "Attempting to get episode info" instance_id episode_name
     token = current_token()
 
-    instance = __database_op_get_model_instance(; token, instance_id)
+    @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model instance could not be found"
+    )
 
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model instance could not be found"
-        )
-    end
-
-    result = __database_op_get_episode(; instance_id, episode_name)
-
-    if isnothing(result)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested episode could not be found"
-        )
-    end
+    episode = @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested episode could not be found"
+    )
 
     return RxInferServerOpenAPI.EpisodeInfo(
         instance_id = instance_id,
         episode_name = episode_name,
-        created_at = ZonedDateTime(result["created_at"], TimeZones.localzone()),
-        events = result["events"]
+        created_at = ZonedDateTime(episode["created_at"], TimeZones.localzone()),
+        events = episode["events"]
     )
 end
 
 function get_episodes(req::HTTP.Request, instance_id::String)
     token = current_token()
 
-    instance = __database_op_get_model_instance(; token, instance_id)
-
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model instance could not be found"
-        )
-    end
+    @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model instance could not be found"
+    )
 
     episodes = __database_op_get_all_episodes(; instance_id)
 
@@ -347,13 +295,10 @@ function create_episode(
     req::HTTP.Request, instance_id::String, create_episode_request::RxInferServerOpenAPI.CreateEpisodeRequest
 )
     token = current_token()
-    instance = __database_op_get_model_instance(; token, instance_id)
 
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model instance could not be found"
-        )
-    end
+    @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model instance could not be found"
+    )
 
     # Check that the episode does not already exist
     episode_name = create_episode_request.name
@@ -366,68 +311,51 @@ function create_episode(
         )
     end
 
-    created = __database_op_create_episode(; instance_id, episode_name)
-
-    if !created
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to create episode due to internal error"
-        )
-    end
+    @expect __database_op_create_episode(; instance_id, episode_name) || RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to create episode due to internal error"
+    )
 
     # Update the model to point to the new episode
-    @debug "Updating model to point to the new episode" instance_id episode_name
-    updated = __database_op_update_model_current_episode(; instance_id, episode_name)
-    if !updated
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request",
-            message = "The episode has been created, but the model could not be updated to point to the new episode due to internal error"
-        )
-    end
+    @expect __database_op_update_model_current_episode(; instance_id, episode_name) ||
+        RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request",
+        message = "The episode has been created, but the model could not be updated to point to the new episode due to internal error"
+    )
 
     return get_episode_info(req, instance_id, episode_name)
 end
 
 function delete_episode(req::HTTP.Request, instance_id::String, episode_name::String)
-    token = current_token()
-    instance = __database_op_get_model_instance(; token, instance_id)
 
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model could not be found"
-        )
-    end
-
+    # Short-circuit if the episode is the default episode
     if episode_name == "default"
         return RxInferServerOpenAPI.ErrorResponse(
             error = "Bad Request", message = "Default episode cannot be deleted, wipe data instead"
         )
     end
 
-    episode = __database_op_get_episode(; instance_id, episode_name)
+    token = current_token()
 
-    if isnothing(episode)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested episode could not be found"
-        )
-    end
+    instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model could not be found"
+    )
+
+    @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested episode could not be found"
+    )
 
     # Delete the episode
-    deleted = __database_op_delete_episode(; instance_id, episode_name)
-    if !deleted
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to delete episode due to internal error"
-        )
-    end
+    @expect __database_op_delete_episode(; instance_id, episode_name) || RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to delete episode due to internal error"
+    )
 
     # Update the model if the deleted episode was the current episode
     if instance["current_episode"] == episode_name
-        updated = __database_op_update_model_current_episode(; instance_id, episode_name = "default")
-        if !updated
-            return RxInferServerOpenAPI.ErrorResponse(
-                error = "Bad Request",
-                message = "The episode has been deleted, but the model could not be updated to point to the default episode due to internal error"
-            )
-        end
+        @expect __database_op_update_model_current_episode(; instance_id, episode_name = "default") ||
+            RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request",
+            message = "The episode has been deleted, but the model could not be updated to point to the default episode due to internal error"
+        )
     end
 
     return RxInferServerOpenAPI.SuccessResponse(message = "Episode deleted successfully")
@@ -435,29 +363,18 @@ end
 
 function wipe_episode(req::HTTP.Request, instance_id::String, episode_name::String)
     token = current_token()
-    instance = __database_op_get_model_instance(; token, instance_id)
 
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model could not be found"
-        )
-    end
+    @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model could not be found"
+    )
 
-    episode = __database_op_get_episode(; instance_id, episode_name)
+    @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested episode could not be found"
+    )
 
-    if isnothing(episode)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested episode could not be found"
-        )
-    end
-
-    wiped = __database_op_wipe_episode(; instance_id, episode_name)
-
-    if !wiped
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to wipe episode due to internal error"
-        )
-    end
+    @expect __database_op_wipe_episode(; instance_id, episode_name) || RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to wipe episode due to internal error"
+    )
 
     return RxInferServerOpenAPI.SuccessResponse(message = "Episode wiped successfully")
 end
@@ -469,35 +386,22 @@ function attach_metadata_to_event(
     event_id,
     attach_metadata_to_event_request::RxInferServerOpenAPI.AttachMetadataToEventRequest
 )
-    @debug "Attempting to attach metadata to an event" instance_id episode_name event_id
     token = current_token()
 
-    instance = __database_op_get_model_instance(; token, instance_id)
-
-    if isnothing(instance)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model could not be found"
-        )
-    end
-
-    episode = __database_op_get_episode(; instance_id, episode_name)
-
-    if isnothing(episode)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found",
-            message = "The requested episode could not be found or the event with the specified ID does not exist"
-        )
-    end
-
-    attached = __database_op_attach_metadata_to_event(;
-        instance_id, episode_name, event_id, metadata = attach_metadata_to_event_request.metadata
+    @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model could not be found"
     )
 
-    if !attached
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to attach metadata to the event due to internal error"
-        )
-    end
+    @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found",
+        message = "The requested episode could not be found or the event with the specified ID does not exist"
+    )
+
+    @expect __database_op_attach_metadata_to_event(;
+        instance_id, episode_name, event_id, metadata = attach_metadata_to_event_request.metadata
+    ) || RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to attach metadata to the event due to internal error"
+    )
 
     return RxInferServerOpenAPI.SuccessResponse(message = "Metadata attached to the event successfully")
 end
@@ -506,10 +410,18 @@ end
 
 ## Get model instances for a given token
 function __database_op_get_all_model_instances(; token)
-    @debug "Getting model instances for token" token
+    @debug "Attempting to get all model instances for token" token
+
     collection = Database.collection("models")
     query = Mongoc.BSON("created_by" => token, "deleted" => false)
     result = Mongoc.find(collection, query)
+
+    if isnothing(result)
+        @debug "Cannot get model instances because the token has no access to any model instances" token
+    else
+        @debug "Successfully retrieved model instances" token
+    end
+
     return result
 end
 
@@ -553,10 +465,11 @@ function __database_op_create_model_instance(; token, model_name, description, a
         return nothing
     end
 
+    @debug "Successfully created model instance" token model_name instance_id
     return instance_id
 end
 
-function __database_op_delete_model_instance(; token, instance_id)::Bool
+function __database_op_delete_model_instance(; token, instance_id)
     @debug "Attempting to delete the model instance" token instance_id
 
     collection = Database.collection("models")
@@ -566,24 +479,32 @@ function __database_op_delete_model_instance(; token, instance_id)::Bool
 
     if result["matchedCount"] != 1
         @debug "Cannot delete model instance because it does not exist" token instance_id
-        return false
+        return nothing
     end
 
     if result["modifiedCount"] != 1
         @debug "Unable to delete model instance due to internal error" token instance_id
-        return false
+        return nothing
     end
 
     @debug "Successfully deleted model instance" token instance_id
-    return true
+    return result
 end
 
 ## Get all episodes for a given model instance
 function __database_op_get_all_episodes(; instance_id::String)
     @debug "Attempting to get all episodes for model instance" instance_id
+
     collection = Database.collection("episodes")
     query = Mongoc.BSON("instance_id" => instance_id, "deleted" => false)
     result = Mongoc.find(collection, query)
+
+    if isnothing(result)
+        @debug "Cannot get episodes because the model instance does not exist" instance_id
+    else
+        @debug "Successfully retrieved episodes" instance_id
+    end
+
     return result
 end
 
@@ -617,41 +538,64 @@ function __database_op_create_episode(; instance_id::String, episode_name::Strin
         "deleted" => false
     )
     collection = Database.collection("episodes")
-    insert_result = Mongoc.insert_one(collection, document)
+    result = Mongoc.insert_one(collection, document)
 
-    if insert_result.reply["insertedCount"] != 1
+    if result.reply["insertedCount"] != 1
         @debug "Unable to create episode due to internal error" instance_id episode_name
-        return false
+        return nothing
     end
 
-    return true
+    @debug "Successfully created episode" instance_id episode_name
+    return result
 end
 
 ## Delete an episode (mark as deleted)
-function __database_op_delete_episode(; instance_id::String, episode_name::String)::Bool
+function __database_op_delete_episode(; instance_id::String, episode_name::String)
     @debug "Attempting to delete episode" instance_id episode_name
+
     collection = Database.collection("episodes")
     query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
     update = Mongoc.BSON("\$set" => Mongoc.BSON("deleted" => true))
     result = Mongoc.update_one(collection, query, update)
-    return result["matchedCount"] == 1 && result["modifiedCount"] == 1
+
+    if result["matchedCount"] != 1
+        @debug "Cannot delete episode because it does not exist" instance_id episode_name
+        return nothing
+    end
+
+    if result["modifiedCount"] != 1
+        @debug "Unable to delete episode due to internal error" instance_id episode_name
+        return nothing
+    end
+
+    @debug "Successfully deleted episode" instance_id episode_name
+    return result
 end
 
 ## Wipe episode events
-function __database_op_wipe_episode(; instance_id::String, episode_name::String)::Bool
+function __database_op_wipe_episode(; instance_id::String, episode_name::String)
     @debug "Attempting to wipe episode" instance_id episode_name
     collection = Database.collection("episodes")
     query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
     update = Mongoc.BSON("\$set" => Mongoc.BSON("events" => []))
     result = Mongoc.update_one(collection, query, update)
-    return result["matchedCount"] == 1
+
+    if result["matchedCount"] != 1
+        @debug "Unable to wipe episode due to internal error" instance_id episode_name
+        return nothing
+    end
+
+    # modifiedCount can be 0 if the episode has been empty before wiping
+    @debug "Successfully wiped episode" instance_id episode_name
+    return result
 end
 
 ## Attach metadata to an event
 function __database_op_attach_metadata_to_event(;
     instance_id::String, episode_name::String, event_id::Int, metadata::Dict
-)::Bool
+)
     @debug "Attempting to attach metadata to event" instance_id episode_name event_id
+
     collection = Database.collection("episodes")
     query = Mongoc.BSON(
         "instance_id" => instance_id,
@@ -661,27 +605,56 @@ function __database_op_attach_metadata_to_event(;
     )
     update = Mongoc.BSON("\$set" => Mongoc.BSON("events.\$.metadata" => metadata))
     result = Mongoc.update_one(collection, query, update)
-    return result["matchedCount"] == 1 && result["modifiedCount"] == 1
+
+    if result["matchedCount"] != 1
+        @debug "Unable to attach metadata to event due to internal error" instance_id episode_name event_id
+        return nothing
+    end
+
+    if result["modifiedCount"] != 1
+        @debug "Unable to attach metadata to event due to internal error" instance_id episode_name event_id
+        return nothing
+    end
+
+    @debug "Successfully attached metadata to event" instance_id episode_name event_id
+    return result
 end
 
 ## Update model state
-function __database_op_update_model_state(; instance_id::String, new_state::Any)::Bool
+function __database_op_update_model_state(; instance_id::String, new_state::Any)
     @debug "Attempting to update model state" instance_id
     collection = Database.collection("models")
     query = Mongoc.BSON("instance_id" => instance_id)
     update = Mongoc.BSON("\$set" => Mongoc.BSON("state" => new_state))
     result = Mongoc.update_one(collection, query, update)
-    return result["matchedCount"] == 1
+
+    if result["matchedCount"] != 1
+        @debug "Unable to update model state due to internal error" instance_id
+        return nothing
+    end
+
+    # modifiedCount can be 0 if the model state has not changed
+
+    @debug "Successfully updated model state" instance_id
+    return result
 end
 
 ## Update model current episode
-function __database_op_update_model_current_episode(; instance_id::String, episode_name::String)::Bool
+function __database_op_update_model_current_episode(; instance_id::String, episode_name::String)
     @debug "Attempting to update model current episode" instance_id episode_name
     collection = Database.collection("models")
     query = Mongoc.BSON("instance_id" => instance_id)
     update = Mongoc.BSON("\$set" => Mongoc.BSON("current_episode" => episode_name))
     result = Mongoc.update_one(collection, query, update)
-    return result["matchedCount"] == 1
+
+    if result["matchedCount"] != 1
+        @debug "Unable to update model current episode due to internal error" instance_id episode_name
+        return nothing
+    end
+
+    # modifiedCount can be 0 if the model current episode has not changed
+    @debug "Successfully updated model current episode" instance_id episode_name
+    return result
 end
 
 ## Attach event to episode and return the event ID

@@ -42,7 +42,7 @@
         token = string(response.token)
 
         # Update the token with the specified role in the database
-        RxInferServer.Database.with_connection() do
+        RxInferServer.Database.with_connection(verbose = false) do
             collection = RxInferServer.Database.collection("tokens")
             query = Mongoc.BSON("token" => token)
             update = Mongoc.BSON("\$set" => Mongoc.BSON("roles" => roles))
@@ -59,7 +59,7 @@
             end
         finally
             # Delete the token from the database
-            RxInferServer.Database.with_connection() do
+            RxInferServer.Database.with_connection(verbose = false) do
                 collection = RxInferServer.Database.collection("tokens")
                 query = Mongoc.BSON("token" => token)
                 result = Mongoc.delete_one(collection, query)

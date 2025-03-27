@@ -71,13 +71,16 @@ function with_connection(
     f::F;
     url::String = RXINFER_SERVER_MONGODB_URL(),
     database::String = RXINFER_SERVER_MONGODB_DATABASE(),
-    check_connection::Bool = true
+    check_connection::Bool = true,
+    verbose::Bool = true
 ) where {F}
     _url_with_tls = inject_tls_ca_file(url)
     _client = Mongoc.Client(_url_with_tls)::Mongoc.Client
     _database = _client[database]::Mongoc.Database
     _hidden_url = hidden_url(_url_with_tls)
-    @info "Connecting to MongoDB server at $_hidden_url"
+    if verbose
+        @info "Connecting to MongoDB server at $_hidden_url"
+    end
     if check_connection
         try
             ping = Mongoc.ping(_client)
@@ -89,7 +92,9 @@ function with_connection(
             rethrow(e)
         end
     end
-    @info "Connected to MongoDB server at $_hidden_url"
+    if verbose
+        @info "Connected to MongoDB server at $_hidden_url"
+    end
     return with(MONGODB_CLIENT => _client, MONGODB_DATABASE => _database) do
         returnval = f()
         Mongoc.destroy!(_client)

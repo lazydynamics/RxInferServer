@@ -10,7 +10,7 @@ All URIs are relative to *http://localhost:8000/v1*
 
 <a name="tokenGenerate"></a>
 # **tokenGenerate**
-> TokenResponse tokenGenerate()
+> TokenGenerateResponse tokenGenerate()
 
 Generate authentication token
 
@@ -21,7 +21,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**TokenResponse**](../Models/TokenResponse.md)
+[**TokenGenerateResponse**](../Models/TokenGenerateResponse.md)
 
 ### Authorization
 

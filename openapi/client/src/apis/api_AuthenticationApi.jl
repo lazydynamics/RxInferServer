@@ -12,7 +12,7 @@ This can be used to construct the `OpenAPI.Clients.Client` instance.
 basepath(::Type{ AuthenticationApi }) = "http://localhost:8000/v1"
 
 const _returntypes_token_generate_AuthenticationApi = Dict{Regex,Type}(
-    Regex("^" * replace("200", "x"=>".") * "\$") => TokenResponse,
+    Regex("^" * replace("200", "x"=>".") * "\$") => TokenGenerateResponse,
     Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
 )
 
@@ -29,7 +29,7 @@ Generates a new authentication token for accessing protected endpoints
 
 Params:
 
-Return: TokenResponse, OpenAPI.Clients.ApiResponse
+Return: TokenGenerateResponse, OpenAPI.Clients.ApiResponse
 """
 function token_generate(_api::AuthenticationApi; _mediaType=nothing)
     _ctx = _oacinternal_token_generate(_api; _mediaType=_mediaType)

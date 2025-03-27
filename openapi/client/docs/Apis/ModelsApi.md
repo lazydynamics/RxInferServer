@@ -4,26 +4,26 @@ All URIs are relative to *http://localhost:8000/v1*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**attachMetadataToEvent**](ModelsApi.md#attachMetadataToEvent) | **POST** /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
-| [**createEpisode**](ModelsApi.md#createEpisode) | **POST** /models/{model_id}/episodes/{episode_name}/create | Create a new episode for a model |
-| [**createModel**](ModelsApi.md#createModel) | **POST** /models/create | Create a new model instance |
-| [**deleteEpisode**](ModelsApi.md#deleteEpisode) | **DELETE** /models/{model_id}/episodes/{episode_name}/delete | Delete an episode for a model |
-| [**deleteModel**](ModelsApi.md#deleteModel) | **DELETE** /models/{model_id}/delete | Delete a model instance |
-| [**getCreatedModelsInfo**](ModelsApi.md#getCreatedModelsInfo) | **GET** /models/created | Get information about all created models for a specific token |
-| [**getEpisodeInfo**](ModelsApi.md#getEpisodeInfo) | **GET** /models/{model_id}/episodes/{episode_name} | Get episode information |
-| [**getEpisodes**](ModelsApi.md#getEpisodes) | **GET** /models/{model_id}/episodes | Get all episodes for a model |
-| [**getModelDetails**](ModelsApi.md#getModelDetails) | **GET** /models/{model_name}/details | Get model details |
-| [**getModelInfo**](ModelsApi.md#getModelInfo) | **GET** /models/{model_id}/info | Get model information |
-| [**getModelState**](ModelsApi.md#getModelState) | **GET** /models/{model_id}/state | Get the state of a model |
-| [**getModels**](ModelsApi.md#getModels) | **GET** /models | Get models |
-| [**runInference**](ModelsApi.md#runInference) | **POST** /models/{model_id}/infer | Run inference on a model |
-| [**runLearning**](ModelsApi.md#runLearning) | **POST** /models/{model_id}/learn | Learn from previous observations |
-| [**wipeEpisode**](ModelsApi.md#wipeEpisode) | **POST** /models/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
+| [**attachMetadataToEvent**](ModelsApi.md#attachMetadataToEvent) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
+| [**createEpisode**](ModelsApi.md#createEpisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/create | Create a new episode for a model |
+| [**createModelInstance**](ModelsApi.md#createModelInstance) | **POST** /models/create-instance | Create a new model instance |
+| [**deleteEpisode**](ModelsApi.md#deleteEpisode) | **DELETE** /models/i/{instance_id}/episodes/{episode_name}/delete | Delete an episode for a model |
+| [**deleteModelInstance**](ModelsApi.md#deleteModelInstance) | **DELETE** /models/i/{instance_id} | Delete a model instance |
+| [**getAvailableModel**](ModelsApi.md#getAvailableModel) | **GET** /models/available/{model_name} | Get information about a specific model available for creation |
+| [**getAvailableModels**](ModelsApi.md#getAvailableModels) | **GET** /models/available | Get models available for creation |
+| [**getEpisodeInfo**](ModelsApi.md#getEpisodeInfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
+| [**getEpisodes**](ModelsApi.md#getEpisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model |
+| [**getModelInstance**](ModelsApi.md#getModelInstance) | **GET** /models/i/{instance_id} | Get model instance information |
+| [**getModelInstanceState**](ModelsApi.md#getModelInstanceState) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
+| [**getModelInstances**](ModelsApi.md#getModelInstances) | **GET** /models/created-instances | Get all created model instances |
+| [**runInference**](ModelsApi.md#runInference) | **POST** /models/i/{instance_id}/infer | Run inference |
+| [**runLearning**](ModelsApi.md#runLearning) | **POST** /models/i/{instance_id}/learn | Learn from previous observations |
+| [**wipeEpisode**](ModelsApi.md#wipeEpisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
 
 
 <a name="attachMetadataToEvent"></a>
 # **attachMetadataToEvent**
-> SuccessResponse attachMetadataToEvent(model\_id, episode\_name, event\_id, AttachMetadataToEventRequest)
+> SuccessResponse attachMetadataToEvent(instance\_id, episode\_name, event\_id, AttachMetadataToEventRequest)
 
 Attach metadata to an event
 
@@ -33,7 +33,7 @@ Attach metadata to an event
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to attach metadata to | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to attach metadata to | [default to null] |
 | **episode\_name** | **String**| Name of the episode to attach metadata to | [default to null] |
 | **event\_id** | **Long**| ID of the event to attach metadata to | [default to null] |
 | **AttachMetadataToEventRequest** | [**AttachMetadataToEventRequest**](../Models/AttachMetadataToEventRequest.md)|  | |
@@ -53,7 +53,7 @@ Attach metadata to an event
 
 <a name="createEpisode"></a>
 # **createEpisode**
-> EpisodeInfo createEpisode(model\_id, episode\_name)
+> EpisodeInfo createEpisode(instance\_id, episode\_name)
 
 Create a new episode for a model
 
@@ -63,7 +63,7 @@ Create a new episode for a model
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to create episode for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to create episode for | [default to null] |
 | **episode\_name** | **String**| Name of the episode to create | [default to null] |
 
 ### Return type
@@ -79,9 +79,9 @@ Create a new episode for a model
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="createModel"></a>
-# **createModel**
-> CreateModelResponse createModel(CreateModelRequest)
+<a name="createModelInstance"></a>
+# **createModelInstance**
+> CreateModelInstanceResponse createModelInstance(CreateModelInstanceRequest)
 
 Create a new model instance
 
@@ -91,11 +91,11 @@ Create a new model instance
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **CreateModelRequest** | [**CreateModelRequest**](../Models/CreateModelRequest.md)|  | |
+| **CreateModelInstanceRequest** | [**CreateModelInstanceRequest**](../Models/CreateModelInstanceRequest.md)|  | |
 
 ### Return type
 
-[**CreateModelResponse**](../Models/CreateModelResponse.md)
+[**CreateModelInstanceResponse**](../Models/CreateModelInstanceResponse.md)
 
 ### Authorization
 
@@ -108,7 +108,7 @@ Create a new model instance
 
 <a name="deleteEpisode"></a>
 # **deleteEpisode**
-> SuccessResponse deleteEpisode(model\_id, episode\_name)
+> SuccessResponse deleteEpisode(instance\_id, episode\_name)
 
 Delete an episode for a model
 
@@ -118,7 +118,7 @@ Delete an episode for a model
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to delete episode for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to delete episode for | [default to null] |
 | **episode\_name** | **String**| Name of the episode to delete | [default to null] |
 
 ### Return type
@@ -134,9 +134,9 @@ Delete an episode for a model
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="deleteModel"></a>
-# **deleteModel**
-> SuccessResponse deleteModel(model\_id)
+<a name="deleteModelInstance"></a>
+# **deleteModelInstance**
+> SuccessResponse deleteModelInstance(instance\_id)
 
 Delete a model instance
 
@@ -146,7 +146,7 @@ Delete a model instance
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to delete | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to delete | [default to null] |
 
 ### Return type
 
@@ -161,20 +161,47 @@ Delete a model instance
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="getCreatedModelsInfo"></a>
-# **getCreatedModelsInfo**
-> List getCreatedModelsInfo()
+<a name="getAvailableModel"></a>
+# **getAvailableModel**
+> AvailableModel getAvailableModel(model\_name)
 
-Get information about all created models for a specific token
+Get information about a specific model available for creation
 
-    Retrieve detailed information about all created models for a specific token
+    Retrieve detailed information about a specific model available for creation
+
+### Parameters
+
+|Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **model\_name** | **String**| Name of the model to retrieve information for (including version identifier if applicable, e.g. \&quot;BetaBernoulli-v1\&quot;) | [default to null] |
+
+### Return type
+
+[**AvailableModel**](../Models/AvailableModel.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+<a name="getAvailableModels"></a>
+# **getAvailableModels**
+> List getAvailableModels()
+
+Get models available for creation
+
+    Retrieve the list of models available for creation for a given token. This list specifies names and available arguments for each model.  **Note** The list of available models might differ for different access tokens. For example, a token with only the \&quot;user\&quot; role might not have access to all models. 
 
 ### Parameters
 This endpoint does not need any parameter.
 
 ### Return type
 
-[**List**](../Models/CreatedModelInfo.md)
+[**List**](../Models/AvailableModel.md)
 
 ### Authorization
 
@@ -187,7 +214,7 @@ This endpoint does not need any parameter.
 
 <a name="getEpisodeInfo"></a>
 # **getEpisodeInfo**
-> EpisodeInfo getEpisodeInfo(model\_id, episode\_name)
+> EpisodeInfo getEpisodeInfo(instance\_id, episode\_name)
 
 Get episode information
 
@@ -197,7 +224,7 @@ Get episode information
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to retrieve episode for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to retrieve episode for | [default to null] |
 | **episode\_name** | **String**| Name of the episode to retrieve | [default to null] |
 
 ### Return type
@@ -215,7 +242,7 @@ Get episode information
 
 <a name="getEpisodes"></a>
 # **getEpisodes**
-> List getEpisodes(model\_id)
+> List getEpisodes(instance\_id)
 
 Get all episodes for a model
 
@@ -225,7 +252,7 @@ Get all episodes for a model
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to retrieve episodes for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to retrieve episodes for | [default to null] |
 
 ### Return type
 
@@ -240,38 +267,11 @@ Get all episodes for a model
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="getModelDetails"></a>
-# **getModelDetails**
-> ModelDetails getModelDetails(model\_name)
+<a name="getModelInstance"></a>
+# **getModelInstance**
+> ModelInstance getModelInstance(instance\_id)
 
-Get model details
-
-    Retrieve detailed information about a specific model
-
-### Parameters
-
-|Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **model\_name** | **String**| Name of the model to retrieve information for (including version identifier if applicable, e.g. \&quot;BetaBernoulli-v1\&quot;) | [default to null] |
-
-### Return type
-
-[**ModelDetails**](../Models/ModelDetails.md)
-
-### Authorization
-
-[ApiKeyAuth](../README.md#ApiKeyAuth)
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-<a name="getModelInfo"></a>
-# **getModelInfo**
-> CreatedModelInfo getModelInfo(model\_id)
-
-Get model information
+Get model instance information
 
     Retrieve detailed information about a specific model instance
 
@@ -279,11 +279,11 @@ Get model information
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to retrieve information for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to retrieve information for | [default to null] |
 
 ### Return type
 
-[**CreatedModelInfo**](../Models/CreatedModelInfo.md)
+[**ModelInstance**](../Models/ModelInstance.md)
 
 ### Authorization
 
@@ -294,11 +294,11 @@ Get model information
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="getModelState"></a>
-# **getModelState**
-> ModelState getModelState(model\_id)
+<a name="getModelInstanceState"></a>
+# **getModelInstanceState**
+> ModelInstanceState getModelInstanceState(instance\_id)
 
-Get the state of a model
+Get the state of a model instance
 
     Retrieve the state of a specific model instance
 
@@ -306,11 +306,11 @@ Get the state of a model
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to retrieve state for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to retrieve state for | [default to null] |
 
 ### Return type
 
-[**ModelState**](../Models/ModelState.md)
+[**ModelInstanceState**](../Models/ModelInstanceState.md)
 
 ### Authorization
 
@@ -321,20 +321,20 @@ Get the state of a model
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="getModels"></a>
-# **getModels**
-> ModelList getModels()
+<a name="getModelInstances"></a>
+# **getModelInstances**
+> List getModelInstances()
 
-Get models
+Get all created model instances
 
-    Retrieve the list of available models and their lightweight details. Note that some access tokens might not have access to all models.
+    Retrieve detailed information about all created model instances for a specific token
 
 ### Parameters
 This endpoint does not need any parameter.
 
 ### Return type
 
-[**ModelList**](../Models/ModelList.md)
+[**List**](../Models/ModelInstance.md)
 
 ### Authorization
 
@@ -347,9 +347,9 @@ This endpoint does not need any parameter.
 
 <a name="runInference"></a>
 # **runInference**
-> InferResponse runInference(model\_id, InferRequest)
+> InferResponse runInference(instance\_id, InferRequest)
 
-Run inference on a model
+Run inference
 
     Run inference on a specific model instance
 
@@ -357,7 +357,7 @@ Run inference on a model
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to run inference on | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to run inference on | [default to null] |
 | **InferRequest** | [**InferRequest**](../Models/InferRequest.md)|  | |
 
 ### Return type
@@ -375,7 +375,7 @@ Run inference on a model
 
 <a name="runLearning"></a>
 # **runLearning**
-> LearnResponse runLearning(model\_id, LearnRequest)
+> LearnResponse runLearning(instance\_id, LearnRequest)
 
 Learn from previous observations
 
@@ -385,7 +385,7 @@ Learn from previous observations
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**|  | [default to null] |
+| **instance\_id** | **UUID**|  | [default to null] |
 | **LearnRequest** | [**LearnRequest**](../Models/LearnRequest.md)|  | |
 
 ### Return type
@@ -403,7 +403,7 @@ Learn from previous observations
 
 <a name="wipeEpisode"></a>
 # **wipeEpisode**
-> SuccessResponse wipeEpisode(model\_id, episode\_name)
+> SuccessResponse wipeEpisode(instance\_id, episode\_name)
 
 Wipe all events from an episode
 
@@ -413,7 +413,7 @@ Wipe all events from an episode
 
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **model\_id** | **UUID**| ID of the model to wipe episode for | [default to null] |
+| **instance\_id** | **UUID**| ID of the model instance to wipe episode for | [default to null] |
 | **episode\_name** | **String**| Name of the episode to wipe | [default to null] |
 
 ### Return type

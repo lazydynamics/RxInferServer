@@ -32,28 +32,29 @@ nothing #hide
 
 ## Discovering Available Models
 
-Before creating a model instance, you can explore which model types are available on the server with the [**get\_models**](@ref) operation:
+Before creating a model instance, you can explore which model types are available on the server with the [**get\_available\_models**](@ref) operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_models
+import RxInferClientOpenAPI: get_available_models
 
-response, _ = get_models(api)
-@test !isnothing(response) #hide
-@test length(response.models) > 0 #hide
+available_models, _ = get_available_models(api)
+@test !isnothing(available_models) #hide
+@test length(available_models) > 0 #hide
 
-available_models = response.models
+# only show the model details as the full configuration is quite large
+map(model -> model.details, available_models)
 ```
 
 Note that the list of available models depends on the [roles](@ref authentication-api-roles) assigned to the token used to make the request as well as server settings.
 
 ## Inspecting Model Details
 
-Each model type comes with detailed configuration and specifications. You can inspect these using the [**get\_model\_details**](@ref) operation:
+Each model type comes with detailed configuration and specifications. You can inspect these using the [**get\_available\_model**](@ref) operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_model_details
+import RxInferClientOpenAPI: get_available_model
 
-response, _ = get_model_details(api, available_models[1].name)
+response, _ = get_available_model(api, available_models[1].details.name)
 @test !isnothing(response) #hide
 @test hasproperty(response, :details) #hide
 @test hasproperty(response, :config) #hide
@@ -74,69 +75,69 @@ response.config
 
 ### Creating a Model Instance
 
-To create a new instance of a model you can use the [**create\_model**](@ref) operation together with the [`CreateModelRequest`](@ref) type:
+To create a new instance of a model you can use the [**create\_model\_instance**](@ref) operation together with the [`CreateModelInstanceRequest`](@ref) type:
 
 ```@example models-api
-import RxInferClientOpenAPI: create_model, CreateModelRequest
+import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
 
-request = CreateModelRequest(
-    model = available_models[1].name,
+request = CreateModelInstanceRequest(
+    model_name = available_models[1].details.name,
     description = "Example model for demonstration",
     # Optional: Customize model behavior with arguments
     # arguments = Dict(...)
 )
 
-response, _ = create_model(api, request)
+response, _ = create_model_instance(api, request)
 @test !isnothing(response) #hide
-model_id = response.model_id
+instance_id = response.instance_id
 ```
 
-If successful, the server returns a unique `model_id` that you'll use to interact with this specific model instance.
+If successful, the server returns a unique `instance_id` that you'll use to interact with this specific model instance.
 
 ## Listing Your Models
 
-View all models you've created with the [**get\_created\_models\_info**](@ref) operation:
+View all models you've created with the [**get\_model\_instances**](@ref) operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_created_models_info
+import RxInferClientOpenAPI: get_model_instances
 
-created_models, _ = get_created_models_info(api)
+created_models, _ = get_model_instances(api)
 @test !isnothing(created_models) #hide
 created_models
 ```
 
 ## Getting Model Information
 
-Retrieve details about a specific model instance with the [**get\_model\_info**](@ref) operation:
+Retrieve details about a specific model instance with the [**get\_model\_instance**](@ref) operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_model_info
+import RxInferClientOpenAPI: get_model_instance
 
-response, _ = get_model_info(api, model_id)
+response, _ = get_model_instance(api, instance_id)
 @test !isnothing(response) #hide
 response
 ```
 
 ## Checking Model State
 
-Monitor the current state of your model with the [**get\_model\_state**](@ref) operation:
+Monitor the current state of your model with the **get\_model\_instance\_state** operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_model_state    
+import RxInferClientOpenAPI: get_model_instance_state    
 
-response, _ = get_model_state(api, model_id)
+response, _ = get_model_instance_state(api, instance_id)
 @test !isnothing(response) #hide
 response
 ```
 
 ## Deleting a Model
 
-When you're done with a model, you can remove it completely with the [**delete\_model**](@ref) operation:
+When you're done with a model, you can remove it completely with the [**delete\_model\_instance**](@ref) operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: delete_model
+import RxInferClientOpenAPI: delete_model_instance
 
-response, _ = delete_model(api, model_id)
+response, _ = delete_model_instance(api, instance_id)
 @test !isnothing(response) #hide
 response
 ```
@@ -150,7 +151,7 @@ Verify the model has been removed:
 
 ```@example models-api
 # Check model list
-created_models, _ = get_created_models_info(api)
+created_models, _ = get_model_instances(api)
 @test !isnothing(created_models) #hide
 @test length(created_models) == 0 #hide
 created_models

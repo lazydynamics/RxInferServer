@@ -9,21 +9,21 @@ All URIs are relative to *http://localhost:8000/v1*
 |------------ | ------------- | ------------- | -------------|
 | *AuthenticationApi* | [**tokenGenerate**](Apis/AuthenticationApi.md#tokengenerate) | **POST** /token/generate | Generate authentication token |
 *AuthenticationApi* | [**tokenRoles**](Apis/AuthenticationApi.md#tokenroles) | **GET** /token/roles | Get token roles |
-| *ModelsApi* | [**attachMetadataToEvent**](Apis/ModelsApi.md#attachmetadatatoevent) | **POST** /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
-*ModelsApi* | [**createEpisode**](Apis/ModelsApi.md#createepisode) | **POST** /models/{model_id}/episodes/{episode_name}/create | Create a new episode for a model |
-*ModelsApi* | [**createModel**](Apis/ModelsApi.md#createmodel) | **POST** /models/create | Create a new model instance |
-*ModelsApi* | [**deleteEpisode**](Apis/ModelsApi.md#deleteepisode) | **DELETE** /models/{model_id}/episodes/{episode_name}/delete | Delete an episode for a model |
-*ModelsApi* | [**deleteModel**](Apis/ModelsApi.md#deletemodel) | **DELETE** /models/{model_id}/delete | Delete a model instance |
-*ModelsApi* | [**getCreatedModelsInfo**](Apis/ModelsApi.md#getcreatedmodelsinfo) | **GET** /models/created | Get information about all created models for a specific token |
-*ModelsApi* | [**getEpisodeInfo**](Apis/ModelsApi.md#getepisodeinfo) | **GET** /models/{model_id}/episodes/{episode_name} | Get episode information |
-*ModelsApi* | [**getEpisodes**](Apis/ModelsApi.md#getepisodes) | **GET** /models/{model_id}/episodes | Get all episodes for a model |
-*ModelsApi* | [**getModelDetails**](Apis/ModelsApi.md#getmodeldetails) | **GET** /models/{model_name}/details | Get model details |
-*ModelsApi* | [**getModelInfo**](Apis/ModelsApi.md#getmodelinfo) | **GET** /models/{model_id}/info | Get model information |
-*ModelsApi* | [**getModelState**](Apis/ModelsApi.md#getmodelstate) | **GET** /models/{model_id}/state | Get the state of a model |
-*ModelsApi* | [**getModels**](Apis/ModelsApi.md#getmodels) | **GET** /models | Get models |
-*ModelsApi* | [**runInference**](Apis/ModelsApi.md#runinference) | **POST** /models/{model_id}/infer | Run inference on a model |
-*ModelsApi* | [**runLearning**](Apis/ModelsApi.md#runlearning) | **POST** /models/{model_id}/learn | Learn from previous observations |
-*ModelsApi* | [**wipeEpisode**](Apis/ModelsApi.md#wipeepisode) | **POST** /models/{model_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
+| *ModelsApi* | [**attachMetadataToEvent**](Apis/ModelsApi.md#attachmetadatatoevent) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
+*ModelsApi* | [**createEpisode**](Apis/ModelsApi.md#createepisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/create | Create a new episode for a model |
+*ModelsApi* | [**createModelInstance**](Apis/ModelsApi.md#createmodelinstance) | **POST** /models/create-instance | Create a new model instance |
+*ModelsApi* | [**deleteEpisode**](Apis/ModelsApi.md#deleteepisode) | **DELETE** /models/i/{instance_id}/episodes/{episode_name}/delete | Delete an episode for a model |
+*ModelsApi* | [**deleteModelInstance**](Apis/ModelsApi.md#deletemodelinstance) | **DELETE** /models/i/{instance_id} | Delete a model instance |
+*ModelsApi* | [**getAvailableModel**](Apis/ModelsApi.md#getavailablemodel) | **GET** /models/available/{model_name} | Get information about a specific model available for creation |
+*ModelsApi* | [**getAvailableModels**](Apis/ModelsApi.md#getavailablemodels) | **GET** /models/available | Get models available for creation |
+*ModelsApi* | [**getEpisodeInfo**](Apis/ModelsApi.md#getepisodeinfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
+*ModelsApi* | [**getEpisodes**](Apis/ModelsApi.md#getepisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model |
+*ModelsApi* | [**getModelInstance**](Apis/ModelsApi.md#getmodelinstance) | **GET** /models/i/{instance_id} | Get model instance information |
+*ModelsApi* | [**getModelInstanceState**](Apis/ModelsApi.md#getmodelinstancestate) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
+*ModelsApi* | [**getModelInstances**](Apis/ModelsApi.md#getmodelinstances) | **GET** /models/created-instances | Get all created model instances |
+*ModelsApi* | [**runInference**](Apis/ModelsApi.md#runinference) | **POST** /models/i/{instance_id}/infer | Run inference |
+*ModelsApi* | [**runLearning**](Apis/ModelsApi.md#runlearning) | **POST** /models/i/{instance_id}/learn | Learn from previous observations |
+*ModelsApi* | [**wipeEpisode**](Apis/ModelsApi.md#wipeepisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
 | *ServerApi* | [**getServerInfo**](Apis/ServerApi.md#getserverinfo) | **GET** /info | Get server information |
 *ServerApi* | [**pingServer**](Apis/ServerApi.md#pingserver) | **GET** /ping | Health check endpoint |
 
@@ -32,25 +32,24 @@ All URIs are relative to *http://localhost:8000/v1*
 ## Documentation for Models
 
  - [AttachMetadataToEventRequest](./Models/AttachMetadataToEventRequest.md)
- - [CreateModelRequest](./Models/CreateModelRequest.md)
- - [CreateModelResponse](./Models/CreateModelResponse.md)
- - [CreatedModelInfo](./Models/CreatedModelInfo.md)
- - [DeleteModelRequest](./Models/DeleteModelRequest.md)
+ - [AvailableModel](./Models/AvailableModel.md)
+ - [AvailableModel_details](./Models/AvailableModel_details.md)
+ - [CreateModelInstanceRequest](./Models/CreateModelInstanceRequest.md)
+ - [CreateModelInstanceResponse](./Models/CreateModelInstanceResponse.md)
+ - [DeleteModelInstanceRequest](./Models/DeleteModelInstanceRequest.md)
  - [EpisodeInfo](./Models/EpisodeInfo.md)
  - [ErrorResponse](./Models/ErrorResponse.md)
  - [InferRequest](./Models/InferRequest.md)
  - [InferResponse](./Models/InferResponse.md)
  - [LearnRequest](./Models/LearnRequest.md)
  - [LearnResponse](./Models/LearnResponse.md)
- - [LightweightModelDetails](./Models/LightweightModelDetails.md)
- - [ModelDetails](./Models/ModelDetails.md)
- - [ModelList](./Models/ModelList.md)
- - [ModelState](./Models/ModelState.md)
+ - [ModelInstance](./Models/ModelInstance.md)
+ - [ModelInstanceState](./Models/ModelInstanceState.md)
  - [NotFoundResponse](./Models/NotFoundResponse.md)
  - [PingResponse](./Models/PingResponse.md)
  - [ServerInfo](./Models/ServerInfo.md)
  - [SuccessResponse](./Models/SuccessResponse.md)
- - [TokenResponse](./Models/TokenResponse.md)
+ - [TokenGenerateResponse](./Models/TokenGenerateResponse.md)
  - [TokenRolesResponse](./Models/TokenRolesResponse.md)
  - [UnauthorizedResponse](./Models/UnauthorizedResponse.md)
 

@@ -62,9 +62,9 @@ nothing #hide
 The 404 Not Found error indicates that the resource you're trying to access does not exist.
 
 ```@example error-handling
-import RxInferClientOpenAPI: ModelsApi, get_model_info
+import RxInferClientOpenAPI: ModelsApi, get_model_instance
 
-response, info = get_model_info(ModelsApi(client), "non-existent-model")
+response, info = get_model_instance(ModelsApi(client), "non-existent-model")
 @test !isnothing(response) #hide
 @test response.error == "Not Found" #hide
 @test info.status == 404 #hide
@@ -81,20 +81,20 @@ response
 The 400 Bad Request error indicates that the request is invalid. This can happen for various reasons, such as invalid JSON payloads, missing required fields, or incorrect parameter values.
 
 ```@example error-handling
-import RxInferClientOpenAPI: ModelsApi, CreateModelRequest, create_model, delete_episode
+import RxInferClientOpenAPI: ModelsApi, CreateModelInstanceRequest, create_model_instance, delete_episode
 
-response, info = create_model(ModelsApi(client), CreateModelRequest(
-    model = "BetaBernoulli-v1",
+response, info = create_model_instance(ModelsApi(client), CreateModelInstanceRequest(
+    model_name = "BetaBernoulli-v1",
     description = "Example model for demonstration"
 ))
 @test !isnothing(response) #hide
 
 # Get the model id from the response
-model_id = response.model_id
+instance_id = response.instance_id
 
 # Attempt to delete the default episode, 
 # which should result in a 400 Bad Request error
-response, info = delete_episode(ModelsApi(client), model_id, "default")
+response, info = delete_episode(ModelsApi(client), instance_id, "default")
 @test !isnothing(response) #hide
 @test response.error == "Bad Request" #hide
 @test info.status == 400 #hide

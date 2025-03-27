@@ -25,7 +25,7 @@ end
 
 @doc raw"""Get server information
 
-Returns information about the server, such as the RxInfer version, Server version, Server edition, and Julia version
+Returns information about the server, such as the RxInferServer version, RxInfer version, Julia version, server edition and API version
 
 Params:
 

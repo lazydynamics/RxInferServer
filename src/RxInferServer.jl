@@ -5,6 +5,7 @@ using RxInfer
 using HTTP, Sockets, JSON, RxInferServerOpenAPI
 using Dates, Pkg
 
+include("macro.jl")
 include("dotenv.jl")
 include("database.jl")
 include("logging.jl")

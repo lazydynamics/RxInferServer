@@ -1,16 +1,35 @@
 openapi: 3.0.2
 info:
+  version: 0.0.1
   title: RxInferServer OpenAPI specification
-  description: API for RxInferServer.jl - A Julia server for RxInfer probabilistic programming framework
-  version: 1.0.0
+  description: |
+    API for RxInferServer.jl - A Julia server for RxInfer probabilistic programming framework
+    **Warning** The specification is not yet stable and may undergo significant changes.
   contact:
     name: RxInferServer Team
     url: https://github.com/lazydynamics/RxInferServer
+  license:
+    name: AGPL-3.0
+    url: https://github.com/lazydynamics/RxInferServer/blob/main/LICENSE
+externalDocs:
+  description: RxInferServer official documentation
+  url: https://server.rxinfer.com/
 servers:
-  - url: 'http://localhost:8000/v1'
+  - url: 'http://localhost:{port}/{basePath}'
     description: Local development server
-  - url: 'https://rxinfer.lazydynamics.app/v1'
+    variables:
+      port:
+        default: '8000'
+        description: The port of the local server, defaults to "8000"
+      basePath:
+        default: 'v1'
+        description: The base path of the server, defaults to "v1"
+  - url: 'https://rxinfer.lazydynamics.app/{basePath}'
     description: Public server provided by Lazy Dynamics team - https://lazydynamics.com/
+    variables:
+      basePath:
+        default: 'v1'
+        description: The base path of the server, defaults to "v1"
 tags:
   - name: Server
     description: Server management endpoints
@@ -28,7 +47,7 @@ paths:
         - Server
       summary: Get server information
       operationId: getServerInfo
-      description: Returns information about the server, such as the RxInfer version, Server version, Server edition, and Julia version
+      description: Returns information about the server, such as the RxInferServer version, RxInfer version, Julia version, server edition and API version
       responses:
         '200':
           description: Successfully retrieved server information
@@ -57,70 +76,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
-  /models:
-    get:
-      tags:
-        - Models
-      summary: Get models
-      operationId: getModels
-      description: Retrieve the list of available models and their lightweight details. Note that some access tokens might not have access to all models.
-      responses:
-        '200':
-          description: Successfully retrieved list of models
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ModelList'
-              example:
-                models:
-                  - name: "BetaBernoulli-v1"
-                    description: "A simple beta-bernoulli model"
-                  - name: "LinearRegression-v1"
-                    description: "A simple linear regression model"
-                  - name: "GaussianMixture-v2"
-                    description: "A simple Gaussian mixture model"
-        '401':
-          description: Access token is missing or invalid
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-  /models/{model_name}/details:
-    get:
-      tags:
-        - Models
-      summary: Get model details
-      operationId: getModelDetails
-      description: Retrieve detailed information about a specific model
-      parameters:
-        - name: model_name
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Name of the model to retrieve information for (including version identifier if applicable, e.g. "BetaBernoulli-v1")
-      responses:
-        '200':
-          description: Successfully retrieved model details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ModelDetails'
-        '401':
-          description: Access token is missing or invalid
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-        '404':
-          description: Model not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundResponse'
-              example:
-                error: "Not Found"
-                message: "The requested model could not be found"
+
   /ping:
     get:
       tags:
@@ -139,6 +95,7 @@ paths:
                 $ref: '#/components/schemas/PingResponse'
               example:
                 status: "ok"
+
   /token/generate:
     post:
       tags:
@@ -154,7 +111,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponse'
+                $ref: '#/components/schemas/TokenGenerateResponse'
         '400':
           description: Unable to generate token
           content:
@@ -189,40 +146,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
-  /models/create:
+
+  /models/available:
+    get:
+      tags:
+        - Models
+      summary: Get models available for creation
+      operationId: getAvailableModels
+      description: |
+        Retrieve the list of models available for creation for a given token.
+        This list specifies names and available arguments for each model.
+        
+        **Note** The list of available models might differ for different access tokens.
+        For example, a token with only the "user" role might not have access to all models.
+      responses:
+        '200':
+          description: Successfully retrieved list of models available for creation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOfAvailableModels'
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+
+  /models/available/{model_name}:
+    get:
+      tags:
+        - Models
+      summary: Get information about a specific model available for creation
+      operationId: getAvailableModel
+      description: Retrieve detailed information about a specific model available for creation
+      parameters:
+        - name: model_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the model to retrieve information for (including version identifier if applicable, e.g. "BetaBernoulli-v1")
+      responses:
+        '200':
+          description: Successfully retrieved model details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableModel'
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model cannot be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+  
+  /models/create-instance:
     post:
       tags:
         - Models
       summary: Create a new model instance
-      operationId: createModel
+      operationId: createModelInstance
       description: Creates a new instance of a model with the specified configuration
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateModelRequest'
-            examples:
-              simple:
-                value:
-                  model: "BetaBernoulli-v1"
-                  description: "Testing beta-bernoulli model"
-              with_arguments:
-                value:
-                  model: "LinearRegression-v1"
-                  arguments:
-                    dt: 0.1
-                    horizon: 10
-                  description: "Linear regression with custom parameters"
+              $ref: '#/components/schemas/CreateModelInstanceRequest'
       responses:
         '200':
           description: Model instance created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateModelResponse'
-              example:
-                model_id: "123e4567-e89b-12d3-a456-426614174000"
+                $ref: '#/components/schemas/CreateModelInstanceResponse'
         '401':
           description: Access token is missing or invalid
           content:
@@ -235,37 +239,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-              example:
-                error: "Not Found"
-                message: "The specified model does not exist"
-  /models/created:
+
+  /models/created-instances:
     get:
       tags:
         - Models
-      summary: Get information about all created models for a specific token
-      operationId: getCreatedModelsInfo
-      description: Retrieve detailed information about all created models for a specific token
+      summary: Get all created model instances
+      operationId: getModelInstances
+      description: Retrieve detailed information about all created model instances for a specific token
       responses:
         '200':
-          description: Successfully retrieved list of created models
+          description: Successfully retrieved list of created model instances
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CreatedModelInfo'
+                  $ref: '#/components/schemas/ModelInstance'
         '401':
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
-  /models/{model_id}/info:
+
+  /models/i/{model_id}:
     get:
       tags:
         - Models
-      summary: Get model information
-      operationId: getModelInfo
+      summary: Get model instance information
+      operationId: getModelInstance
       description: Retrieve detailed information about a specific model instance
       parameters:
         - name: model_id
@@ -281,7 +284,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreatedModelInfo'
+                $ref: '#/components/schemas/ModelInstance'
         '401':
           description: Access token is missing, invalid or has no access to the specific model
           content:
@@ -294,12 +297,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/delete:
     delete:
       tags:
         - Models
       summary: Delete a model instance
-      operationId: deleteModel
+      operationId: deleteModelInstance
       description: Delete a specific model instance by its ID
       parameters:
         - name: model_id
@@ -330,12 +332,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/state:
+    
+  /models/i/{model_id}/state:
     get:
       tags:
         - Models
-      summary: Get the state of a model
-      operationId: getModelState
+      summary: Get the state of a model instance
+      operationId: getModelInstanceState
       description: Retrieve the state of a specific model instance
       parameters:
         - name: model_id
@@ -351,7 +354,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ModelState'
+                $ref: '#/components/schemas/ModelInstanceState'
         '401':
           description: Access token is missing, invalid or has no access to the specific model
           content:
@@ -364,11 +367,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/infer:
+
+  /models/i/{model_id}/infer:
     post:
       tags:
         - Models
-      summary: Run inference on a model
+      summary: Run inference
       operationId: runInference
       description: Run inference on a specific model instance
       parameters:
@@ -404,7 +408,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/learn:
+
+  /models/i/{model_id}/learn:
     post:
       tags:
         - Models
@@ -442,8 +447,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'                
-  /models/{model_id}/episodes:
+                $ref: '#/components/schemas/NotFoundResponse'    
+
+  /models/i/{model_id}/episodes:
     get:
       tags:
         - Models
@@ -479,7 +485,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/episodes/{episode_name}:
+
+  /models/i/{model_id}/episodes/{episode_name}:
     get:
       tags:
         - Models
@@ -519,7 +526,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/episodes/{episode_name}/create:
+
+  /models/i/{model_id}/episodes/{episode_name}/create:
     post:
       tags:
         - Models
@@ -568,7 +576,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'  
-  /models/{model_id}/episodes/{episode_name}/delete:
+                
+  /models/i/{model_id}/episodes/{episode_name}/delete:
     delete:
       tags:
         - Models
@@ -617,7 +626,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/episodes/{episode_name}/wipe:
+
+  /models/i/{model_id}/episodes/{episode_name}/wipe:
     post:
       tags:
         - Models
@@ -657,7 +667,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'    
-  /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata:
+
+  /models/i/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata:
     post:
       tags:
         - Models
@@ -718,19 +729,76 @@ components:
       scheme: bearer
       description: Simple token authentication. Use the Authorization header with the Bearer scheme.
   schemas:
-    TokenRolesResponse:
+    SuccessResponse:
       type: object
       required:
-        - roles
+        - message
       properties:
-        roles:
-          type: array
-          description: List of roles for the token
-          items:
-            type: string
-            description: Role identifier
-          example:
-            - "user"
+        message:
+          type: string
+          description: Success message
+      example:
+        message: "Model deleted successfully"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message explaining the failure
+        message:
+          type: string
+          description: Additional message providing details about the failure
+      example:
+        error: "Unauthorized"
+        message: "The request requires authentication, generate a token using the /generate-token endpoint"
+
+    NotFoundResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type, always "Not Found" for this error
+          enum: ["Not Found"]
+        message:
+          type: string
+          description: Detailed message explaining why the resource was not found
+      example:
+        error: "Not Found"
+        message: "The requested resource could not be found"
+
+    UnauthorizedResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type, always "Unauthorized" for this error
+          enum: ["Unauthorized"]
+        message:
+          type: string
+          description: Detailed message explaining why authentication failed
+      example:
+        error: "Unauthorized"
+        message: "The request requires authentication, generate a token using the /generate-token endpoint"
+
+    PingResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: Status of the server
+          default: "ok"
+
     ServerInfo:
       type: object
       required:
@@ -756,7 +824,8 @@ components:
           type: string
           description: The version of the API being used
           default: "v1"
-    TokenResponse:
+
+    TokenGenerateResponse:
       type: object
       required:
         - token
@@ -764,112 +833,67 @@ components:
         token:
           type: string
           description: The token to use in the Authorization header with the format "Bearer {token}"
-    PingResponse:
+
+    TokenRolesResponse:
       type: object
       required:
-        - status
+        - roles
       properties:
-        status:
-          type: string
-          description: Status of the server
-          default: "ok"
-    SuccessResponse:
-      type: object
-      required:
-        - message
-      properties:
-        message:
-          type: string
-          description: Success message
-      example:
-        message: "Model deleted successfully"
-    ErrorResponse:
-      type: object
-      required:
-        - error
-      properties:
-        error:
-          type: string
-          description: Error message explaining the failure
-        message:
-          type: string
-          description: Additional message providing details about the failure
-      example:
-        error: "Unauthorized"
-        message: "The request requires authentication, generate a token using the /generate-token endpoint"
-    NotFoundResponse:
-      type: object
-      required:
-        - error
-        - message
-      properties:
-        error:
-          type: string
-          description: Error type, always "Not Found" for this error
-          enum: ["Not Found"]
-        message:
-          type: string
-          description: Detailed message explaining why the resource was not found
-      example:
-        error: "Not Found"
-        message: "The requested resource could not be found"
-    UnauthorizedResponse:
-      type: object
-      required:
-        - error
-        - message
-      properties:
-        error:
-          type: string
-          description: Error type, always "Unauthorized" for this error
-          enum: ["Unauthorized"]
-        message:
-          type: string
-          description: Detailed message explaining why authentication failed
-      example:
-        error: "Unauthorized"
-        message: "The request requires authentication, generate a token using the /generate-token endpoint"
-    ModelList:
-      type: object
-      required:
-        - models
-      properties:
-        models:
+        roles:
           type: array
-          description: List of available models
+          description: List of roles for the token
           items:
-            $ref: '#/components/schemas/LightweightModelDetails'
-    ModelDetails:
+            type: string
+            description: Role identifier
+          example:
+            - "user"
+     
+    ListOfAvailableModels:
+      type: array
+      description: List of available models
+      items:
+        $ref: '#/components/schemas/AvailableModel'
+
+    AvailableModel:
       type: object
       required:
         - details
         - config
       properties:
         details:
-          $ref: '#/components/schemas/LightweightModelDetails'
-          description: Basic model details
+          type: object
+          description: | 
+            Primary model details. Note that these are also included in the `config` object.
+          properties:
+            name:
+              type: string
+              description: Name of the model (usually with the version identifier, e.g. "BetaBernoulli-v1")
+            description:
+              type: string
+              description: Brief description of the model
+            author:
+              type: string
+              description: Author of the model
+            roles:
+              type: array
+              description: List of roles that can access the model
+              items:
+                type: string
+                description: Role identifier
         config:
           type: object
-          description: Extended model-specific configuration
+          description: |
+            The entire model configuration as in the `config.yaml` file. 
+            May include arbitrary fields, which are not part of the public interface.
+            Note that this information also includes the properties from the `details` object.
           additionalProperties: true
-    LightweightModelDetails:
+
+    CreateModelInstanceRequest:
       type: object
       required:
-        - name
-        - description
+        - model_name
       properties:
-        name:
-          type: string
-          description: Name of the model (including version identifier, e.g. "BetaBernoulli-v1")
-        description:
-          type: string
-          description: Brief description of the model
-    CreateModelRequest:
-      type: object
-      required:
-        - model
-      properties:
-        model:
+        model_name:
           type: string
           description: The name of the model to create (including version identifier if applicable, e.g. "BetaBernoulli-v1")
         arguments:
@@ -880,7 +904,8 @@ components:
           type: string
           maxLength: 128
           description: Optional description of the model instance
-    CreateModelResponse:
+
+    CreateModelInstanceResponse:
       type: object
       required:
         - model_id
@@ -889,7 +914,14 @@ components:
           type: string
           format: uuid
           description: Unique identifier for the created model instance
-    CreatedModelInfo:
+        
+    ListOfModelInstances:
+      type: array
+      description: List of created model instances
+      items:
+        $ref: '#/components/schemas/ModelInstance'
+
+    ModelInstance:
       type: object
       required:
         - model_id
@@ -921,7 +953,8 @@ components:
           type: string
           description: Name of the current episode for this model
           example: "default"
-    DeleteModelRequest:
+
+    DeleteModelInstanceRequest:
       type: object
       required:
         - model_id
@@ -930,24 +963,19 @@ components:
           type: string
           format: uuid
           description: ID of the model to delete
-    ModelState:
+
+    ModelInstanceState:
       type: object
       required:
         - state
       properties:
         state:
           type: object
-          description: Model-specific state
+          description: |
+            An object containing the current state of the model instance. 
+            May include arbitrary fields specific to the model. See the model documentation for more details.
           additionalProperties: true
-    AttachMetadataToEventRequest:
-      type: object
-      required:
-        - metadata
-      properties:
-        metadata:
-          type: object
-          description: Metadata to attach to the event
-          additionalProperties: true
+
     InferRequest:
       type: object
       required:
@@ -967,6 +995,7 @@ components:
           description: Name of the episode to run inference on
           default: "default"
           example: "default"
+
     InferResponse:
       type: object
       required:
@@ -987,6 +1016,7 @@ components:
           description: List of errors that occurred during the inference call, but were not fatal and the inference was still completed successfully
           items:
             $ref: '#/components/schemas/ErrorResponse'
+    
     LearnRequest:
       type: object
       required:
@@ -1005,6 +1035,7 @@ components:
           items:
             type: string
             description: Name of the parameter to learn from
+
     LearnResponse:
       type: object
       required:
@@ -1014,6 +1045,7 @@ components:
           type: object
           description: A dictionary of learned parameters and their values
           additionalProperties: true
+
     EpisodeInfo:
       type: object
       required:
@@ -1043,3 +1075,13 @@ components:
         model_id: "123e4567-e89b-12d3-a456-426614174000"
         name: "default"
         created_at: "2024-03-20T12:00:00Z"
+
+    AttachMetadataToEventRequest:
+      type: object
+      required:
+        - metadata
+      properties:
+        metadata:
+          type: object
+          description: Metadata to attach to the event
+          additionalProperties: true

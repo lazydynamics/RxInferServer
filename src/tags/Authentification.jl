@@ -5,7 +5,7 @@ function token_generate(req::HTTP.Request)
     token = HTTP.header(req, "Authorization", nothing)
     if !isnothing(token)
         token = replace(token, "Bearer " => "")
-        return RxInferServerOpenAPI.TokenResponse(token = token)
+        return RxInferServerOpenAPI.TokenGenerateResponse(token = token)
     end
 
     @debug "New token request"
@@ -22,7 +22,7 @@ function token_generate(req::HTTP.Request)
     end
 
     @debug "New token generated" token
-    return RxInferServerOpenAPI.TokenResponse(token = token)
+    return RxInferServerOpenAPI.TokenGenerateResponse(token = token)
 end
 
 function token_roles(req::HTTP.Request)

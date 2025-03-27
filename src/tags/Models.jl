@@ -1,65 +1,111 @@
 using UUIDs, Mongoc, TimeZones
 
-function get_models(req::HTTP.Request)
-    # Filter out private models
+function get_available_models(req::HTTP.Request)
     models = Models.get_models()
-
-    # Filter models by role if provided
     roles = current_roles()
 
     filtered_models = filter(models) do model
         return any(r -> r in roles, model.roles)
     end
 
-    # Create a list of lightweight model info
-    model_list = map(filtered_models) do model
-        return RxInferServerOpenAPI.LightweightModelDetails(name = model.name, description = model.description)
+    return map(filtered_models) do model
+        return RxInferServerOpenAPI.AvailableModel(
+            details = (name = model.name, description = model.description, author = model.author, roles = model.roles),
+            config = model.config
+        )
     end
-
-    return RxInferServerOpenAPI.ModelList(model_list)
 end
 
-function get_model_details(req::HTTP.Request, model_name::String)
+function get_available_model(req::HTTP.Request, model_name::String)
     model = Models.get_model(model_name)
-
-    if isnothing(model)
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model could not be found"
-        )
-    end
-
     roles = current_roles()
 
-    if !any(r -> r in roles, model.roles)
+    if isnothing(model) || !any(r -> r in roles, model.roles)
         return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model could not be found"
+            error = "Not Found", message = "The requested model name `$model_name` could not be found"
         )
     end
 
-    return RxInferServerOpenAPI.ModelDetails(
-        details = RxInferServerOpenAPI.LightweightModelDetails(name = model.name, description = model.description),
+    return RxInferServerOpenAPI.AvailableModel(
+        details = (name = model.name, description = model.description, author = model.author, roles = model.roles),
         config = model.config
     )
 end
 
-function create_model(req::HTTP.Request, create_model_request::RxInferServerOpenAPI.CreateModelRequest)
-    @debug "Attempting to create a new model" create_model_request.model
-    model_details = get_model_details(req, create_model_request.model)
+function get_model_instances(req::HTTP.Request)
+    token = current_token()
 
-    # In this case, the response is probably an error response
-    if !isa(model_details, RxInferServerOpenAPI.ModelDetails)
-        @debug "Could not create model, `model_details` is not a `ModelDetails` object" create_model_request.model
-        return model_details
+    @debug "Attempting to get model instances" token
+    collection = Database.collection("models")
+    query = Mongoc.BSON("created_by" => token, "deleted" => false)
+    result = Mongoc.find(collection, query)
+
+    @debug "Found model instances" token
+    return map(result) do model
+        return RxInferServerOpenAPI.ModelInstance(
+            model_id = model["model_id"],
+            model_name = model["model_name"],
+            created_at = ZonedDateTime(model["created_at"], TimeZones.localzone()),
+            description = model["description"],
+            arguments = model["arguments"],
+            current_episode = model["current_episode"]
+        )
+    end
+end
+
+function get_model_instance(req::HTTP.Request, model_id::String)
+    token = current_token()
+
+    @debug "Attempting to get model instance" token model_id
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    result = Mongoc.find_one(collection, query)
+
+    if isnothing(result)
+        @debug "Cannot get model instance because the instance does not exist or token has no access to it" token model_id
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model instance could not be found"
+        )
     end
 
-    # Create model in the database
-    model_name = model_details.details.name
-    created_by = current_token()
+    @debug "Successfully retrieved model instance" token model_id
+    return RxInferServerOpenAPI.ModelInstance(
+        model_id = result["model_id"],
+        model_name = result["model_name"],
+        created_at = ZonedDateTime(result["created_at"], TimeZones.localzone()),
+        description = result["description"],
+        arguments = result["arguments"],
+        current_episode = result["current_episode"]
+    )
+end
+
+function create_model_instance(req::HTTP.Request, create_model_request::RxInferServerOpenAPI.CreateModelInstanceRequest)
+    @debug "Attempting to create a new model" create_model_request.model_name
+
+    token = current_token()
+    model_name = create_model_request.model_name
+    response = get_available_model(req, model_name)
+
+    # In this case, the response is probably an error response
+    if !isa(response, RxInferServerOpenAPI.AvailableModel)
+        @debug "Could not create a new model instance, `response` is not a `AvailableModel` object" token model_name
+        return response
+    end
+
+    model = response::RxInferServerOpenAPI.AvailableModel
+
+    # Check if the retrieved model name is correct
+    if !isequal(create_model_request.model_name, model.details.name)
+        @debug "Could not create a new model instance, `model_name` from the request is not equal to the retrieved `model.details.name`" create_model_request.model_name model.details.name
+        return RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request", message = "The requested model name `$model_name` could not be found"
+        )
+    end
 
     # Merge the default arguments with the arguments provided by the user
     # If user has not provided any arguments merge with the empty dictionary
     arguments = merge(
-        Models.parse_default_arguments_from_config(model_details.config),
+        Models.parse_default_arguments_from_config(model.config),
         @something(create_model_request.arguments, Dict{String, Any}())
     )
 
@@ -72,13 +118,13 @@ function create_model(req::HTTP.Request, create_model_request::RxInferServerOpen
 
     created_at = Dates.now()
 
-    @debug "Creating new model in the database" model_name created_by
+    @debug "Creating new model instance in the database" model_name token
     model_id = string(UUIDs.uuid4())
     document = Mongoc.BSON(
         "model_id" => model_id,
         "model_name" => model_name,
         "created_at" => created_at,
-        "created_by" => created_by,
+        "created_by" => token,
         "arguments" => arguments,
         "description" => description,
         "state" => initial_state,
@@ -89,120 +135,71 @@ function create_model(req::HTTP.Request, create_model_request::RxInferServerOpen
     insert_result = Mongoc.insert_one(collection, document)
 
     if insert_result.reply["insertedCount"] != 1
-        @error "Unable to create model due to internal error"
+        @error "Unable to create model instance due to internal error" token
         return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to create model due to internal error"
+            error = "Bad Request", message = "Unable to create model instance due to internal error"
         )
     end
 
-    @debug "Creating default episode for a model" model_id
+    @debug "Creating default episode for the model instance" model_id
     episode = create_episode(req, model_id, "default")
 
     if !isa(episode, RxInferServerOpenAPI.EpisodeInfo)
-        @debug "Unable to create default episode, deleting model" model_id episode
+        @debug "Unable to create default episode, deleting the model instance" token model_id episode
         delete_model(req, model_id)
         return RxInferServerOpenAPI.ErrorResponse(
             error = "Bad Request", message = "Unable to create default episode due to internal error"
         )
     end
 
-    @debug "Model created successfully" model_id
-    return RxInferServerOpenAPI.CreateModelResponse(model_id = model_id)
+    @debug "Model instance created successfully" token model_id
+    return RxInferServerOpenAPI.CreateModelInstanceResponse(model_id = model_id)
 end
 
-function get_created_models_info(req::HTTP.Request)
-    @debug "Attempting to get created models info"
-    token = current_token()
-    collection = Database.collection("models")
-    query = Mongoc.BSON("created_by" => token, "deleted" => false)
-    result = Mongoc.find(collection, query)
-
-    @debug "Found models"
-    return map(result) do model
-        return RxInferServerOpenAPI.CreatedModelInfo(
-            model_id = model["model_id"],
-            model_name = model["model_name"],
-            created_at = ZonedDateTime(model["created_at"], TimeZones.localzone()),
-            description = model["description"],
-            arguments = model["arguments"]
-        )
-    end
-end
-
-function get_model_info(req::HTTP.Request, model_id::String)
-    @debug "Attempting to get model info" model_id
+function delete_model_instance(req::HTTP.Request, model_id::String)
     token = current_token()
 
-    # Query the database for the model
-    collection = Database.collection("models")
-    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
-    result = Mongoc.find_one(collection, query)
-
-    # If no model is found, return `NotFoundResponse`
-    if isnothing(result)
-        @debug "Cannot get model info because the model does not exist or token has no access to it" model_id
-        return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model could not be found"
-        )
-    end
-
-    # Return the model info
-    return RxInferServerOpenAPI.CreatedModelInfo(
-        model_id = result["model_id"],
-        model_name = result["model_name"],
-        created_at = ZonedDateTime(result["created_at"], TimeZones.localzone()), # OpenAPI eh?
-        description = result["description"],
-        arguments = result["arguments"],
-        current_episode = result["current_episode"]
-    )
-end
-
-function delete_model(req::HTTP.Request, model_id::String)
-    @debug "Attempt to delete model" model_id
-    token = current_token()
-
-    # Update the model to be deleted
+    @debug "Attempting to delete the model instance" token model_id
     collection = Database.collection("models")
     query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
     update = Mongoc.BSON("\$set" => Mongoc.BSON("deleted" => true))
     result = Mongoc.update_one(collection, query, update)
 
     if result["matchedCount"] != 1
-        @debug "Cannot delete model because it does not exist" model_id
+        @debug "Cannot delete model instance because it does not exist" token model_id
         return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model could not be found"
+            error = "Not Found", message = "The requested model instance could not be found"
         )
     end
 
     if result["modifiedCount"] != 1
-        @debug "Unable to delete model due to internal error" model_id
+        @debug "Unable to delete model instance due to internal error" token model_id
         return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to delete model due to internal error"
+            error = "Bad Request", message = "Unable to delete model instance due to internal error"
         )
     end
 
-    @debug "Model deleted successfully" model_id
-    return RxInferServerOpenAPI.SuccessResponse(message = "Model deleted successfully")
+    @debug "Model instance deleted successfully" token model_id
+    return RxInferServerOpenAPI.SuccessResponse(message = "Model instance deleted successfully")
 end
 
-function get_model_state(req::HTTP.Request, model_id::String)
-    @debug "Attempting to get model state" model_id
+function get_model_instance_state(req::HTTP.Request, model_id::String)
     token = current_token()
 
-    # Query the database for the model
+    @debug "Attempting to get model instance state" token model_id
     collection = Database.collection("models")
     query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
     result = Mongoc.find_one(collection, query)
 
     if isnothing(result)
-        @debug "Cannot get model state because the model does not exist or token has no access to it" model_id
+        @debug "Cannot get model instance state because the instance does not exist or token has no access to it" token model_id
         return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model could not be found"
+            error = "Not Found", message = "The requested model instance could not be found"
         )
     end
 
-    @debug "Successfully got model state" model_id
-    return RxInferServerOpenAPI.ModelState(state = result["state"])
+    @debug "Successfully retrieved model instance state" token model_id
+    return RxInferServerOpenAPI.ModelInstanceState(state = result["state"])
 end
 
 function run_inference(req::HTTP.Request, model_id::String, infer_request::RxInferServerOpenAPI.InferRequest)

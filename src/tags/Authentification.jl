@@ -2,24 +2,18 @@ using Mongoc, UUIDs
 
 function token_generate(req::HTTP.Request)
     # Check if the token is already in the database
+    # We cannot use `current_token()` here because 
+    # middleware bypasses the authentication check for this endpoint
     token = HTTP.header(req, "Authorization", nothing)
     if !isnothing(token)
         token = replace(token, "Bearer " => "")
         return RxInferServerOpenAPI.TokenGenerateResponse(token = token)
     end
 
-    @debug "New token request"
-    token = string(UUIDs.uuid4())
-    inserted = __database_op_insert_token(token)
+    token = @expect __database_op_create_new_token() || RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to generate token due to internal error"
+    )
 
-    if !inserted
-        @error "Unable to generate token due to internal error"
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to generate token due to internal error"
-        )
-    end
-
-    @debug "New token generated" token
     return RxInferServerOpenAPI.TokenGenerateResponse(token = token)
 end
 
@@ -29,11 +23,20 @@ end
 
 # Database operations
 
-const __database_op_default_roles = ["user"]
-# Insert a token into the database, return true if the token was inserted successfully
-function __database_op_insert_token(token::String)::Bool
-    document = Mongoc.BSON("token" => token, "created_at" => Dates.now(), "roles" => __database_op_default_roles)
+function __database_op_create_new_token()
+    token = string(UUIDs.uuid4())
+    roles = ["user"]
+
+    @debug "Inserting new token into the database" token
+    document = Mongoc.BSON("token" => token, "created_at" => Dates.now(), "roles" => roles)
     collection = Database.collection("tokens")
-    insert_result = Mongoc.insert_one(collection, document)
-    return insert_result.reply["insertedCount"] == 1
+    result = Mongoc.insert_one(collection, document)
+
+    if result.reply["insertedCount"] != 1
+        @debug "Cannot insert token into the database" token
+        return nothing
+    end
+
+    @debug "Successfully inserted token into the database" token
+    return token
 end

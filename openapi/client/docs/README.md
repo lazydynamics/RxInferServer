@@ -16,11 +16,11 @@ All URIs are relative to *http://localhost:8000/v1*
 *ModelsApi* | [**deleteModelInstance**](Apis/ModelsApi.md#deletemodelinstance) | **DELETE** /models/i/{instance_id} | Delete a model instance |
 *ModelsApi* | [**getAvailableModel**](Apis/ModelsApi.md#getavailablemodel) | **GET** /models/available/{model_name} | Get information about a specific model available for creation |
 *ModelsApi* | [**getAvailableModels**](Apis/ModelsApi.md#getavailablemodels) | **GET** /models/available | Get models available for creation |
-*ModelsApi* | [**getCreatedEpisodes**](Apis/ModelsApi.md#getcreatedepisodes) | **GET** /models/i/{instance_id}/created-episodes | Get all created episodes for a model instance |
 *ModelsApi* | [**getEpisodeInfo**](Apis/ModelsApi.md#getepisodeinfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
+*ModelsApi* | [**getEpisodes**](Apis/ModelsApi.md#getepisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model instance |
 *ModelsApi* | [**getModelInstance**](Apis/ModelsApi.md#getmodelinstance) | **GET** /models/i/{instance_id} | Get model instance information |
 *ModelsApi* | [**getModelInstanceState**](Apis/ModelsApi.md#getmodelinstancestate) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
-*ModelsApi* | [**getModelInstances**](Apis/ModelsApi.md#getmodelinstances) | **GET** /models/created-instances | Get all created model instances |
+*ModelsApi* | [**getModelInstances**](Apis/ModelsApi.md#getmodelinstances) | **GET** /models/instances | Get all created model instances |
 *ModelsApi* | [**runInference**](Apis/ModelsApi.md#runinference) | **POST** /models/i/{instance_id}/infer | Run inference |
 *ModelsApi* | [**runLearning**](Apis/ModelsApi.md#runlearning) | **POST** /models/i/{instance_id}/learn | Learn from previous observations |
 *ModelsApi* | [**wipeEpisode**](Apis/ModelsApi.md#wipeepisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
@@ -34,6 +34,7 @@ All URIs are relative to *http://localhost:8000/v1*
  - [AttachMetadataToEventRequest](./Models/AttachMetadataToEventRequest.md)
  - [AvailableModel](./Models/AvailableModel.md)
  - [AvailableModel_details](./Models/AvailableModel_details.md)
+ - [CreateEpisodeRequest](./Models/CreateEpisodeRequest.md)
  - [CreateModelInstanceRequest](./Models/CreateModelInstanceRequest.md)
  - [CreateModelInstanceResponse](./Models/CreateModelInstanceResponse.md)
  - [DeleteModelInstanceRequest](./Models/DeleteModelInstanceRequest.md)

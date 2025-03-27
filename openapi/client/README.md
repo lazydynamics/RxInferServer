@@ -33,11 +33,11 @@ Class | Method
 *ModelsApi* | [**delete_model_instance**](docs/ModelsApi.md#delete_model_instance)<br/>**DELETE** /models/i/{instance_id}<br/>Delete a model instance
 *ModelsApi* | [**get_available_model**](docs/ModelsApi.md#get_available_model)<br/>**GET** /models/available/{model_name}<br/>Get information about a specific model available for creation
 *ModelsApi* | [**get_available_models**](docs/ModelsApi.md#get_available_models)<br/>**GET** /models/available<br/>Get models available for creation
-*ModelsApi* | [**get_created_episodes**](docs/ModelsApi.md#get_created_episodes)<br/>**GET** /models/i/{instance_id}/created-episodes<br/>Get all created episodes for a model instance
 *ModelsApi* | [**get_episode_info**](docs/ModelsApi.md#get_episode_info)<br/>**GET** /models/i/{instance_id}/episodes/{episode_name}<br/>Get episode information
+*ModelsApi* | [**get_episodes**](docs/ModelsApi.md#get_episodes)<br/>**GET** /models/i/{instance_id}/episodes<br/>Get all episodes for a model instance
 *ModelsApi* | [**get_model_instance**](docs/ModelsApi.md#get_model_instance)<br/>**GET** /models/i/{instance_id}<br/>Get model instance information
 *ModelsApi* | [**get_model_instance_state**](docs/ModelsApi.md#get_model_instance_state)<br/>**GET** /models/i/{instance_id}/state<br/>Get the state of a model instance
-*ModelsApi* | [**get_model_instances**](docs/ModelsApi.md#get_model_instances)<br/>**GET** /models/created-instances<br/>Get all created model instances
+*ModelsApi* | [**get_model_instances**](docs/ModelsApi.md#get_model_instances)<br/>**GET** /models/instances<br/>Get all created model instances
 *ModelsApi* | [**run_inference**](docs/ModelsApi.md#run_inference)<br/>**POST** /models/i/{instance_id}/infer<br/>Run inference
 *ModelsApi* | [**run_learning**](docs/ModelsApi.md#run_learning)<br/>**POST** /models/i/{instance_id}/learn<br/>Learn from previous observations
 *ModelsApi* | [**wipe_episode**](docs/ModelsApi.md#wipe_episode)<br/>**POST** /models/i/{instance_id}/episodes/{episode_name}/wipe<br/>Wipe all events from an episode
@@ -50,6 +50,7 @@ Class | Method
  - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [AvailableModel](docs/AvailableModel.md)
  - [AvailableModelDetails](docs/AvailableModelDetails.md)
+ - [CreateEpisodeRequest](docs/CreateEpisodeRequest.md)
  - [CreateModelInstanceRequest](docs/CreateModelInstanceRequest.md)
  - [CreateModelInstanceResponse](docs/CreateModelInstanceResponse.md)
  - [DeleteModelInstanceRequest](docs/DeleteModelInstanceRequest.md)

@@ -11,11 +11,11 @@ All URIs are relative to *http://localhost:8000/v1*
 | [**deleteModelInstance**](ModelsApi.md#deleteModelInstance) | **DELETE** /models/i/{instance_id} | Delete a model instance |
 | [**getAvailableModel**](ModelsApi.md#getAvailableModel) | **GET** /models/available/{model_name} | Get information about a specific model available for creation |
 | [**getAvailableModels**](ModelsApi.md#getAvailableModels) | **GET** /models/available | Get models available for creation |
-| [**getCreatedEpisodes**](ModelsApi.md#getCreatedEpisodes) | **GET** /models/i/{instance_id}/created-episodes | Get all created episodes for a model instance |
 | [**getEpisodeInfo**](ModelsApi.md#getEpisodeInfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
+| [**getEpisodes**](ModelsApi.md#getEpisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model instance |
 | [**getModelInstance**](ModelsApi.md#getModelInstance) | **GET** /models/i/{instance_id} | Get model instance information |
 | [**getModelInstanceState**](ModelsApi.md#getModelInstanceState) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
-| [**getModelInstances**](ModelsApi.md#getModelInstances) | **GET** /models/created-instances | Get all created model instances |
+| [**getModelInstances**](ModelsApi.md#getModelInstances) | **GET** /models/instances | Get all created model instances |
 | [**runInference**](ModelsApi.md#runInference) | **POST** /models/i/{instance_id}/infer | Run inference |
 | [**runLearning**](ModelsApi.md#runLearning) | **POST** /models/i/{instance_id}/learn | Learn from previous observations |
 | [**wipeEpisode**](ModelsApi.md#wipeEpisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
@@ -53,7 +53,7 @@ Attach metadata to an event
 
 <a name="createEpisode"></a>
 # **createEpisode**
-> EpisodeInfo createEpisode(instance\_id, episode\_name)
+> EpisodeInfo createEpisode(instance\_id, CreateEpisodeRequest)
 
 Create a new episode for a model instance
 
@@ -64,7 +64,7 @@ Create a new episode for a model instance
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **instance\_id** | **UUID**| ID of the model instance to create episode for | [default to null] |
-| **episode\_name** | **String**| Name of the episode to create | [default to null] |
+| **CreateEpisodeRequest** | [**CreateEpisodeRequest**](../Models/CreateEpisodeRequest.md)|  | |
 
 ### Return type
 
@@ -76,7 +76,7 @@ Create a new episode for a model instance
 
 ### HTTP request headers
 
-- **Content-Type**: Not defined
+- **Content-Type**: application/json
 - **Accept**: application/json
 
 <a name="createModelInstance"></a>
@@ -212,33 +212,6 @@ This endpoint does not need any parameter.
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="getCreatedEpisodes"></a>
-# **getCreatedEpisodes**
-> List getCreatedEpisodes(instance\_id)
-
-Get all created episodes for a model instance
-
-    Retrieve all created episodes for a specific model instance
-
-### Parameters
-
-|Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **instance\_id** | **UUID**| ID of the model instance to retrieve episodes for | [default to null] |
-
-### Return type
-
-[**List**](../Models/EpisodeInfo.md)
-
-### Authorization
-
-[ApiKeyAuth](../README.md#ApiKeyAuth)
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
 <a name="getEpisodeInfo"></a>
 # **getEpisodeInfo**
 > EpisodeInfo getEpisodeInfo(instance\_id, episode\_name)
@@ -257,6 +230,33 @@ Get episode information
 ### Return type
 
 [**EpisodeInfo**](../Models/EpisodeInfo.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+<a name="getEpisodes"></a>
+# **getEpisodes**
+> List getEpisodes(instance\_id)
+
+Get all episodes for a model instance
+
+    Retrieve all episodes for a specific model instance
+
+### Parameters
+
+|Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **instance\_id** | **UUID**| ID of the model instance to retrieve episodes for | [default to null] |
+
+### Return type
+
+[**List**](../Models/EpisodeInfo.md)
 
 ### Authorization
 

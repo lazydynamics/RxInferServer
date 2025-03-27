@@ -3,6 +3,7 @@ docs/AttachMetadataToEventRequest.md
 docs/AuthenticationApi.md
 docs/AvailableModel.md
 docs/AvailableModelDetails.md
+docs/CreateEpisodeRequest.md
 docs/CreateModelInstanceRequest.md
 docs/CreateModelInstanceResponse.md
 docs/DeleteModelInstanceRequest.md
@@ -31,6 +32,7 @@ src/modelincludes.jl
 src/models/model_AttachMetadataToEventRequest.jl
 src/models/model_AvailableModel.jl
 src/models/model_AvailableModelDetails.jl
+src/models/model_CreateEpisodeRequest.jl
 src/models/model_CreateModelInstanceRequest.jl
 src/models/model_CreateModelInstanceResponse.jl
 src/models/model_DeleteModelInstanceRequest.jl

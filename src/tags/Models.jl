@@ -142,7 +142,7 @@ function create_model_instance(req::HTTP.Request, create_model_request::RxInferS
     end
 
     @debug "Creating default episode for the model instance" instance_id
-    episode = create_episode(req, instance_id, "default")
+    episode = create_episode(req, instance_id, RxInferServerOpenAPI.CreateEpisodeRequest(name = "default"))
 
     if !isa(episode, RxInferServerOpenAPI.EpisodeInfo)
         @debug "Unable to create default episode, deleting the model instance" token instance_id episode
@@ -223,7 +223,9 @@ function run_inference(req::HTTP.Request, instance_id::String, infer_request::Rx
     fill_episode_task = Threads.@spawn begin
         # Query the database for the episode
         collection = Database.collection("episodes")
-        query = Mongoc.BSON("instance_id" => instance_id, "name" => infer_request.episode_name, "deleted" => false)
+        query = Mongoc.BSON(
+            "instance_id" => instance_id, "episode_name" => infer_request.episode_name, "deleted" => false
+        )
 
         # Get the current number of events from the n_events field
         options = Mongoc.BSON("projection" => Mongoc.BSON("events_id_counter" => 1))
@@ -347,7 +349,7 @@ function run_learning(req::HTTP.Request, instance_id::String, learn_request::RxI
 
     # Query the database for the episode
     collection = Database.collection("episodes")
-    query = Mongoc.BSON("instance_id" => instance_id, "name" => episodes[1], "deleted" => false)
+    query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episodes[1], "deleted" => false)
     episode = Mongoc.find_one(collection, query)
 
     if isnothing(episode)
@@ -411,7 +413,7 @@ function attach_metadata_to_event(
     collection = Database.collection("episodes")
     query = Mongoc.BSON(
         "instance_id" => instance_id,
-        "name" => episode_name,
+        "episode_name" => episode_name,
         "deleted" => false,
         "events" => Mongoc.BSON("\$elemMatch" => Mongoc.BSON("event_id" => event_id))
     )
@@ -459,7 +461,7 @@ function get_episode_info(req::HTTP.Request, instance_id::String, episode_name::
 
     # Query the database for the episode
     collection = Database.collection("episodes")
-    query = Mongoc.BSON("instance_id" => instance_id, "name" => episode_name, "deleted" => false)
+    query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
     result = Mongoc.find_one(collection, query)
 
     if isnothing(result)
@@ -472,7 +474,7 @@ function get_episode_info(req::HTTP.Request, instance_id::String, episode_name::
     @debug "Successfully got episode info" instance_id episode_name
     return RxInferServerOpenAPI.EpisodeInfo(
         instance_id = instance_id,
-        name = episode_name,
+        episode_name = episode_name,
         created_at = ZonedDateTime(result["created_at"], TimeZones.localzone()),
         events = result["events"]
     )
@@ -503,18 +505,20 @@ function get_episodes(req::HTTP.Request, instance_id::String)
     return map(result) do episode
         return RxInferServerOpenAPI.EpisodeInfo(
             instance_id = instance_id,
-            name = episode["name"],
+            episode_name = episode["episode_name"],
             created_at = ZonedDateTime(episode["created_at"], TimeZones.localzone()),
             events = episode["events"]
         )
     end
 end
 
-function create_episode(req::HTTP.Request, instance_id::String, episode_name::String)
-    @debug "Attempting to create episode" instance_id episode_name
+function create_episode(
+    req::HTTP.Request, instance_id::String, create_episode_request::RxInferServerOpenAPI.CreateEpisodeRequest
+)
     token = current_token()
+    episode_name = create_episode_request.name
 
-    # Query the database for the model
+    @debug "Attempting to create an episode" token instance_id episode_name
     collection = Database.collection("models")
     query = Mongoc.BSON("instance_id" => instance_id, "created_by" => token, "deleted" => false)
     result = Mongoc.find_one(collection, query)
@@ -528,7 +532,7 @@ function create_episode(req::HTTP.Request, instance_id::String, episode_name::St
 
     # Check that the episode does not already exist
     collection = Database.collection("episodes")
-    query = Mongoc.BSON("instance_id" => instance_id, "name" => episode_name)
+    query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name)
     result = Mongoc.find_one(collection, query)
 
     if !isnothing(result)
@@ -542,7 +546,7 @@ function create_episode(req::HTTP.Request, instance_id::String, episode_name::St
     created_at = Dates.now()
     document = Mongoc.BSON(
         "instance_id" => instance_id,
-        "name" => episode_name,
+        "episode_name" => episode_name,
         "created_at" => created_at,
         "events" => [],
         "events_id_counter" => 0,
@@ -575,7 +579,7 @@ function create_episode(req::HTTP.Request, instance_id::String, episode_name::St
     @debug "Episode created successfully" instance_id episode_name
     return RxInferServerOpenAPI.EpisodeInfo(
         instance_id = instance_id,
-        name = episode_name,
+        episode_name = episode_name,
         created_at = ZonedDateTime(created_at, TimeZones.localzone()),
         events = []
     )
@@ -606,7 +610,7 @@ function delete_episode(req::HTTP.Request, instance_id::String, episode_name::St
 
     # Query the database for the episode
     collection = Database.collection("episodes")
-    query = Mongoc.BSON("instance_id" => instance_id, "name" => episode_name, "deleted" => false)
+    query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
     episode = Mongoc.find_one(collection, query)
 
     if isnothing(episode)
@@ -665,7 +669,7 @@ function wipe_episode(req::HTTP.Request, instance_id::String, episode_name::Stri
 
     # Query the database for the episode
     collection = Database.collection("episodes")
-    query = Mongoc.BSON("instance_id" => instance_id, "name" => episode_name, "deleted" => false)
+    query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
     episode = Mongoc.find_one(collection, query)
 
     if isnothing(episode)

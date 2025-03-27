@@ -1,10 +1,10 @@
-.openapi-generator-ignore
 Apis/AuthenticationApi.md
 Apis/ModelsApi.md
 Apis/ServerApi.md
 Models/AttachMetadataToEventRequest.md
 Models/AvailableModel.md
 Models/AvailableModel_details.md
+Models/CreateEpisodeRequest.md
 Models/CreateModelInstanceRequest.md
 Models/CreateModelInstanceResponse.md
 Models/DeleteModelInstanceRequest.md

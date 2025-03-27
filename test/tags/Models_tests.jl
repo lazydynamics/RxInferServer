@@ -406,7 +406,7 @@ end
     response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, instance_id, "default")
     @test info.status == 200
     @test !isnothing(response)
-    @test response.name == "default"
+    @test response.episode_name == "default"
     @test response.created_at < TimeZones.now(TimeZones.localzone())
     @test response.created_at >= mcat
     @test response.instance_id == instance_id
@@ -419,7 +419,7 @@ end
     response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, instance_id)
     @test info.status == 200
     @test !isnothing(response)
-    @test any(e -> e.name == "default", response)
+    @test any(e -> e.episode_name == "default", response)
     @test any(e -> e.created_at == cat, response)
 
     # Other users should not have access to the episode
@@ -473,10 +473,11 @@ end
     end
 
     @testset "Create a new episode and check that it is the current episode" begin
-        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, instance_id, "new_episode")
+        create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "new_episode")
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, instance_id, create_episode_request)
         @test info.status == 200
         @test !isnothing(response)
-        @test response.name == "new_episode"
+        @test response.episode_name == "new_episode"
         @test response.created_at > model_created_at
         @test response.instance_id == instance_id
         @test response.events == [] # no events yet
@@ -488,7 +489,8 @@ end
     end
 
     @testset "Check that another episode with the same name cannot be created" begin
-        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, instance_id, "new_episode")
+        create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "new_episode")
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, instance_id, create_episode_request)
         @test info.status == 400
         @test response.error == "Bad Request"
         @test response.message == "The requested episode already exists"
@@ -498,8 +500,8 @@ end
         response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, instance_id)
         @test info.status == 200
         @test !isnothing(response)
-        @test any(e -> e.name == "new_episode", response)
-        @test any(e -> e.name == "default", response)
+        @test any(e -> e.episode_name == "new_episode", response)
+        @test any(e -> e.episode_name == "default", response)
     end
 
     @testset "Check that the default episode cannot be deleted" begin
@@ -510,7 +512,8 @@ end
     end
 
     @testset "Create yet another episode and check that it is the current episode" begin
-        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, instance_id, "yet_another_episode")
+        create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "yet_another_episode")
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, instance_id, create_episode_request)
         @test info.status == 200
         @test !isnothing(response)
 
@@ -535,7 +538,7 @@ end
         response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, instance_id)
         @test info.status == 200
         @test !isnothing(response)
-        @test !any(e -> e.name == "new_episode", response)
+        @test !any(e -> e.episode_name == "new_episode", response)
     end
 
     @testset "Delete the yet another episode and check that the default episode becomes the current episode" begin
@@ -553,9 +556,9 @@ end
         response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, instance_id)
         @test info.status == 200
         @test !isnothing(response)
-        @test any(e -> e.name == "default", response)
-        @test !any(e -> e.name == "yet_another_episode", response)
-        @test !any(e -> e.name == "new_episode", response)
+        @test any(e -> e.episode_name == "default", response)
+        @test !any(e -> e.episode_name == "yet_another_episode", response)
+        @test !any(e -> e.episode_name == "new_episode", response)
         @test length(response) == 1
 
         response, info = TestUtils.RxInferClientOpenAPI.get_model_instance(models_api, instance_id)
@@ -644,7 +647,7 @@ end
     episode, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "default")
     @test info.status == 200
     @test !isnothing(episode)
-    @test episode.name == "default"
+    @test episode.episode_name == "default"
     @test episode.instance_id == model_instance.instance_id
 
     # Check that the episode is empty before running any inference tasks
@@ -845,21 +848,23 @@ end
     @test !isnothing(model_instance)
 
     @testset "Create episode1" begin
+        create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "episode1")
         response, info = TestUtils.RxInferClientOpenAPI.create_episode(
-            models_api, model_instance.instance_id, "episode1"
+            models_api, model_instance.instance_id, create_episode_request
         )
         @test info.status == 200
         @test !isnothing(response)
-        @test response.name == "episode1"
+        @test response.episode_name == "episode1"
     end
 
     @testset "Create episode2" begin
+        create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "episode2")
         response, info = TestUtils.RxInferClientOpenAPI.create_episode(
-            models_api, model_instance.instance_id, "episode2"
+            models_api, model_instance.instance_id, create_episode_request
         )
         @test info.status == 200
         @test !isnothing(response)
-        @test response.name == "episode2"
+        @test response.episode_name == "episode2"
     end
 
     @testset "Check that episode1 is empty" begin
@@ -964,12 +969,13 @@ end
     @test !isnothing(model_instance)
 
     @testset "Create a new episode" begin
+        create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "another_episode")
         response, info = TestUtils.RxInferClientOpenAPI.create_episode(
-            models_api, model_instance.instance_id, "another_episode"
+            models_api, model_instance.instance_id, create_episode_request
         )
         @test info.status == 200
         @test !isnothing(response)
-        @test response.name == "another_episode"
+        @test response.episode_name == "another_episode"
     end
 
     # Make infer calls on the default episode

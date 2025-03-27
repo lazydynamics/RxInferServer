@@ -6,37 +6,37 @@
 
     EpisodeInfo(;
         instance_id=nothing,
-        name=nothing,
+        episode_name=nothing,
         created_at=nothing,
         events=nothing,
     )
 
     - instance_id::String : ID of the model instance this episode belongs to
-    - name::String : Name of the episode
+    - episode_name::String : Name of the episode
     - created_at::ZonedDateTime : Timestamp of when the episode was created
     - events::Vector{Dict{String, Any}} : List of events that have occurred in the episode
 """
 Base.@kwdef mutable struct EpisodeInfo <: OpenAPI.APIModel
     instance_id::Union{Nothing, String} = nothing
-    name::Union{Nothing, String} = nothing
+    episode_name::Union{Nothing, String} = nothing
     created_at::Union{Nothing, ZonedDateTime} = nothing
     events::Union{Nothing, Vector{Dict{String, Any}}} = nothing
 
-    function EpisodeInfo(instance_id, name, created_at, events, )
+    function EpisodeInfo(instance_id, episode_name, created_at, events, )
         OpenAPI.validate_property(EpisodeInfo, Symbol("instance_id"), instance_id)
-        OpenAPI.validate_property(EpisodeInfo, Symbol("name"), name)
+        OpenAPI.validate_property(EpisodeInfo, Symbol("episode_name"), episode_name)
         OpenAPI.validate_property(EpisodeInfo, Symbol("created_at"), created_at)
         OpenAPI.validate_property(EpisodeInfo, Symbol("events"), events)
-        return new(instance_id, name, created_at, events, )
+        return new(instance_id, episode_name, created_at, events, )
     end
 end # type EpisodeInfo
 
-const _property_types_EpisodeInfo = Dict{Symbol,String}(Symbol("instance_id")=>"String", Symbol("name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("events")=>"Vector{Dict{String, Any}}", )
+const _property_types_EpisodeInfo = Dict{Symbol,String}(Symbol("instance_id")=>"String", Symbol("episode_name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("events")=>"Vector{Dict{String, Any}}", )
 OpenAPI.property_type(::Type{ EpisodeInfo }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_EpisodeInfo[name]))}
 
 function check_required(o::EpisodeInfo)
     o.instance_id === nothing && (return false)
-    o.name === nothing && (return false)
+    o.episode_name === nothing && (return false)
     o.created_at === nothing && (return false)
     o.events === nothing && (return false)
     true

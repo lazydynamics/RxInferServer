@@ -4,6 +4,7 @@
 include("models/model_AttachMetadataToEventRequest.jl")
 include("models/model_AvailableModel.jl")
 include("models/model_AvailableModelDetails.jl")
+include("models/model_CreateEpisodeRequest.jl")
 include("models/model_CreateModelInstanceRequest.jl")
 include("models/model_CreateModelInstanceResponse.jl")
 include("models/model_DeleteModelInstanceRequest.jl")

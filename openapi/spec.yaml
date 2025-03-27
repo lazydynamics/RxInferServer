@@ -242,7 +242,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
 
-  /models/created-instances:
+  /models/instances:
     get:
       tags:
         - Models
@@ -469,12 +469,12 @@ paths:
             type: string
             format: uuid
           description: ID of the model instance to create episode for
-        - name: episode_name
-          in: path
-          required: true
-          schema:
-            type: string  
-          description: Name of the episode to create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEpisodeRequest'
       responses:
         '200':
           description: Successfully created episode
@@ -504,13 +504,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'  
 
-  /models/i/{instance_id}/created-episodes:
+  /models/i/{instance_id}/episodes:
     get:
       tags:
         - Models
-      summary: Get all created episodes for a model instance
-      operationId: getCreatedEpisodes
-      description: Retrieve all created episodes for a specific model instance
+      summary: Get all episodes for a model instance
+      operationId: getEpisodes
+      description: Retrieve all episodes for a specific model instance
       parameters:
         - name: instance_id
           in: path
@@ -1041,11 +1041,20 @@ components:
           description: A dictionary of learned parameters and their values
           additionalProperties: true
 
+    CreateEpisodeRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the episode to create
+
     EpisodeInfo:
       type: object
       required:
         - instance_id
-        - name
+        - episode_name
         - created_at
         - events
       properties:
@@ -1053,7 +1062,7 @@ components:
           type: string
           format: uuid
           description: ID of the model instance this episode belongs to
-        name:
+        episode_name:
           type: string
           description: Name of the episode
         created_at:
@@ -1068,8 +1077,9 @@ components:
             additionalProperties: true
       example:
         instance_id: "123e4567-e89b-12d3-a456-426614174000"
-        name: "default"
+        episode_name: "default"
         created_at: "2024-03-20T12:00:00Z"
+        events: []
 
     AttachMetadataToEventRequest:
       type: object

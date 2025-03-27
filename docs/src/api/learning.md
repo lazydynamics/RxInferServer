@@ -33,21 +33,21 @@ nothing #hide
 ## Creating a model instance 
 
 Read more about how to create a model instance in the [Model management](@ref model-management-api) section.
-Here we assume that you have already created a model instance and have its `model_id`.
+Here we assume that you have already created a model instance and have its `instance_id`.
 
 ```@example learning-api
-import RxInferClientOpenAPI: create_model, CreateModelRequest
+import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
 
-request = CreateModelRequest(
-    model = "BetaBernoulli-v1",
+request = CreateModelInstanceRequest(
+    model_name = "BetaBernoulli-v1",
     description = "Example model for demonstration",
     # Optional: Customize model behavior with arguments
     # arguments = Dict(...)
 )
 
-response, _ = create_model(api, request)
+response, _ = create_model_instance(api, request)
 @test !isnothing(response) #hide
-model_id = response.model_id
+instance_id = response.instance_id
 ```
 
 ## Working with Episodes
@@ -68,7 +68,7 @@ View all episodes for a model:
 ```@example learning-api
 import RxInferClientOpenAPI: get_episodes
 
-response, _ = get_episodes(api, model_id)
+response, _ = get_episodes(api, instance_id)
 @test !isnothing(response) #hide
 response
 ```
@@ -80,7 +80,7 @@ Get information about a specific episode:
 ```@example learning-api
 import RxInferClientOpenAPI: get_episode_info
 
-response, _ = get_episode_info(api, model_id, "default")
+response, _ = get_episode_info(api, instance_id, "default")
 @test !isnothing(response) #hide
 response
 ```
@@ -92,7 +92,7 @@ Create a new episode for different experiments or training sessions:
 ```@example learning-api
 import RxInferClientOpenAPI: create_episode
 
-response, _ = create_episode(api, model_id, "experiment-1")
+response, _ = create_episode(api, instance_id, "experiment-1")
 @test !isnothing(response) #hide
 response
 ```
@@ -100,8 +100,8 @@ response
 !!! note "Current Episode"
     Creating a new episode automatically makes it the current episode:
     ```@example learning-api
-    import RxInferClientOpenAPI: get_model_info
-    response, _ = get_model_info(api, model_id)
+    import RxInferClientOpenAPI: get_model_instance
+    response, _ = get_model_instance(api, instance_id)
     @test !isnothing(response) #hide
     @test response.current_episode == "experiment-1" #hide
     response.current_episode
@@ -112,7 +112,7 @@ Verify the new episode appears in the list:
 ```@example learning-api
 import RxInferClientOpenAPI: get_episodes
 
-response, _ = get_episodes(api, model_id)
+response, _ = get_episodes(api, instance_id)
 @test !isnothing(response) #hide
 @test length(response) == 2 #hide
 @test "default" in map(episode -> episode.name, response) #hide
@@ -127,7 +127,7 @@ Remove an episode when it's no longer needed:
 ```@example learning-api
 import RxInferClientOpenAPI: delete_episode
 
-response, _ = delete_episode(api, model_id, "experiment-1")
+response, _ = delete_episode(api, instance_id, "experiment-1")
 @test !isnothing(response) #hide
 response
 ```
@@ -139,7 +139,7 @@ response
 
 ```@example learning-api
 # Attempting to delete the default episode
-response, _ = delete_episode(api, model_id, "default")
+response, _ = delete_episode(api, instance_id, "default")
 @test !isnothing(response) #hide
 @test response.error == "Bad Request" #hide
 response

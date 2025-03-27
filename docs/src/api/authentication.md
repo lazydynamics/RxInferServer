@@ -67,23 +67,23 @@ response.roles
 Roles control which models a token can access. Here's how to list accessible models:
 
 ```@example auth-generate-token
-import RxInferClientOpenAPI: ModelsApi, get_models
+import RxInferClientOpenAPI: ModelsApi, get_available_models
 
 models_api = ModelsApi(client)
-response, _ = get_models(models_api)
+response, _ = get_available_models(models_api)
 @test !isnothing(response) #hide
 @test length(response.models) > 0 #hide
 
 response.models
 ```
 
-To inspect the roles required for a specific model, you can use the `get_model_details` operation:
+To inspect the roles required for a specific model, you can use the `get_available_model` operation:
 
 ```@example auth-generate-token
-import RxInferClientOpenAPI: ModelsApi, get_model_details
+import RxInferClientOpenAPI: ModelsApi, get_available_model
 
 models_api = ModelsApi(client)
-response, _ = get_model_details(models_api, response.models[1].name)
+response, _ = get_available_model(models_api, response.models[1].name)
 @test !isnothing(response) #hide
 
 response.config["roles"]

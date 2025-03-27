@@ -96,9 +96,7 @@ function with_connection(
         @info "Connected to MongoDB server at $_hidden_url"
     end
     return with(MONGODB_CLIENT => _client, MONGODB_DATABASE => _database) do
-        returnval = f()
-        Mongoc.destroy!(_client)
-        return returnval
+        return f()
     end
 end
 

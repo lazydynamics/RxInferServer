@@ -130,63 +130,39 @@ end
 
 function delete_model_instance(req::HTTP.Request, instance_id::String)
     token = current_token()
+    deleted = __database_op_delete_model_instance(; token, instance_id)
 
-    @debug "Attempting to delete the model instance" token instance_id
-    collection = Database.collection("models")
-    query = Mongoc.BSON("instance_id" => instance_id, "created_by" => token, "deleted" => false)
-    update = Mongoc.BSON("\$set" => Mongoc.BSON("deleted" => true))
-    result = Mongoc.update_one(collection, query, update)
-
-    if result["matchedCount"] != 1
-        @debug "Cannot delete model instance because it does not exist" token instance_id
+    if !deleted
         return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model instance could not be found"
+            error = "Not Found", message = "The requested model instance could not be found or deleted"
         )
     end
 
-    if result["modifiedCount"] != 1
-        @debug "Unable to delete model instance due to internal error" token instance_id
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "Unable to delete model instance due to internal error"
-        )
-    end
-
-    @debug "Model instance deleted successfully" token instance_id
     return RxInferServerOpenAPI.SuccessResponse(message = "Model instance deleted successfully")
 end
 
 function get_model_instance_state(req::HTTP.Request, instance_id::String)
     token = current_token()
+    instance = __database_op_get_model_instance(; token, instance_id)
 
-    @debug "Attempting to get model instance state" token instance_id
-    collection = Database.collection("models")
-    query = Mongoc.BSON("instance_id" => instance_id, "created_by" => token, "deleted" => false)
-    result = Mongoc.find_one(collection, query)
-
-    if isnothing(result)
-        @debug "Cannot get model instance state because the instance does not exist or token has no access to it" token instance_id
+    if isnothing(instance)
         return RxInferServerOpenAPI.NotFoundResponse(
             error = "Not Found", message = "The requested model instance could not be found"
         )
     end
 
-    @debug "Successfully retrieved model instance state" token instance_id
-    return RxInferServerOpenAPI.ModelInstanceState(state = result["state"])
+    return RxInferServerOpenAPI.ModelInstanceState(state = instance["state"])
 end
 
 function run_inference(req::HTTP.Request, instance_id::String, infer_request::RxInferServerOpenAPI.InferRequest)
     @debug "Attempting to run inference" instance_id
+
     token = current_token()
+    instance = __database_op_get_model_instance(; token, instance_id)
 
-    # Query the database for the model
-    collection = Database.collection("models")
-    query = Mongoc.BSON("instance_id" => instance_id, "created_by" => token, "deleted" => false)
-    model = Mongoc.find_one(collection, query)
-
-    if isnothing(model)
-        @debug "Cannot run inference because the model does not exist or token has no access to it" instance_id
+    if isnothing(instance)
         return RxInferServerOpenAPI.NotFoundResponse(
-            error = "Not Found", message = "The requested model could not be found"
+            error = "Not Found", message = "The requested model instance could not be found"
         )
     end
 
@@ -239,8 +215,8 @@ function run_inference(req::HTTP.Request, instance_id::String, infer_request::Rx
 
         # Run the inference
         try
-            model_name = model["model_name"]
-            model_state = model["state"]
+            model_name = instance["model_name"]
+            model_state = instance["state"]
 
             inference_result, new_state = Models.dispatch(
                 dispatcher, model_name, :run_inference, model_state, infer_request.data
@@ -687,13 +663,12 @@ function __database_op_get_model_instance(; token, instance_id)
 
     if isnothing(result)
         @debug "Cannot get model instance because the instance does not exist or token has no access to it" token instance_id
-    else 
+    else
         @debug "Successfully retrieved model instance" token instance_id
     end
 
     return result
 end
-
 
 function __database_op_create_model_instance(; token, model_name, description, arguments, initial_state)
     @debug "Creating new model instance in the database" model_name token
@@ -719,4 +694,26 @@ function __database_op_create_model_instance(; token, model_name, description, a
     end
 
     return instance_id
+end
+
+function __database_op_delete_model_instance(; token, instance_id)::Bool
+    @debug "Attempting to delete the model instance" token instance_id
+
+    collection = Database.collection("models")
+    query = Mongoc.BSON("instance_id" => instance_id, "created_by" => token, "deleted" => false)
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("deleted" => true))
+    result = Mongoc.update_one(collection, query, update)
+
+    if result["matchedCount"] != 1
+        @debug "Cannot delete model instance because it does not exist" token instance_id
+        return false
+    end
+
+    if result["modifiedCount"] != 1
+        @debug "Unable to delete model instance due to internal error" token instance_id
+        return false
+    end
+
+    @debug "Successfully deleted model instance" token instance_id
+    return true
 end

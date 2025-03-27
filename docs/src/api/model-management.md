@@ -30,9 +30,16 @@ api = ModelsApi(client)
 nothing #hide
 ```
 
+## Terminology 
+
+In RxInferServer, a **model** is a type of probabilistic program that you can create and interact with. We distinguish between _available models_ and _model instances_.
+
+- **Available models** are the models that you can use to create an instance of. They contain all the code and configuration to create an actual model instance and are usually identified by their `model_name`.
+- **Model instances** are the actual instances of a model that you have created. They contain the state of the model, including the learned parameters. You can have multiple model instances of the same model which are identified by a unique `instance_id`. Individual instances are isolated from each other, meaning that they do not share state.
+
 ## Discovering Available Models
 
-Before creating a model instance, you can explore which model types are available on the server with the [**get\_available\_models**](@ref) operation:
+Before creating a new model instance, you can explore which model types are available on the server with the [**get\_available\_models**](@ref) operation:
 
 ```@example models-api
 import RxInferClientOpenAPI: get_available_models
@@ -47,17 +54,29 @@ map(model -> model.details, available_models)
 
 Note that the list of available models depends on the [roles](@ref authentication-api-roles) assigned to the token used to make the request as well as server settings.
 
-## Inspecting Model Details
+## Inspecting Available Model Details and Configuration
 
-Each model type comes with detailed configuration and specifications. You can inspect these using the [**get\_available\_model**](@ref) operation:
+Each model type comes with detailed configuration and specifications. For example:
+
+```@example models-api
+available_models[1].details
+```
+
+```@example models-api
+available_models[1].config
+```
+
+Alternatively, you can inspect these using the [**get\_available\_model**](@ref) operation with the specific model name:
 
 ```@example models-api
 import RxInferClientOpenAPI: get_available_model
 
-response, _ = get_available_model(api, available_models[1].details.name)
-@test !isnothing(response) #hide
-@test hasproperty(response, :details) #hide
-@test hasproperty(response, :config) #hide
+some_model, _ = get_available_model(api, available_models[1].details.name)
+@test some_model.details.name == available_models[1].details.name #hide
+@test some_model.details.description == available_models[1].details.description #hide
+@test !isnothing(some_model) #hide
+@test hasproperty(some_model, :details) #hide
+@test hasproperty(some_model, :config) #hide
 nothing #hide
 ```
 
@@ -66,23 +85,26 @@ The response provides two key pieces of information:
 2. `config`: Model-specific configuration
 
 ```@example models-api
-response.details
+some_model.details
 ```
 
 ```@example models-api
-response.config
+some_model.config
 ```
 
-### Creating a Model Instance
+## Creating a Model Instance
 
-To create a new instance of a model you can use the [**create\_model\_instance**](@ref) operation together with the [`CreateModelInstanceRequest`](@ref) type:
+Once you have selected the model you want to use, you can create a new instance of it with the [**create\_model\_instance**](@ref) operation together with the [`CreateModelInstanceRequest`](@ref) type:
 
 ```@example models-api
 import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
 
 request = CreateModelInstanceRequest(
     model_name = available_models[1].details.name,
-    description = "Example model for demonstration",
+    description = """
+    An arbitrary instance description, 
+    which can be used to identify the instance later on
+    """,
     # Optional: Customize model behavior with arguments
     # arguments = Dict(...)
 )
@@ -92,23 +114,38 @@ response, _ = create_model_instance(api, request)
 instance_id = response.instance_id
 ```
 
-If successful, the server returns a unique `instance_id` that you'll use to interact with this specific model instance.
+If successful, the server returns a unique `instance_id` that you'll use to interact with this specific model instance. A server may return an error if the model is not found or if the instance already exists.
 
-## Listing Your Models
+```@example models-api
+response, _ = create_model_instance(api, CreateModelInstanceRequest(
+    model_name = "non_existent_model"
+))
+@test response.error == "Not Found" #hide
+response
+```
 
-View all models you've created with the [**get\_model\_instances**](@ref) operation:
+## Listing Created Model Instances
+
+View all instances of models you've created with the [**get\_model\_instances**](@ref) operation:
 
 ```@example models-api
 import RxInferClientOpenAPI: get_model_instances
 
 created_models, _ = get_model_instances(api)
 @test !isnothing(created_models) #hide
+@test created_models[1].instance_id == instance_id #hide
 created_models
 ```
 
-## Getting Model Information
+We can see indeed that the list contains the instance we created earlier.
 
-Retrieve details about a specific model instance with the [**get\_model\_instance**](@ref) operation:
+```@example models-api
+created_models[1].instance_id == instance_id
+```
+
+## Getting Details of a Specific Model Instance
+
+Previously we retrieved a list of all model instances. Now we can retrieve details about a specific model instance with the [**get\_model\_instance**](@ref) operation:
 
 ```@example models-api
 import RxInferClientOpenAPI: get_model_instance
@@ -118,7 +155,7 @@ response, _ = get_model_instance(api, instance_id)
 response
 ```
 
-## Checking Model State
+## Checking the State of a Specific Model Instance
 
 Monitor the current state of your model with the **get\_model\_instance\_state** operation:
 
@@ -130,9 +167,9 @@ response, _ = get_model_instance_state(api, instance_id)
 response
 ```
 
-## Deleting a Model
+## Deleting a Model Instance
 
-When you're done with a model, you can remove it completely with the [**delete\_model\_instance**](@ref) operation:
+When you're done with a model instance, you can remove it completely with the [**delete\_model\_instance**](@ref) operation:
 
 ```@example models-api
 import RxInferClientOpenAPI: delete_model_instance
@@ -143,7 +180,8 @@ response
 ```
 
 !!! note "Cascade Deletion"
-    - Deleting a model automatically removes all its episodes, read more about episodes in the [Learning parameters of a model](@ref learning-api) section
+    - Deleting an instance automatically removes all its episodes, read more about episodes in the [Learning parameters of a model](@ref learning-api) section
+    - Deleting an instance does not delete other instances of the same model
     - This action cannot be undone
     - Make sure to save any important data before deletion
 
@@ -155,6 +193,13 @@ created_models, _ = get_model_instances(api)
 @test !isnothing(created_models) #hide
 @test length(created_models) == 0 #hide
 created_models
+```
+
+```@example models-api
+# Check model list
+response, _ = get_model_instance(api, instance_id)
+@test response.error == "Not Found" #hide
+response
 ```
 
 

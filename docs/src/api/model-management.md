@@ -41,7 +41,8 @@ available_models, _ = get_available_models(api)
 @test !isnothing(available_models) #hide
 @test length(available_models) > 0 #hide
 
-available_models
+# only show the model details as the full configuration is quite large
+map(model -> model.details, available_models)
 ```
 
 Note that the list of available models depends on the [roles](@ref authentication-api-roles) assigned to the token used to make the request as well as server settings.
@@ -53,7 +54,7 @@ Each model type comes with detailed configuration and specifications. You can in
 ```@example models-api
 import RxInferClientOpenAPI: get_available_model
 
-response, _ = get_available_model(api, available_models[1].name)
+response, _ = get_available_model(api, available_models[1].details.name)
 @test !isnothing(response) #hide
 @test hasproperty(response, :details) #hide
 @test hasproperty(response, :config) #hide
@@ -80,7 +81,7 @@ To create a new instance of a model you can use the [**create\_model\_instance**
 import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
 
 request = CreateModelInstanceRequest(
-    model_name = available_models[1].name,
+    model_name = available_models[1].details.name,
     description = "Example model for demonstration",
     # Optional: Customize model behavior with arguments
     # arguments = Dict(...)

@@ -77,13 +77,19 @@ available_models, _ = get_available_models(models_api)
 available_models
 ```
 
-To inspect the roles required for a specific model, you can use the `get_available_model` operation:
+To inspect the roles required for a specific model, you can simply access the `roles` field of the model details:
+
+```@example auth-generate-token
+available_models[1].details
+```
+
+or alternatively use the `get_available_model` operation:
 
 ```@example auth-generate-token
 import RxInferClientOpenAPI: ModelsApi, get_available_model
 
 models_api = ModelsApi(client)
-response, _ = get_available_model(models_api, available_models[1].name)
+response, _ = get_available_model(models_api, available_models[1].details.name)
 @test !isnothing(response) #hide
 
 response.details

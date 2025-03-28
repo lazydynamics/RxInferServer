@@ -97,8 +97,8 @@ function with_connection(
     end
     return with(MONGODB_CLIENT => _client, MONGODB_DATABASE => _database) do
         result = f()
+        # https://github.com/felipenoris/Mongoc.jl/issues/124
         Mongoc.destroy!(_client)
-        Mongoc.destroy!(_database)
         return result
     end
 end

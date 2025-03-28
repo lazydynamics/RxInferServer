@@ -61,8 +61,15 @@ function run_learning(state, parameters, events)
         meta = make_learning_meta(f),
         initialization = make_learning_initialization(state["state_dimension"]),
         constraints = make_learning_constraints(),
-        options = (limit_stack_depth = 100,)
+        returnvars = (H = KeepLast(),),
+        iterations = 50,
+        options = (limit_stack_depth = 300,)
+    )
+    parameters["A"] = reshape(mean(results.posteriors[:H]), state["state_dimension"], state["state_dimension"])
+
+    result = Dict(
+        "A_flattened" => mean(results.posteriors[:H]),
     )
 
-    return Dict(), state, parameters
+    return result, state, parameters
 end

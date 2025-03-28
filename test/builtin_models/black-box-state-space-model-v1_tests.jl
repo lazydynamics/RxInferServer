@@ -100,6 +100,7 @@ end
 
     @test info.status == 200
     @test !isnothing(learn_response)
+    @test isapprox(A, reshape(learn_response.learned_parameters["A_flattened"], 2, 2), rtol = 0.1)
 
     # Delete model instance
     response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)

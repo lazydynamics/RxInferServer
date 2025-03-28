@@ -1152,12 +1152,14 @@ end
     @test learning_response.learned_parameters["posterior_a"] == 11
     @test learning_response.learned_parameters["posterior_b"] == 1
 
-    # Check that the model state has been updated
-    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, model_instance.instance_id)
+    # Check that the model parameters has been updated
+    model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(
+        models_api, model_instance.instance_id
+    )
     @test info.status == 200
-    @test !isnothing(model_state)
-    @test model_state.state["posterior_a"] == 11
-    @test model_state.state["posterior_b"] == 1
+    @test !isnothing(model_parameters)
+    @test model_parameters.parameters["posterior_a"] == 11
+    @test model_parameters.parameters["posterior_b"] == 1
 
     for i in 1:10
         inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => 0))

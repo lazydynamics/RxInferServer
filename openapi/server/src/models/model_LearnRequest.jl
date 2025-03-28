@@ -6,24 +6,20 @@
 
     LearnRequest(;
         episodes=nothing,
-        parameters=nothing,
     )
 
     - episodes::Vector{String} : List of episodes to learn from
-    - parameters::Vector{String} : Which parameters to learn from the episodes, if not specified, all parameters will be learned
 """
 Base.@kwdef mutable struct LearnRequest <: OpenAPI.APIModel
     episodes::Union{Nothing, Vector{String}} = nothing
-    parameters::Union{Nothing, Vector{String}} = nothing
 
-    function LearnRequest(episodes, parameters, )
+    function LearnRequest(episodes, )
         OpenAPI.validate_property(LearnRequest, Symbol("episodes"), episodes)
-        OpenAPI.validate_property(LearnRequest, Symbol("parameters"), parameters)
-        return new(episodes, parameters, )
+        return new(episodes, )
     end
 end # type LearnRequest
 
-const _property_types_LearnRequest = Dict{Symbol,String}(Symbol("episodes")=>"Vector{String}", Symbol("parameters")=>"Vector{String}", )
+const _property_types_LearnRequest = Dict{Symbol,String}(Symbol("episodes")=>"Vector{String}", )
 OpenAPI.property_type(::Type{ LearnRequest }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_LearnRequest[name]))}
 
 function check_required(o::LearnRequest)
@@ -32,6 +28,5 @@ function check_required(o::LearnRequest)
 end
 
 function OpenAPI.validate_property(::Type{ LearnRequest }, name::Symbol, val)
-
 
 end

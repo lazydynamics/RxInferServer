@@ -14,6 +14,7 @@ All URIs are relative to *http://localhost:8000/v1*
 | [**getEpisodeInfo**](ModelsApi.md#getEpisodeInfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
 | [**getEpisodes**](ModelsApi.md#getEpisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model instance |
 | [**getModelInstance**](ModelsApi.md#getModelInstance) | **GET** /models/i/{instance_id} | Get model instance information |
+| [**getModelInstanceParameters**](ModelsApi.md#getModelInstanceParameters) | **GET** /models/i/{instance_id}/parameters | Get the parameters of a model instance |
 | [**getModelInstanceState**](ModelsApi.md#getModelInstanceState) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
 | [**getModelInstances**](ModelsApi.md#getModelInstances) | **GET** /models/instances | Get all created model instances |
 | [**runInference**](ModelsApi.md#runInference) | **POST** /models/i/{instance_id}/infer | Run inference |
@@ -284,6 +285,33 @@ Get model instance information
 ### Return type
 
 [**ModelInstance**](../Models/ModelInstance.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+<a name="getModelInstanceParameters"></a>
+# **getModelInstanceParameters**
+> ModelInstanceParameters getModelInstanceParameters(instance\_id)
+
+Get the parameters of a model instance
+
+    Retrieve the parameters of a specific model instance
+
+### Parameters
+
+|Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **instance\_id** | **UUID**|  | [default to null] |
+
+### Return type
+
+[**ModelInstanceParameters**](../Models/ModelInstanceParameters.md)
 
 ### Authorization
 

@@ -19,6 +19,7 @@ All URIs are relative to *http://localhost:8000/v1*
 *ModelsApi* | [**getEpisodeInfo**](Apis/ModelsApi.md#getepisodeinfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
 *ModelsApi* | [**getEpisodes**](Apis/ModelsApi.md#getepisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model instance |
 *ModelsApi* | [**getModelInstance**](Apis/ModelsApi.md#getmodelinstance) | **GET** /models/i/{instance_id} | Get model instance information |
+*ModelsApi* | [**getModelInstanceParameters**](Apis/ModelsApi.md#getmodelinstanceparameters) | **GET** /models/i/{instance_id}/parameters | Get the parameters of a model instance |
 *ModelsApi* | [**getModelInstanceState**](Apis/ModelsApi.md#getmodelinstancestate) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
 *ModelsApi* | [**getModelInstances**](Apis/ModelsApi.md#getmodelinstances) | **GET** /models/instances | Get all created model instances |
 *ModelsApi* | [**runInference**](Apis/ModelsApi.md#runinference) | **POST** /models/i/{instance_id}/infer | Run inference |
@@ -45,6 +46,7 @@ All URIs are relative to *http://localhost:8000/v1*
  - [LearnRequest](./Models/LearnRequest.md)
  - [LearnResponse](./Models/LearnResponse.md)
  - [ModelInstance](./Models/ModelInstance.md)
+ - [ModelInstanceParameters](./Models/ModelInstanceParameters.md)
  - [ModelInstanceState](./Models/ModelInstanceState.md)
  - [NotFoundResponse](./Models/NotFoundResponse.md)
  - [PingResponse](./Models/PingResponse.md)

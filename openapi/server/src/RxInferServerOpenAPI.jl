@@ -43,6 +43,9 @@ The following server methods must be implemented:
 - **get_model_instance**
     - *invocation:* GET /models/i/{instance_id}
     - *signature:* get_model_instance(req::HTTP.Request, instance_id::String;) -> ModelInstance
+- **get_model_instance_parameters**
+    - *invocation:* GET /models/i/{instance_id}/parameters
+    - *signature:* get_model_instance_parameters(req::HTTP.Request, instance_id::String;) -> ModelInstanceParameters
 - **get_model_instance_state**
     - *invocation:* GET /models/i/{instance_id}/state
     - *signature:* get_model_instance_state(req::HTTP.Request, instance_id::String;) -> ModelInstanceState

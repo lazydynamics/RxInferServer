@@ -36,6 +36,7 @@ Class | Method
 *ModelsApi* | [**get_episode_info**](docs/ModelsApi.md#get_episode_info)<br/>**GET** /models/i/{instance_id}/episodes/{episode_name}<br/>Get episode information
 *ModelsApi* | [**get_episodes**](docs/ModelsApi.md#get_episodes)<br/>**GET** /models/i/{instance_id}/episodes<br/>Get all episodes for a model instance
 *ModelsApi* | [**get_model_instance**](docs/ModelsApi.md#get_model_instance)<br/>**GET** /models/i/{instance_id}<br/>Get model instance information
+*ModelsApi* | [**get_model_instance_parameters**](docs/ModelsApi.md#get_model_instance_parameters)<br/>**GET** /models/i/{instance_id}/parameters<br/>Get the parameters of a model instance
 *ModelsApi* | [**get_model_instance_state**](docs/ModelsApi.md#get_model_instance_state)<br/>**GET** /models/i/{instance_id}/state<br/>Get the state of a model instance
 *ModelsApi* | [**get_model_instances**](docs/ModelsApi.md#get_model_instances)<br/>**GET** /models/instances<br/>Get all created model instances
 *ModelsApi* | [**run_inference**](docs/ModelsApi.md#run_inference)<br/>**POST** /models/i/{instance_id}/infer<br/>Run inference
@@ -61,6 +62,7 @@ Class | Method
  - [LearnRequest](docs/LearnRequest.md)
  - [LearnResponse](docs/LearnResponse.md)
  - [ModelInstance](docs/ModelInstance.md)
+ - [ModelInstanceParameters](docs/ModelInstanceParameters.md)
  - [ModelInstanceState](docs/ModelInstanceState.md)
  - [NotFoundResponse](docs/NotFoundResponse.md)
  - [PingResponse](docs/PingResponse.md)

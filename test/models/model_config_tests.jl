@@ -9,7 +9,7 @@ end
 
 @testitem "ModelConfigurationValidationError should be convertable to a string" begin
     import RxInferServer.Models: ModelConfigurationValidationError
-    struct SomeCustomStructure 
+    struct SomeCustomStructure
         error::String
     end
     error = ModelConfigurationValidationError("test")

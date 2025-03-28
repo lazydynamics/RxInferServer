@@ -350,8 +350,43 @@ function get_model_instance(_api::ModelsApi, response_stream::Channel, instance_
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_get_model_instance_parameters_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => ModelInstanceParameters,
+    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_get_model_instance_parameters(_api::ModelsApi, instance_id::String; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_model_instance_parameters_ModelsApi, "/models/i/{instance_id}/parameters", ["ApiKeyAuth", ])
+    OpenAPI.Clients.set_param(_ctx.path, "instance_id", instance_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Get the parameters of a model instance
+
+Retrieve the parameters of a specific model instance
+
+Params:
+- instance_id::String (required)
+
+Return: ModelInstanceParameters, OpenAPI.Clients.ApiResponse
+"""
+function get_model_instance_parameters(_api::ModelsApi, instance_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_instance_parameters(_api, instance_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function get_model_instance_parameters(_api::ModelsApi, response_stream::Channel, instance_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_instance_parameters(_api, instance_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_get_model_instance_state_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => ModelInstanceState,
+    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
     Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
 )
@@ -526,6 +561,7 @@ export get_available_models
 export get_episode_info
 export get_episodes
 export get_model_instance
+export get_model_instance_parameters
 export get_model_instance_state
 export get_model_instances
 export run_inference

@@ -13,3 +13,8 @@ arguments:
     description: The dimension of the state space
     type: int
     required: true
+
+parameters:
+  - name: A
+    description: The state transition matrix
+    

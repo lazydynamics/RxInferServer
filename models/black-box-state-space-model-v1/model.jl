@@ -1,14 +1,14 @@
 using RxInfer
 
-
 function initial_state(arguments)
-    return Dict(
-        "A" => zeros(arguments["state_dimension"], arguments["state_dimension"]),
-    )
+    return Dict()
+end
+
+function initial_parameters(arguments)
+    return Dict("A" => zeros(arguments["state_dimension"], arguments["state_dimension"]))
 end
 
 @model function state_space_model_inference(A, horizon, current_state, observation, arguments)
-
     dim = arguments["state_dimension"]::Int
 
     s[0] ~ MvNormalMeanCovariance(μ = current_state, Σ = diageye(dim))

@@ -104,11 +104,12 @@ function create_model_instance(req::HTTP.Request, create_model_request::RxInferS
     description = @something(create_model_request.description, "")
 
     # Create the model's initial state
-    dispatcher    = Models.get_models_dispatcher()
-    initial_state = Models.dispatch(dispatcher, model_name, :initial_state, arguments)
+    dispatcher         = Models.get_models_dispatcher()
+    initial_state      = Models.dispatch(dispatcher, model_name, :initial_state, arguments)
+    initial_parameters = Models.dispatch(dispatcher, model_name, :initial_parameters, arguments)
 
     instance_id = @expect __database_op_create_model_instance(;
-        token, model_name, description, arguments, initial_state
+        token, model_name, description, arguments, initial_state, initial_parameters
     ) || RxInferServerOpenAPI.ErrorResponse(
         error = "Bad Request", message = "Unable to create model instance due to internal error"
     )
@@ -142,6 +143,14 @@ function get_model_instance_state(req::HTTP.Request, instance_id::String)
     return RxInferServerOpenAPI.ModelInstanceState(state = instance["state"])
 end
 
+function get_model_instance_parameters(req::HTTP.Request, instance_id::String)
+    token = current_token()
+    instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model instance could not be found"
+    )
+    return RxInferServerOpenAPI.ModelInstanceParameters(parameters = instance["parameters"])
+end
+
 function run_inference(req::HTTP.Request, instance_id::String, infer_request::RxInferServerOpenAPI.InferRequest)
     @debug "Attempting to run inference" instance_id
 
@@ -172,10 +181,11 @@ function run_inference(req::HTTP.Request, instance_id::String, infer_request::Rx
         try
             model_name = instance["model_name"]
             model_state = instance["state"]
+            model_parameters = instance["parameters"]
 
             @debug "Calling the model's `run_inference` method" instance_id
             inference_result, new_state = Models.dispatch(
-                dispatcher, model_name, :run_inference, model_state, infer_request.data
+                dispatcher, model_name, :run_inference, model_state, model_parameters, infer_request.data
             )
 
             # Update the model's state
@@ -244,16 +254,22 @@ function run_learning(req::HTTP.Request, instance_id::String, learn_request::RxI
 
     model_name = instance["model_name"]
     model_state = instance["state"]
+    model_parameters = instance["parameters"]
     episode_events = episode["events"]
 
     @debug "Calling the model's `run_learning` method" instance_id
-    learning_result, new_state = Models.dispatch(
-        dispatcher, model_name, :run_learning, model_state, learn_request.parameters, episode_events
+    learning_result, new_state, new_parameters = Models.dispatch(
+        dispatcher, model_name, :run_learning, model_state, model_parameters, episode_events
     )
 
     # Update the model's state
     @expect __database_op_update_model_state(; instance_id, new_state) || RxInferServerOpenAPI.ErrorResponse(
         error = "Bad Request", message = "Unable to update model's state due to internal error"
+    )
+
+    # Update the model's parameters
+    @expect __database_op_update_model_parameters(; instance_id, new_parameters) || RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to update model's parameters due to internal error"
     )
 
     @debug "Learning completed successfully" instance_id
@@ -446,19 +462,28 @@ function __database_op_get_model_instance(; token, instance_id)
         @debug "Successfully retrieved model instance" token instance_id
     end
 
-    # Deserialize the state if it exists and in binary format
-    if !isnothing(result) && haskey(result, "state") && isa(result["state"], Vector{UInt8})
+    if !isnothing(result)
         result = Dict(result)
-        result["state"] = Models.deserialize_state(result["state"])
+        # Deserialize the state if it exists and in binary format
+        if haskey(result, "state") && isa(result["state"], Vector{UInt8})
+            result["state"] = Models.deserialize_state(result["state"])
+        end
+        # Deserialize the parameters if it exists and in binary format
+        if haskey(result, "parameters") && isa(result["parameters"], Vector{UInt8})
+            result["parameters"] = Models.deserialize_parameters(result["parameters"])
+        end
     end
 
     return result
 end
 
-function __database_op_create_model_instance(; token, model_name, description, arguments, initial_state)
+function __database_op_create_model_instance(;
+    token, model_name, description, arguments, initial_state, initial_parameters
+)
     @debug "Creating new model instance in the database" model_name token
 
     serialized_state = Models.serialize_state(initial_state)
+    serialized_parameters = Models.serialize_parameters(initial_parameters)
     instance_id = string(UUIDs.uuid4())
     document = Mongoc.BSON(
         "instance_id" => instance_id,
@@ -468,6 +493,7 @@ function __database_op_create_model_instance(; token, model_name, description, a
         "created_by" => token,
         "arguments" => arguments,
         "state" => serialized_state,
+        "parameters" => serialized_parameters,
         "current_episode" => "default",
         "deleted" => false
     )
@@ -650,6 +676,22 @@ function __database_op_update_model_state(; instance_id::String, new_state::Any)
     # modifiedCount can be 0 if the model state has not changed
 
     @debug "Successfully updated model state" instance_id
+    return result
+end
+
+## Update model parameters
+function __database_op_update_model_parameters(; instance_id::String, new_parameters::Any)
+    @debug "Attempting to update model parameters" instance_id
+    collection = Database.collection("models")
+    query = Mongoc.BSON("instance_id" => instance_id)
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("parameters" => Models.serialize_parameters(new_parameters)))
+    result = Mongoc.update_one(collection, query, update)
+
+    if result["matchedCount"] != 1
+        @debug "Unable to update model parameters due to internal error" instance_id
+        return nothing
+    end
+
     return result
 end
 

@@ -15,6 +15,7 @@ Models/InferResponse.md
 Models/LearnRequest.md
 Models/LearnResponse.md
 Models/ModelInstance.md
+Models/ModelInstanceParameters.md
 Models/ModelInstanceState.md
 Models/NotFoundResponse.md
 Models/PingResponse.md

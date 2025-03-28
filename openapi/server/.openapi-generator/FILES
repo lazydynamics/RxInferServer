@@ -14,6 +14,7 @@ docs/InferResponse.md
 docs/LearnRequest.md
 docs/LearnResponse.md
 docs/ModelInstance.md
+docs/ModelInstanceParameters.md
 docs/ModelInstanceState.md
 docs/ModelsApi.md
 docs/NotFoundResponse.md
@@ -43,6 +44,7 @@ src/models/model_InferResponse.jl
 src/models/model_LearnRequest.jl
 src/models/model_LearnResponse.jl
 src/models/model_ModelInstance.jl
+src/models/model_ModelInstanceParameters.jl
 src/models/model_ModelInstanceState.jl
 src/models/model_NotFoundResponse.jl
 src/models/model_PingResponse.jl

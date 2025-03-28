@@ -363,6 +363,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelInstanceState'
+        '400':
+          description: Model state cannot be retrieved due to internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Access token is missing, invalid or has no access to the specific model
           content:
@@ -376,6 +382,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
 
+  /models/i/{instance_id}/parameters:
+    get:
+      tags:
+        - Models
+      summary: Get the parameters of a model instance
+      operationId: getModelInstanceParameters
+      description: Retrieve the parameters of a specific model instance
+      parameters:
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully retrieved model parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelInstanceParameters'
+        '400':
+          description: Model parameters cannot be retrieved due to internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
   /models/i/{instance_id}/infer:
     post:
       tags:
@@ -977,6 +1022,18 @@ components:
             May include arbitrary fields specific to the model. See the model documentation for more details.
           additionalProperties: true
 
+    ModelInstanceParameters:
+      type: object
+      required:
+        - parameters
+      properties:
+        parameters:
+          type: object
+          description: |
+            An object containing the current parameters of the model instance.
+            The keys are the parameter names as defined in the model configuration, and the values are the parameter values.
+          additionalProperties: true
+
     InferRequest:
       type: object
       required:
@@ -1030,12 +1087,6 @@ components:
           items:
             type: string
             description: Name of the episode to learn from
-        parameters:
-          type: array
-          description: Which parameters to learn from the episodes, if not specified, all parameters will be learned
-          items:
-            type: string
-            description: Name of the parameter to learn from
 
     LearnResponse:
       type: object

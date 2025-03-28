@@ -94,8 +94,10 @@ jobs:
           make docs
           DOC_EXIT_CODE=$?
 
-          # Kill the server and exit with success code
+          # Kill the server
           kill $SERVER_PID || true
+
+          # Exit with the documentation exit code
           exit $DOC_EXIT_CODE
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

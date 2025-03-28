@@ -50,6 +50,9 @@ function LoadedModel(path::String)::LoadedModel
     @debug "Reading model's config from `$potential_model_config`"
     config = YAML.load_file(potential_model_config)
 
+    header_validation = validate_model_config_header(config)
+    isnothing(header_validation) || throw(header_validation)
+
     name = config["name"]
     description = config["description"]
     author = config["author"]

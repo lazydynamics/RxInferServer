@@ -7,21 +7,21 @@ roles:
 
 arguments:
   - name: prior_a
-    description: The initial alpha parameter of the prior Beta distribution
+    description: The initial alpha parameter of the prior Beta distribution `p`
     type: int
     required: true
     default: 1
   - name: prior_b
-    description: The initial beta parameter of the prior Beta distribution
+    description: The initial beta parameter of the prior Beta distribution `p`
     type: int
     required: true
     default: 1
 
 parameters:
   - name: posterior_a
-    description: The posterior alpha parameter of the Beta distribution
+    description: The posterior parameter `a` of the Beta distribution
   - name: posterior_b
-    description: The posterior beta parameter of the Beta distribution
+    description: The posterior parameter `b` of the Beta distribution
 
 data:
   - name: observation

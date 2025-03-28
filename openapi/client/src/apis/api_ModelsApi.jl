@@ -11,6 +11,43 @@ This can be used to construct the `OpenAPI.Clients.Client` instance.
 """
 basepath(::Type{ ModelsApi }) = "http://localhost:8000/v1"
 
+const _returntypes_attach_events_to_episode_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => SuccessResponse,
+    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_attach_events_to_episode(_api::ModelsApi, instance_id::String, episode_name::String, attach_events_to_episode_request::AttachEventsToEpisodeRequest; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "POST", _returntypes_attach_events_to_episode_ModelsApi, "/models/i/{instance_id}/episodes/{episode_name}/attach-events", ["ApiKeyAuth", ], attach_events_to_episode_request)
+    OpenAPI.Clients.set_param(_ctx.path, "instance_id", instance_id)  # type String
+    OpenAPI.Clients.set_param(_ctx.path, "episode_name", episode_name)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? ["application/json", ] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Attach events to an episode
+
+Attach events to a specific episode for a model
+
+Params:
+- instance_id::String (required)
+- episode_name::String (required)
+- attach_events_to_episode_request::AttachEventsToEpisodeRequest (required)
+
+Return: SuccessResponse, OpenAPI.Clients.ApiResponse
+"""
+function attach_events_to_episode(_api::ModelsApi, instance_id::String, episode_name::String, attach_events_to_episode_request::AttachEventsToEpisodeRequest; _mediaType=nothing)
+    _ctx = _oacinternal_attach_events_to_episode(_api, instance_id, episode_name, attach_events_to_episode_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function attach_events_to_episode(_api::ModelsApi, response_stream::Channel, instance_id::String, episode_name::String, attach_events_to_episode_request::AttachEventsToEpisodeRequest; _mediaType=nothing)
+    _ctx = _oacinternal_attach_events_to_episode(_api, instance_id, episode_name, attach_events_to_episode_request; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_attach_metadata_to_event_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => SuccessResponse,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
@@ -87,6 +124,7 @@ end
 const _returntypes_create_model_instance_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => CreateModelInstanceResponse,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
     Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
 )
 
@@ -349,8 +387,43 @@ function get_model_instance(_api::ModelsApi, response_stream::Channel, instance_
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+const _returntypes_get_model_instance_parameters_ModelsApi = Dict{Regex,Type}(
+    Regex("^" * replace("200", "x"=>".") * "\$") => ModelInstanceParameters,
+    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
+    Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
+)
+
+function _oacinternal_get_model_instance_parameters(_api::ModelsApi, instance_id::String; _mediaType=nothing)
+    _ctx = OpenAPI.Clients.Ctx(_api.client, "GET", _returntypes_get_model_instance_parameters_ModelsApi, "/models/i/{instance_id}/parameters", ["ApiKeyAuth", ])
+    OpenAPI.Clients.set_param(_ctx.path, "instance_id", instance_id)  # type String
+    OpenAPI.Clients.set_header_accept(_ctx, ["application/json", ])
+    OpenAPI.Clients.set_header_content_type(_ctx, (_mediaType === nothing) ? [] : [_mediaType])
+    return _ctx
+end
+
+@doc raw"""Get the parameters of a model instance
+
+Retrieve the parameters of a specific model instance
+
+Params:
+- instance_id::String (required)
+
+Return: ModelInstanceParameters, OpenAPI.Clients.ApiResponse
+"""
+function get_model_instance_parameters(_api::ModelsApi, instance_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_instance_parameters(_api, instance_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx)
+end
+
+function get_model_instance_parameters(_api::ModelsApi, response_stream::Channel, instance_id::String; _mediaType=nothing)
+    _ctx = _oacinternal_get_model_instance_parameters(_api, instance_id; _mediaType=_mediaType)
+    return OpenAPI.Clients.exec(_ctx, response_stream)
+end
+
 const _returntypes_get_model_instance_state_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => ModelInstanceState,
+    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
     Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
 )
@@ -515,6 +588,7 @@ function wipe_episode(_api::ModelsApi, response_stream::Channel, instance_id::St
     return OpenAPI.Clients.exec(_ctx, response_stream)
 end
 
+export attach_events_to_episode
 export attach_metadata_to_event
 export create_episode
 export create_model_instance
@@ -525,6 +599,7 @@ export get_available_models
 export get_episode_info
 export get_episodes
 export get_model_instance
+export get_model_instance_parameters
 export get_model_instance_state
 export get_model_instances
 export run_inference

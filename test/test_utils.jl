@@ -10,6 +10,8 @@
     const TEST_SERVER_URL = "http://localhost:8000$(RxInferServer.API_PATH_PREFIX)"
     const TEST_TOKEN = ScopedValue{String}(RxInferServer.RXINFER_SERVER_DEV_TOKEN())
 
+    projectdir(paths...) = joinpath(@__DIR__, "..", paths...)
+
     current_test_token() = TEST_TOKEN[]
 
     function TestClient(; authorized = true, token = current_test_token())
@@ -70,6 +72,11 @@
             end
         end
     end
+end
+
+@testitem "projectdir should return the correct path" setup = [TestUtils] begin
+    @test TestUtils.projectdir() == joinpath(@__DIR__, "..")
+    @test TestUtils.projectdir("models") == joinpath(@__DIR__, "..", "models")
 end
 
 @testitem "TestClient should be able to generate a token for a role" setup = [TestUtils] begin

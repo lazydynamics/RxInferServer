@@ -1,6 +1,8 @@
 Apis/AuthenticationApi.md
 Apis/ModelsApi.md
 Apis/ServerApi.md
+Models/AttachEventsToEpisodeRequest.md
+Models/AttachEventsToEpisodeRequest_events_inner.md
 Models/AttachMetadataToEventRequest.md
 Models/AvailableModel.md
 Models/AvailableModel_details.md
@@ -15,6 +17,7 @@ Models/InferResponse.md
 Models/LearnRequest.md
 Models/LearnResponse.md
 Models/ModelInstance.md
+Models/ModelInstanceParameters.md
 Models/ModelInstanceState.md
 Models/NotFoundResponse.md
 Models/PingResponse.md

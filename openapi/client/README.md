@@ -26,6 +26,7 @@ Class | Method
 ------------ | -------------
 *AuthenticationApi* | [**token_generate**](docs/AuthenticationApi.md#token_generate)<br/>**POST** /token/generate<br/>Generate authentication token
 *AuthenticationApi* | [**token_roles**](docs/AuthenticationApi.md#token_roles)<br/>**GET** /token/roles<br/>Get token roles
+*ModelsApi* | [**attach_events_to_episode**](docs/ModelsApi.md#attach_events_to_episode)<br/>**POST** /models/i/{instance_id}/episodes/{episode_name}/attach-events<br/>Attach events to an episode
 *ModelsApi* | [**attach_metadata_to_event**](docs/ModelsApi.md#attach_metadata_to_event)<br/>**POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata<br/>Attach metadata to an event
 *ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode)<br/>**POST** /models/i/{instance_id}/create-episode<br/>Create a new episode for a model instance
 *ModelsApi* | [**create_model_instance**](docs/ModelsApi.md#create_model_instance)<br/>**POST** /models/create-instance<br/>Create a new model instance
@@ -36,6 +37,7 @@ Class | Method
 *ModelsApi* | [**get_episode_info**](docs/ModelsApi.md#get_episode_info)<br/>**GET** /models/i/{instance_id}/episodes/{episode_name}<br/>Get episode information
 *ModelsApi* | [**get_episodes**](docs/ModelsApi.md#get_episodes)<br/>**GET** /models/i/{instance_id}/episodes<br/>Get all episodes for a model instance
 *ModelsApi* | [**get_model_instance**](docs/ModelsApi.md#get_model_instance)<br/>**GET** /models/i/{instance_id}<br/>Get model instance information
+*ModelsApi* | [**get_model_instance_parameters**](docs/ModelsApi.md#get_model_instance_parameters)<br/>**GET** /models/i/{instance_id}/parameters<br/>Get the parameters of a model instance
 *ModelsApi* | [**get_model_instance_state**](docs/ModelsApi.md#get_model_instance_state)<br/>**GET** /models/i/{instance_id}/state<br/>Get the state of a model instance
 *ModelsApi* | [**get_model_instances**](docs/ModelsApi.md#get_model_instances)<br/>**GET** /models/instances<br/>Get all created model instances
 *ModelsApi* | [**run_inference**](docs/ModelsApi.md#run_inference)<br/>**POST** /models/i/{instance_id}/infer<br/>Run inference
@@ -47,6 +49,8 @@ Class | Method
 
 ## Models
 
+ - [AttachEventsToEpisodeRequest](docs/AttachEventsToEpisodeRequest.md)
+ - [AttachEventsToEpisodeRequestEventsInner](docs/AttachEventsToEpisodeRequestEventsInner.md)
  - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [AvailableModel](docs/AvailableModel.md)
  - [AvailableModelDetails](docs/AvailableModelDetails.md)
@@ -61,6 +65,7 @@ Class | Method
  - [LearnRequest](docs/LearnRequest.md)
  - [LearnResponse](docs/LearnResponse.md)
  - [ModelInstance](docs/ModelInstance.md)
+ - [ModelInstanceParameters](docs/ModelInstanceParameters.md)
  - [ModelInstanceState](docs/ModelInstanceState.md)
  - [NotFoundResponse](docs/NotFoundResponse.md)
  - [PingResponse](docs/PingResponse.md)

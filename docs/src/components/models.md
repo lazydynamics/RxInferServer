@@ -59,6 +59,8 @@ The configuration file defines the model's metadata and must contain at least th
 name: ModelName-v1             # Model name with version identifier
 description: Model description # A brief description of the model
 author: Author Name            # Name of the model's author
+roles:                         # The roles that can use the model
+  - user                       # Can contain arbitrary roles
 ```
 
 ### Model Implementation (model.jl)
@@ -76,6 +78,7 @@ Models are exposed through the API endpoints defined in the OpenAPI specificatio
 ## API Reference 
 
 ```@docs
+RxInferServer.Models
 RxInferServer.Models.ModelsDispatcher
 RxInferServer.Models.LoadedModel
 RxInferServer.Models.get_models
@@ -84,6 +87,12 @@ RxInferServer.Models.load_models!
 RxInferServer.Models.reload!
 RxInferServer.Models.with_models
 RxInferServer.Models.get_models_dispatcher
-RxInferServer.Models.parse_default_arguments_from_config
-RxInferServer.Models
+RxInferServer.Models.serialize_parameters
+RxInferServer.Models.serialize_state
+RxInferServer.Models.deserialize_state
+RxInferServer.Models.deserialize_parameters
+RxInferServer.Models.validate_model_config_header
+RxInferServer.Models.validate_model_config_arguments
+RxInferServer.Models.parse_model_config_default_arguments
+RxInferServer.Models.ModelConfigurationValidationError
 ```

@@ -235,6 +235,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Model not found
           content:
@@ -357,6 +363,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelInstanceState'
+        '400':
+          description: Model state cannot be retrieved due to internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Access token is missing, invalid or has no access to the specific model
           content:
@@ -370,6 +382,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
 
+  /models/i/{instance_id}/parameters:
+    get:
+      tags:
+        - Models
+      summary: Get the parameters of a model instance
+      operationId: getModelInstanceParameters
+      description: Retrieve the parameters of a specific model instance
+      parameters:
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully retrieved model parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelInstanceParameters'
+        '400':
+          description: Model parameters cannot be retrieved due to internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
   /models/i/{instance_id}/infer:
     post:
       tags:
@@ -632,7 +683,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-    
+
+  /models/i/{instance_id}/episodes/{episode_name}/attach-events:
+    post:
+      tags:
+        - Models
+      summary: Attach events to an episode
+      operationId: attachEventsToEpisode
+      description: Attach events to a specific episode for a model
+      parameters:
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model instance to attach events to
+        - name: episode_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the episode to attach events to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachEventsToEpisodeRequest'
+      responses:
+        '200':
+          description: Successfully attached events to the episode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Bad request, e.g. invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model or episode not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
 
   /models/i/{instance_id}/episodes/{episode_name}/wipe:
     post:
@@ -971,6 +1074,18 @@ components:
             May include arbitrary fields specific to the model. See the model documentation for more details.
           additionalProperties: true
 
+    ModelInstanceParameters:
+      type: object
+      required:
+        - parameters
+      properties:
+        parameters:
+          type: object
+          description: |
+            An object containing the current parameters of the model instance.
+            The keys are the parameter names as defined in the model configuration, and the values are the parameter values.
+          additionalProperties: true
+
     InferRequest:
       type: object
       required:
@@ -1024,12 +1139,6 @@ components:
           items:
             type: string
             description: Name of the episode to learn from
-        parameters:
-          type: array
-          description: Which parameters to learn from the episodes, if not specified, all parameters will be learned
-          items:
-            type: string
-            description: Name of the parameter to learn from
 
     LearnResponse:
       type: object
@@ -1080,6 +1189,30 @@ components:
         episode_name: "default"
         created_at: "2024-03-20T12:00:00Z"
         events: []
+
+    AttachEventsToEpisodeRequest:
+      type: object
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          description: List of events to attach to the episode
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+                description: Timestamp of the event
+              data:
+                type: object
+                description: Arbitrary data to attach to the event, model-specific
+                additionalProperties: true
+              metadata:
+                type: object
+                description: Arbitrary metadata to attach to the event, model-specific
+                additionalProperties: true
 
     AttachMetadataToEventRequest:
       type: object

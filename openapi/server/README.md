@@ -47,6 +47,7 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AuthenticationApi* | [**token_generate**](docs/AuthenticationApi.md#token_generate) | **POST** /token/generate | Generate authentication token
 *AuthenticationApi* | [**token_roles**](docs/AuthenticationApi.md#token_roles) | **GET** /token/roles | Get token roles
+*ModelsApi* | [**attach_events_to_episode**](docs/ModelsApi.md#attach_events_to_episode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/attach-events | Attach events to an episode
 *ModelsApi* | [**attach_metadata_to_event**](docs/ModelsApi.md#attach_metadata_to_event) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event
 *ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode) | **POST** /models/i/{instance_id}/create-episode | Create a new episode for a model instance
 *ModelsApi* | [**create_model_instance**](docs/ModelsApi.md#create_model_instance) | **POST** /models/create-instance | Create a new model instance
@@ -57,6 +58,7 @@ Class | Method | HTTP request | Description
 *ModelsApi* | [**get_episode_info**](docs/ModelsApi.md#get_episode_info) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information
 *ModelsApi* | [**get_episodes**](docs/ModelsApi.md#get_episodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model instance
 *ModelsApi* | [**get_model_instance**](docs/ModelsApi.md#get_model_instance) | **GET** /models/i/{instance_id} | Get model instance information
+*ModelsApi* | [**get_model_instance_parameters**](docs/ModelsApi.md#get_model_instance_parameters) | **GET** /models/i/{instance_id}/parameters | Get the parameters of a model instance
 *ModelsApi* | [**get_model_instance_state**](docs/ModelsApi.md#get_model_instance_state) | **GET** /models/i/{instance_id}/state | Get the state of a model instance
 *ModelsApi* | [**get_model_instances**](docs/ModelsApi.md#get_model_instances) | **GET** /models/instances | Get all created model instances
 *ModelsApi* | [**run_inference**](docs/ModelsApi.md#run_inference) | **POST** /models/i/{instance_id}/infer | Run inference
@@ -69,6 +71,8 @@ Class | Method | HTTP request | Description
 
 ## Models
 
+ - [AttachEventsToEpisodeRequest](docs/AttachEventsToEpisodeRequest.md)
+ - [AttachEventsToEpisodeRequestEventsInner](docs/AttachEventsToEpisodeRequestEventsInner.md)
  - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [AvailableModel](docs/AvailableModel.md)
  - [AvailableModelDetails](docs/AvailableModelDetails.md)
@@ -83,6 +87,7 @@ Class | Method | HTTP request | Description
  - [LearnRequest](docs/LearnRequest.md)
  - [LearnResponse](docs/LearnResponse.md)
  - [ModelInstance](docs/ModelInstance.md)
+ - [ModelInstanceParameters](docs/ModelInstanceParameters.md)
  - [ModelInstanceState](docs/ModelInstanceState.md)
  - [NotFoundResponse](docs/NotFoundResponse.md)
  - [PingResponse](docs/PingResponse.md)

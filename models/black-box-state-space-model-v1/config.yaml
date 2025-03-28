@@ -13,6 +13,10 @@ arguments:
     description: The dimension of the state space
     type: int
     required: true
+  - name: horizon
+    description: The horizon of the model for prediction
+    type: int
+    default: 10
 
 parameters:
   - name: A

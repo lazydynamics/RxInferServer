@@ -1,14 +1,14 @@
 using Test
 using RxInferServer.Models
 
-@testitem "with_models" begin
+@testitem "with_models" setup = [TestUtils] begin
     import RxInferServer.Models
     import Logging
 
     @test_throws "Models dispatcher is not initialized" Models.get_models()
     @test_throws "Models dispatcher is not initialized" Models.get_model("BetaBernoulli-v1")
 
-    Models.with_models(locations = [joinpath(@__DIR__, "..", "models")]) do
+    Models.with_models(locations = [TestUtils.projectdir("models")]) do
         models = Models.get_models()
         @test !isempty(models)
 
@@ -20,7 +20,7 @@ using RxInferServer.Models
 
     io = IOBuffer()
     Logging.with_logger(Logging.SimpleLogger(io, Logging.Info)) do
-        Models.with_models(locations = [tmpdir_created, joinpath(@__DIR__, "..", "models")]) do
+        Models.with_models(locations = [tmpdir_created, TestUtils.projectdir("models")]) do
             models = Models.get_models()
             @test !isempty(models)
 

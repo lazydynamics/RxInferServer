@@ -48,10 +48,18 @@ jobs:
           make deps
           
           # Start the Julia server in the background with trace compilation
-          make serve &
+          make serve & 
+          SERVER_PID=$!
           
           # Run tests (runtests.jl has built-in server availability check)
           make test
+          TEST_EXIT_CODE=$?
+          
+          # Kill the server
+          kill $SERVER_PID || true
+          
+          # Exit with the test exit code
+          exit $TEST_EXIT_CODE
       
       - name: Upload trace compilation artifact
         uses: actions/upload-artifact@v4
@@ -80,9 +88,15 @@ jobs:
           
           # Start the Julia server in the background with trace compilation
           make serve &
+          SERVER_PID=$!
 
           # Build the documentation
           make docs
+          DOC_EXIT_CODE=$?
+
+          # Kill the server and exit with success code
+          kill $SERVER_PID || true
+          exit $DOC_EXIT_CODE
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

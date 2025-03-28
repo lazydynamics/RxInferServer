@@ -26,6 +26,7 @@ Class | Method
 ------------ | -------------
 *AuthenticationApi* | [**token_generate**](docs/AuthenticationApi.md#token_generate)<br/>**POST** /token/generate<br/>Generate authentication token
 *AuthenticationApi* | [**token_roles**](docs/AuthenticationApi.md#token_roles)<br/>**GET** /token/roles<br/>Get token roles
+*ModelsApi* | [**attach_events_to_episode**](docs/ModelsApi.md#attach_events_to_episode)<br/>**POST** /models/i/{instance_id}/episodes/{episode_name}/attach-events<br/>Attach events to an episode
 *ModelsApi* | [**attach_metadata_to_event**](docs/ModelsApi.md#attach_metadata_to_event)<br/>**POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata<br/>Attach metadata to an event
 *ModelsApi* | [**create_episode**](docs/ModelsApi.md#create_episode)<br/>**POST** /models/i/{instance_id}/create-episode<br/>Create a new episode for a model instance
 *ModelsApi* | [**create_model_instance**](docs/ModelsApi.md#create_model_instance)<br/>**POST** /models/create-instance<br/>Create a new model instance
@@ -48,6 +49,8 @@ Class | Method
 
 ## Models
 
+ - [AttachEventsToEpisodeRequest](docs/AttachEventsToEpisodeRequest.md)
+ - [AttachEventsToEpisodeRequestEventsInner](docs/AttachEventsToEpisodeRequestEventsInner.md)
  - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [AvailableModel](docs/AvailableModel.md)
  - [AvailableModelDetails](docs/AvailableModelDetails.md)

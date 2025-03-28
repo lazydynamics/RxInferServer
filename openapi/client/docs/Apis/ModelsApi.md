@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost:8000/v1*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
+| [**attachEventsToEpisode**](ModelsApi.md#attachEventsToEpisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/attach-events | Attach events to an episode |
 | [**attachMetadataToEvent**](ModelsApi.md#attachMetadataToEvent) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
 | [**createEpisode**](ModelsApi.md#createEpisode) | **POST** /models/i/{instance_id}/create-episode | Create a new episode for a model instance |
 | [**createModelInstance**](ModelsApi.md#createModelInstance) | **POST** /models/create-instance | Create a new model instance |
@@ -21,6 +22,35 @@ All URIs are relative to *http://localhost:8000/v1*
 | [**runLearning**](ModelsApi.md#runLearning) | **POST** /models/i/{instance_id}/learn | Learn from previous observations |
 | [**wipeEpisode**](ModelsApi.md#wipeEpisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
 
+
+<a name="attachEventsToEpisode"></a>
+# **attachEventsToEpisode**
+> SuccessResponse attachEventsToEpisode(instance\_id, episode\_name, AttachEventsToEpisodeRequest)
+
+Attach events to an episode
+
+    Attach events to a specific episode for a model
+
+### Parameters
+
+|Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **instance\_id** | **UUID**| ID of the model instance to attach events to | [default to null] |
+| **episode\_name** | **String**| Name of the episode to attach events to | [default to null] |
+| **AttachEventsToEpisodeRequest** | [**AttachEventsToEpisodeRequest**](../Models/AttachEventsToEpisodeRequest.md)|  | |
+
+### Return type
+
+[**SuccessResponse**](../Models/SuccessResponse.md)
+
+### Authorization
+
+[ApiKeyAuth](../README.md#ApiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
 
 <a name="attachMetadataToEvent"></a>
 # **attachMetadataToEvent**

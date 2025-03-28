@@ -579,6 +579,145 @@ end
     end
 end
 
+@testitem "It should be possible to load external data into an episode after creation of the episode" setup = [
+    TestUtils
+] begin
+    using Dates
+
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+    )
+
+    model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
+        models_api, create_model_instance_request
+    )
+
+    @test info.status == 200
+    @test !isnothing(model_instance)
+
+    create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "load-data-here")
+    episode, info = TestUtils.RxInferClientOpenAPI.create_episode(
+        models_api, model_instance.instance_id, create_episode_request
+    )
+    @test info.status == 200
+    @test !isnothing(episode)
+
+    events = [
+        Dict(
+            "timestamp" => DateTime(2024, 3, 20, 12, 0, 0),
+            "data" => Dict("observation" => 1),
+            "metadata" => Dict("a" => "b")
+        ),
+        Dict(
+            "timestamp" => DateTime(2024, 3, 20, 12, 0, 1),
+            "data" => Dict("observation" => 0),
+            "metadata" => Dict("c" => "d")
+        ),
+        Dict(
+            "timestamp" => DateTime(2024, 3, 20, 12, 0, 2),
+            "data" => Dict("observation" => 0),
+            "metadata" => Dict("a" => "b", "c" => "d")
+        )
+    ]
+
+    load_data_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events)
+    response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+        models_api, model_instance.instance_id, episode.episode_name, load_data_request
+    )
+
+    @test info.status == 200
+    @test !isnothing(response)
+
+    @testset "Check that the events are loaded correctly" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+            models_api, model_instance.instance_id, "load-data-here"
+        )
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 3
+
+        for (i, event) in enumerate(response.events)
+            @test event["data"] == events[i]["data"]
+            @test event["metadata"] == events[i]["metadata"]
+            @test event["id"] == i
+            @test DateTime(event["timestamp"]) == DateTime(events[i]["timestamp"])
+        end
+    end
+
+    @testset "Check that the events are not attached to the default episode" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+            models_api, model_instance.instance_id, "default"
+        )
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 0
+    end
+
+    @testset "Check that if you wipe the default episode, the events from the other episode are not wiped" begin
+        response, info = TestUtils.RxInferClientOpenAPI.wipe_episode(models_api, model_instance.instance_id, "default")
+        @test info.status == 200
+        @test response.message == "Episode wiped successfully"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+            models_api, model_instance.instance_id, "load-data-here"
+        )
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 3
+    end
+
+    @testset "Check that the events from the other episode can be wiped" begin
+        response, info = TestUtils.RxInferClientOpenAPI.wipe_episode(
+            models_api, model_instance.instance_id, "load-data-here"
+        )
+        @test info.status == 200
+        @test response.message == "Episode wiped successfully"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+            models_api, model_instance.instance_id, "load-data-here"
+        )
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 0
+    end
+
+    @testset "It should be possible to load data after the wiping" begin
+        load_data_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events)
+        response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+            models_api, model_instance.instance_id, "load-data-here", load_data_request
+        )
+
+        @test info.status == 200
+        @test !isnothing(response)
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+            models_api, model_instance.instance_id, "load-data-here"
+        )
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 3
+
+        for (i, event) in enumerate(response.events)
+            @test event["data"] == events[i]["data"]
+            @test event["metadata"] == events[i]["metadata"]
+            @test event["id"] == i
+            @test DateTime(event["timestamp"]) == DateTime(events[i]["timestamp"])
+        end
+    end
+
+    # Delete model instance
+    response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, model_instance.instance_id)
+    @test info.status == 200
+    @test response.message == "Model instance deleted successfully"
+
+    # Check that the episode is not accessible anymore
+    response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "default")
+    @test info.status == 404
+end
+
 @testitem "Inference calls should update the model's state" setup = [TestUtils] begin
     client = TestUtils.TestClient()
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)

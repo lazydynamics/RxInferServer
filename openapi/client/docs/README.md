@@ -9,7 +9,8 @@ All URIs are relative to *http://localhost:8000/v1*
 |------------ | ------------- | ------------- | -------------|
 | *AuthenticationApi* | [**tokenGenerate**](Apis/AuthenticationApi.md#tokengenerate) | **POST** /token/generate | Generate authentication token |
 *AuthenticationApi* | [**tokenRoles**](Apis/AuthenticationApi.md#tokenroles) | **GET** /token/roles | Get token roles |
-| *ModelsApi* | [**attachMetadataToEvent**](Apis/ModelsApi.md#attachmetadatatoevent) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
+| *ModelsApi* | [**attachEventsToEpisode**](Apis/ModelsApi.md#attacheventstoepisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/attach-events | Attach events to an episode |
+*ModelsApi* | [**attachMetadataToEvent**](Apis/ModelsApi.md#attachmetadatatoevent) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
 *ModelsApi* | [**createEpisode**](Apis/ModelsApi.md#createepisode) | **POST** /models/i/{instance_id}/create-episode | Create a new episode for a model instance |
 *ModelsApi* | [**createModelInstance**](Apis/ModelsApi.md#createmodelinstance) | **POST** /models/create-instance | Create a new model instance |
 *ModelsApi* | [**deleteEpisode**](Apis/ModelsApi.md#deleteepisode) | **DELETE** /models/i/{instance_id}/episodes/{episode_name} | Delete an episode for a model |
@@ -32,6 +33,8 @@ All URIs are relative to *http://localhost:8000/v1*
 <a name="documentation-for-models"></a>
 ## Documentation for Models
 
+ - [AttachEventsToEpisodeRequest](./Models/AttachEventsToEpisodeRequest.md)
+ - [AttachEventsToEpisodeRequest_events_inner](./Models/AttachEventsToEpisodeRequest_events_inner.md)
  - [AttachMetadataToEventRequest](./Models/AttachMetadataToEventRequest.md)
  - [AvailableModel](./Models/AvailableModel.md)
  - [AvailableModel_details](./Models/AvailableModel_details.md)

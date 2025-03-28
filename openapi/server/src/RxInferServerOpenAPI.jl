@@ -13,6 +13,9 @@ The following server methods must be implemented:
 - **token_roles**
     - *invocation:* GET /token/roles
     - *signature:* token_roles(req::HTTP.Request;) -> TokenRolesResponse
+- **attach_events_to_episode**
+    - *invocation:* POST /models/i/{instance_id}/episodes/{episode_name}/attach-events
+    - *signature:* attach_events_to_episode(req::HTTP.Request, instance_id::String, episode_name::String, attach_events_to_episode_request::AttachEventsToEpisodeRequest;) -> SuccessResponse
 - **attach_metadata_to_event**
     - *invocation:* POST /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata
     - *signature:* attach_metadata_to_event(req::HTTP.Request, instance_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest;) -> SuccessResponse

@@ -348,6 +348,31 @@ function create_episode(
     return get_episode_info(req, instance_id, episode_name)
 end
 
+function attach_events_to_episode(
+    req::HTTP.Request,
+    instance_id::String,
+    episode_name::String,
+    attach_events_to_episode_request::RxInferServerOpenAPI.AttachEventsToEpisodeRequest
+)
+    token = current_token()
+
+    @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model could not be found"
+    )
+
+    @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested episode could not be found"
+    )
+
+    @expect __database_op_attach_events_to_episode(;
+        instance_id, episode_name, events = attach_events_to_episode_request.events
+    ) || RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to attach events to the episode due to internal error"
+    )
+
+    return RxInferServerOpenAPI.SuccessResponse(message = "Events attached to the episode successfully")
+end
+
 function delete_episode(req::HTTP.Request, instance_id::String, episode_name::String)
 
     # Short-circuit if the episode is the default episode
@@ -589,6 +614,51 @@ function __database_op_create_episode(; instance_id::String, episode_name::Strin
     return result
 end
 
+## Attach events to an episode
+function __database_op_attach_events_to_episode(; instance_id::String, episode_name::String, events)
+    @debug "Attempting to attach events to episode" instance_id episode_name
+
+    collection = Database.collection("episodes")
+    query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
+    episode = Mongoc.find_one(collection, query)
+
+    if isnothing(episode)
+        @debug "Cannot attach events because episode does not exist" instance_id episode_name
+        return nothing
+    end
+
+    # Get the current events and counter
+    current_events = episode["events"]
+    counter = episode["events_id_counter"]
+
+    # Assign IDs to new events and increment counter
+    new_events = map(events) do event
+        counter += 1
+        return Mongoc.BSON(
+            "data" => event.data,
+            "timestamp" => DateTime(@something(event.timestamp, Dates.now())),
+            "metadata" => @something(event.metadata, Dict()),
+            "id" => counter
+        )
+    end
+
+    # Append new events to existing events
+    updated_events = vcat(current_events, new_events)
+
+    # Update the episode with the new events and counter
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("events" => updated_events, "events_id_counter" => counter))
+
+    result = Mongoc.update_one(collection, query, update)
+
+    if result["matchedCount"] != 1 || result["modifiedCount"] != 1
+        @debug "Unable to attach events to episode due to internal error" instance_id episode_name
+        return nothing
+    end
+
+    @debug "Successfully attached events to episode" instance_id episode_name length(new_events)
+    return result
+end
+
 ## Delete an episode (mark as deleted)
 function __database_op_delete_episode(; instance_id::String, episode_name::String)
     @debug "Attempting to delete episode" instance_id episode_name
@@ -617,7 +687,7 @@ function __database_op_wipe_episode(; instance_id::String, episode_name::String)
     @debug "Attempting to wipe episode" instance_id episode_name
     collection = Database.collection("episodes")
     query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
-    update = Mongoc.BSON("\$set" => Mongoc.BSON("events" => []))
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("events" => [], "events_id_counter" => 0))
     result = Mongoc.update_one(collection, query, update)
 
     if result["matchedCount"] != 1

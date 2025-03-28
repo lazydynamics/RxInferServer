@@ -1,6 +1,8 @@
 Apis/AuthenticationApi.md
 Apis/ModelsApi.md
 Apis/ServerApi.md
+Models/AttachEventsToEpisodeRequest.md
+Models/AttachEventsToEpisodeRequest_events_inner.md
 Models/AttachMetadataToEventRequest.md
 Models/AvailableModel.md
 Models/AvailableModel_details.md

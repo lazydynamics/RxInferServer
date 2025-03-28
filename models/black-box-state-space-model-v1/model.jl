@@ -67,9 +67,7 @@ function run_learning(state, parameters, events)
     )
     parameters["A"] = reshape(mean(results.posteriors[:H]), state["state_dimension"], state["state_dimension"])
 
-    result = Dict(
-        "A_flattened" => mean(results.posteriors[:H]),
-    )
+    result = Dict("A_flattened" => mean(results.posteriors[:H]))
 
     return result, state, parameters
 end

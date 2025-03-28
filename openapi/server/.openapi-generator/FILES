@@ -1,4 +1,6 @@
 README.md
+docs/AttachEventsToEpisodeRequest.md
+docs/AttachEventsToEpisodeRequestEventsInner.md
 docs/AttachMetadataToEventRequest.md
 docs/AuthenticationApi.md
 docs/AvailableModel.md
@@ -30,6 +32,8 @@ src/apis/api_AuthenticationApi.jl
 src/apis/api_ModelsApi.jl
 src/apis/api_ServerApi.jl
 src/modelincludes.jl
+src/models/model_AttachEventsToEpisodeRequest.jl
+src/models/model_AttachEventsToEpisodeRequestEventsInner.jl
 src/models/model_AttachMetadataToEventRequest.jl
 src/models/model_AvailableModel.jl
 src/models/model_AvailableModelDetails.jl

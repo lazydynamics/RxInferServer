@@ -78,15 +78,17 @@ end
 
         instance_id = response.instance_id
 
-        for i in eachindex(y)
-            inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => y[i]))
-            inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(
-                models_api, instance_id, inference_request
-            )
+        # Create events for all observations
+        events = [Dict("data" => Dict("observation" => obs)) for obs in y]
 
-            @test info.status == 200
-            @test !isnothing(inference_response)
-        end
+        # Attach all events at once
+        attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events)
+        attach_response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+            models_api, instance_id, "default", attach_events_request
+        )
+
+        @test info.status == 200
+        @test !isnothing(attach_response)
 
         # Double check that the episode has the correct number of events and that the events are correct
         episode, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, instance_id, "default")

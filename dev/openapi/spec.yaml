@@ -1,14 +1,35 @@
 openapi: 3.0.2
 info:
+  version: 0.0.1
   title: RxInferServer OpenAPI specification
-  description: API for RxInferServer.jl - A Julia server for RxInfer probabilistic programming framework
-  version: 1.0.0
+  description: |
+    API for RxInferServer.jl - A Julia server for RxInfer probabilistic programming framework
+    **Warning** The specification is not yet stable and may undergo significant changes.
   contact:
     name: RxInferServer Team
     url: https://github.com/lazydynamics/RxInferServer
+  license:
+    name: AGPL-3.0
+    url: https://github.com/lazydynamics/RxInferServer/blob/main/LICENSE
+externalDocs:
+  description: RxInferServer official documentation
+  url: https://server.rxinfer.com/
 servers:
-  - url: 'http://localhost:8000/v1'
+  - url: 'http://localhost:{port}/{basePath}'
     description: Local development server
+    variables:
+      port:
+        default: '8000'
+        description: The port of the local server, defaults to "8000"
+      basePath:
+        default: 'v1'
+        description: The base path of the server, defaults to "v1"
+  - url: 'https://rxinfer.lazydynamics.app/{basePath}'
+    description: Public server provided by Lazy Dynamics team - https://lazydynamics.com/
+    variables:
+      basePath:
+        default: 'v1'
+        description: The base path of the server, defaults to "v1"
 tags:
   - name: Server
     description: Server management endpoints
@@ -26,7 +47,7 @@ paths:
         - Server
       summary: Get server information
       operationId: getServerInfo
-      description: Returns information about the server, such as the RxInfer version, Server version, Server edition, and Julia version
+      description: Returns information about the server, such as the RxInferServer version, RxInfer version, Julia version, server edition and API version
       responses:
         '200':
           description: Successfully retrieved server information
@@ -55,70 +76,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
-  /models:
-    get:
-      tags:
-        - Models
-      summary: Get models
-      operationId: getModels
-      description: Retrieve the list of available models and their lightweight details. Note that some access tokens might not have access to all models.
-      responses:
-        '200':
-          description: Successfully retrieved list of models
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ModelList'
-              example:
-                models:
-                  - name: "BetaBernoulli-v1"
-                    description: "A simple beta-bernoulli model"
-                  - name: "LinearRegression-v1"
-                    description: "A simple linear regression model"
-                  - name: "GaussianMixture-v2"
-                    description: "A simple Gaussian mixture model"
-        '401':
-          description: Access token is missing or invalid
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-  /models/{model_name}/details:
-    get:
-      tags:
-        - Models
-      summary: Get model details
-      operationId: getModelDetails
-      description: Retrieve detailed information about a specific model
-      parameters:
-        - name: model_name
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Name of the model to retrieve information for (including version identifier if applicable, e.g. "BetaBernoulli-v1")
-      responses:
-        '200':
-          description: Successfully retrieved model details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ModelDetails'
-        '401':
-          description: Access token is missing or invalid
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-        '404':
-          description: Model not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundResponse'
-              example:
-                error: "Not Found"
-                message: "The requested model could not be found"
+
   /ping:
     get:
       tags:
@@ -137,12 +95,13 @@ paths:
                 $ref: '#/components/schemas/PingResponse'
               example:
                 status: "ok"
-  /generate-token:
+
+  /token/generate:
     post:
       tags:
         - Authentication
       summary: Generate authentication token
-      operationId: generateToken
+      operationId: tokenGenerate
       description: Generates a new authentication token for accessing protected endpoints
       # This endpoint doesn't require authentication
       security: []
@@ -152,7 +111,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponse'
+                $ref: '#/components/schemas/TokenGenerateResponse'
         '400':
           description: Unable to generate token
           content:
@@ -162,40 +121,81 @@ paths:
               example:
                 error: "Bad Request"
                 message: "Unable to generate token due to internal error"
-  /models/create:
-    post:
+  /token/roles:
+    get:
       tags:
-        - Models
-      summary: Create a new model instance
-      operationId: createModel
-      description: Creates a new instance of a model with the specified configuration
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateModelRequest'
-            examples:
-              simple:
-                value:
-                  model: "BetaBernoulli-v1"
-                  description: "Testing beta-bernoulli model"
-              with_arguments:
-                value:
-                  model: "LinearRegression-v1"
-                  arguments:
-                    dt: 0.1
-                    horizon: 10
-                  description: "Linear regression with custom parameters"
+        - Authentication
+      summary: Get token roles
+      operationId: tokenRoles
+      description: Retrieve the list of roles for a specific token
       responses:
         '200':
-          description: Model instance created successfully
+          description: Successfully retrieved token roles
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateModelResponse'
-              example:
-                model_id: "123e4567-e89b-12d3-a456-426614174000"
+                $ref: '#/components/schemas/TokenRolesResponse'
+              examples:
+                user:
+                  value:
+                    roles:
+                      - "user"
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+
+  /models/available:
+    get:
+      tags:
+        - Models
+      summary: Get models available for creation
+      operationId: getAvailableModels
+      description: |
+        Retrieve the list of models available for creation for a given token.
+        This list specifies names and available arguments for each model.
+        
+        **Note** The list of available models might differ for different access tokens.
+        For example, a token with only the "user" role might not have access to all models.
+      responses:
+        '200':
+          description: Successfully retrieved list of models available for creation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailableModel'
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+
+  /models/available/{model_name}:
+    get:
+      tags:
+        - Models
+      summary: Get information about a specific model available for creation
+      operationId: getAvailableModel
+      description: Retrieve detailed information about a specific model available for creation
+      parameters:
+        - name: model_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the model to retrieve information for (including version identifier if applicable, e.g. "BetaBernoulli-v1")
+      responses:
+        '200':
+          description: Successfully retrieved model details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableModel'
         '401':
           description: Access token is missing or invalid
           content:
@@ -203,58 +203,96 @@ paths:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
         '404':
-          description: Model not found
+          description: Model cannot be found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-              example:
-                error: "Not Found"
-                message: "The specified model does not exist"
-  /models/created:
-    get:
+  
+  /models/create-instance:
+    post:
       tags:
         - Models
-      summary: Get information about all created models for a specific token
-      operationId: getCreatedModelsInfo
-      description: Retrieve detailed information about all created models for a specific token
+      summary: Create a new model instance
+      operationId: createModelInstance
+      description: Creates a new instance of a model with the specified configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateModelInstanceRequest'
       responses:
         '200':
-          description: Successfully retrieved list of created models
+          description: Model instance created successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CreatedModelInfo'
+                $ref: '#/components/schemas/CreateModelInstanceResponse'
         '401':
           description: Access token is missing or invalid
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedResponse'
-  /models/{model_id}/info:
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+
+  /models/instances:
     get:
       tags:
         - Models
-      summary: Get model information
-      operationId: getModelInfo
+      summary: Get all created model instances
+      operationId: getModelInstances
+      description: Retrieve detailed information about all created model instances for a specific token
+      responses:
+        '200':
+          description: Successfully retrieved list of created model instances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelInstance'
+        '401':
+          description: Access token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+
+  /models/i/{instance_id}:
+    get:
+      tags:
+        - Models
+      summary: Get model instance information
+      operationId: getModelInstance
       description: Retrieve detailed information about a specific model instance
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to retrieve information for
+          description: ID of the model instance to retrieve information for
       responses:
         '200':
           description: Successfully retrieved model information
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreatedModelInfo'
+                $ref: '#/components/schemas/ModelInstance'
         '401':
           description: Access token is missing, invalid or has no access to the specific model
           content:
@@ -267,21 +305,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/delete:
     delete:
       tags:
         - Models
       summary: Delete a model instance
-      operationId: deleteModel
+      operationId: deleteModelInstance
       description: Delete a specific model instance by its ID
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to delete
+          description: ID of the model instance to delete
       responses:
         '200':
           description: Model successfully deleted
@@ -303,28 +340,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/state:
+    
+  /models/i/{instance_id}/state:
     get:
       tags:
         - Models
-      summary: Get the state of a model
-      operationId: getModelState
+      summary: Get the state of a model instance
+      operationId: getModelInstanceState
       description: Retrieve the state of a specific model instance
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to retrieve state for
+          description: ID of the model instance to retrieve state for
       responses:
         '200':
           description: Successfully retrieved model state. Each model has its own state, which is a dictionary of arbitrary key-value pairs. Check model-specific documentation for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ModelState'
+                $ref: '#/components/schemas/ModelInstanceState'
+        '400':
+          description: Model state cannot be retrieved due to internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Access token is missing, invalid or has no access to the specific model
           content:
@@ -337,21 +381,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/infer:
-    post:
+
+  /models/i/{instance_id}/parameters:
+    get:
       tags:
         - Models
-      summary: Run inference on a model
-      operationId: runInference
-      description: Run inference on a specific model instance
+      summary: Get the parameters of a model instance
+      operationId: getModelInstanceParameters
+      description: Retrieve the parameters of a specific model instance
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to run inference on
+      responses:
+        '200':
+          description: Successfully retrieved model parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelInstanceParameters'
+        '400':
+          description: Model parameters cannot be retrieved due to internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+  /models/i/{instance_id}/infer:
+    post:
+      tags:
+        - Models
+      summary: Run inference
+      operationId: runInference
+      description: Run inference on a specific model instance
+      parameters:
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model instance to run inference on
       requestBody:
         required: true
         content:
@@ -377,7 +461,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/learn:
+
+  /models/i/{instance_id}/learn:
     post:
       tags:
         - Models
@@ -385,7 +470,7 @@ paths:
       operationId: runLearning
       description: Learn from previous episodes for a specific model
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
@@ -415,22 +500,76 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'                
-  /models/{model_id}/episodes:
-    get:
+                $ref: '#/components/schemas/NotFoundResponse'    
+
+  /models/i/{instance_id}/create-episode:
+    post:
       tags:
         - Models
-      summary: Get all episodes for a model
-      operationId: getEpisodes
-      description: Retrieve all episodes for a specific model
+      summary: Create a new episode for a model instance
+      operationId: createEpisode
+      description: | 
+        Create a new episode for a specific model instance.
+        Note that the default episode is created automatically when the model instance is created. 
+        When a new episode is created, it becomes the current episode for the model instance.
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to retrieve episodes for
+          description: ID of the model instance to create episode for
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEpisodeRequest'
+      responses:
+        '200':
+          description: Successfully created episode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EpisodeInfo'
+        '400':
+          description: Episode cannot be created, e.g. it already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Bad Request"
+                message: "The requested episode already exists"
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model instance not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'  
+
+  /models/i/{instance_id}/episodes:
+    get:
+      tags:
+        - Models
+      summary: Get all episodes for a model instance
+      operationId: getEpisodes
+      description: Retrieve all episodes for a specific model instance
+      parameters:
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model instance to retrieve episodes for
       responses:
         '200':
           description: Successfully retrieved list of episodes
@@ -452,7 +591,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/episodes/{episode_name}:
+
+  /models/i/{instance_id}/episodes/{episode_name}:
     get:
       tags:
         - Models
@@ -460,13 +600,13 @@ paths:
       operationId: getEpisodeInfo
       description: Retrieve information about a specific episode of a model
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to retrieve episode for
+          description: ID of the model instance to retrieve episode for
         - name: episode_name
           in: path
           required: true
@@ -492,70 +632,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/episodes/{episode_name}/create:
-    post:
-      tags:
-        - Models
-      summary: Create a new episode for a model
-      operationId: createEpisode
-      description: Create a new episode for a specific model, note that the default episode cannot be created, but you can wipe data from it. When created, the new episode becomes the current episode for the model.
-      parameters:
-        - name: model_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-          description: ID of the model to create episode for
-        - name: episode_name
-          in: path
-          required: true
-          schema:
-            type: string  
-          description: Name of the episode to create
-      responses:
-        '200':
-          description: Successfully created episode
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EpisodeInfo'
-        '400':
-          description: Episode cannot be created, e.g. it already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "Bad Request"
-                message: "The requested episode already exists"
-        '401':
-          description: Access token is missing, invalid or has no access to the specific model
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedResponse'
-        '404':
-          description: Model not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundResponse'  
-  /models/{model_id}/episodes/{episode_name}/delete:
     delete:
       tags:
         - Models
       summary: Delete an episode for a model
       operationId: deleteEpisode
-      description: Delete a specific episode for a model, note that the default episode cannot be deleted, but you can wipe data from it. If the deleted episode was the current episode, the default episode will become the current episode.
+      description: | 
+        Delete a specific episode for a model instance.
+        Note that the default episode cannot be deleted, but you can wipe data from it.
+        If the deleted episode was the current episode, the default episode will become the current episode.
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to delete episode for
+          description: ID of the model instance to delete episode for
         - name: episode_name
           in: path
           required: true
@@ -590,7 +683,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
-  /models/{model_id}/episodes/{episode_name}/wipe:
+
+  /models/i/{instance_id}/episodes/{episode_name}/attach-events:
+    post:
+      tags:
+        - Models
+      summary: Attach events to an episode
+      operationId: attachEventsToEpisode
+      description: Attach events to a specific episode for a model
+      parameters:
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model instance to attach events to
+        - name: episode_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the episode to attach events to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachEventsToEpisodeRequest'
+      responses:
+        '200':
+          description: Successfully attached events to the episode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Bad request, e.g. invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model or episode not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+
+  /models/i/{instance_id}/episodes/{episode_name}/wipe:
     post:
       tags:
         - Models
@@ -598,13 +745,13 @@ paths:
       operationId: wipeEpisode
       description: Wipe all events from a specific episode for a model
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to wipe episode for
+          description: ID of the model instance to wipe episode for
         - name: episode_name
           in: path
           required: true
@@ -630,7 +777,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'    
-  /models/{model_id}/episodes/{episode_name}/events/{event_id}/attach-metadata:
+
+  /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata:
     post:
       tags:
         - Models
@@ -638,13 +786,13 @@ paths:
       operationId: attachMetadataToEvent
       description: Attach metadata to a specific event for a model
       parameters:
-        - name: model_id
+        - name: instance_id
           in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: ID of the model to attach metadata to
+          description: ID of the model instance to attach metadata to
         - name: episode_name
           in: path
           required: true
@@ -691,6 +839,76 @@ components:
       scheme: bearer
       description: Simple token authentication. Use the Authorization header with the Bearer scheme.
   schemas:
+    SuccessResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Success message
+      example:
+        message: "Model deleted successfully"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message explaining the failure
+        message:
+          type: string
+          description: Additional message providing details about the failure
+      example:
+        error: "Unauthorized"
+        message: "The request requires authentication, generate a token using the /generate-token endpoint"
+
+    NotFoundResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type, always "Not Found" for this error
+          enum: ["Not Found"]
+        message:
+          type: string
+          description: Detailed message explaining why the resource was not found
+      example:
+        error: "Not Found"
+        message: "The requested resource could not be found"
+
+    UnauthorizedResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type, always "Unauthorized" for this error
+          enum: ["Unauthorized"]
+        message:
+          type: string
+          description: Detailed message explaining why authentication failed
+      example:
+        error: "Unauthorized"
+        message: "The request requires authentication, generate a token using the /generate-token endpoint"
+
+    PingResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: Status of the server
+          default: "ok"
+
     ServerInfo:
       type: object
       required:
@@ -716,7 +934,8 @@ components:
           type: string
           description: The version of the API being used
           default: "v1"
-    TokenResponse:
+
+    TokenGenerateResponse:
       type: object
       required:
         - token
@@ -724,112 +943,61 @@ components:
         token:
           type: string
           description: The token to use in the Authorization header with the format "Bearer {token}"
-    PingResponse:
+
+    TokenRolesResponse:
       type: object
       required:
-        - status
+        - roles
       properties:
-        status:
-          type: string
-          description: Status of the server
-          default: "ok"
-    SuccessResponse:
-      type: object
-      required:
-        - message
-      properties:
-        message:
-          type: string
-          description: Success message
-      example:
-        message: "Model deleted successfully"
-    ErrorResponse:
-      type: object
-      required:
-        - error
-      properties:
-        error:
-          type: string
-          description: Error message explaining the failure
-        message:
-          type: string
-          description: Additional message providing details about the failure
-      example:
-        error: "Unauthorized"
-        message: "The request requires authentication, generate a token using the /generate-token endpoint"
-    NotFoundResponse:
-      type: object
-      required:
-        - error
-        - message
-      properties:
-        error:
-          type: string
-          description: Error type, always "Not Found" for this error
-          enum: ["Not Found"]
-        message:
-          type: string
-          description: Detailed message explaining why the resource was not found
-      example:
-        error: "Not Found"
-        message: "The requested resource could not be found"
-    UnauthorizedResponse:
-      type: object
-      required:
-        - error
-        - message
-      properties:
-        error:
-          type: string
-          description: Error type, always "Unauthorized" for this error
-          enum: ["Unauthorized"]
-        message:
-          type: string
-          description: Detailed message explaining why authentication failed
-      example:
-        error: "Unauthorized"
-        message: "The request requires authentication, generate a token using the /generate-token endpoint"
-    ModelList:
-      type: object
-      required:
-        - models
-      properties:
-        models:
+        roles:
           type: array
-          description: List of available models
+          description: List of roles for the token
           items:
-            $ref: '#/components/schemas/LightweightModelDetails'
-    ModelDetails:
+            type: string
+            description: Role identifier
+          example:
+            - "user"
+
+    AvailableModel:
       type: object
       required:
         - details
         - config
       properties:
         details:
-          $ref: '#/components/schemas/LightweightModelDetails'
-          description: Basic model details
+          type: object
+          description: | 
+            Primary model details. Note that these are also included in the `config` object.
+          properties:
+            name:
+              type: string
+              description: Name of the model (usually with the version identifier, e.g. "BetaBernoulli-v1")
+            description:
+              type: string
+              description: Brief description of the model
+            author:
+              type: string
+              description: Author of the model
+            roles:
+              type: array
+              description: List of roles that can access the model
+              items:
+                type: string
+                description: Role identifier
         config:
           type: object
-          description: Extended model-specific configuration
+          description: |
+            The entire model configuration as in the `config.yaml` file. 
+            May include arbitrary fields, which are not part of the public interface.
+            Note that this information also includes the properties from the `details` object.
           additionalProperties: true
-    LightweightModelDetails:
+
+    CreateModelInstanceRequest:
       type: object
       required:
-        - name
-        - description
+        - model_name
       properties:
-        name:
-          type: string
-          description: Name of the model (including version identifier, e.g. "BetaBernoulli-v1")
-        description:
-          type: string
-          description: Brief description of the model
-    CreateModelRequest:
-      type: object
-      required:
-        - model
-      properties:
-        model:
+        model_name:
           type: string
           description: The name of the model to create (including version identifier if applicable, e.g. "BetaBernoulli-v1")
         arguments:
@@ -840,26 +1008,28 @@ components:
           type: string
           maxLength: 128
           description: Optional description of the model instance
-    CreateModelResponse:
+
+    CreateModelInstanceResponse:
       type: object
       required:
-        - model_id
+        - instance_id
       properties:
-        model_id:
+        instance_id:
           type: string
           format: uuid
           description: Unique identifier for the created model instance
-    CreatedModelInfo:
+
+    ModelInstance:
       type: object
       required:
-        - model_id
+        - instance_id
         - model_name
         - created_at
         - description
         - arguments
         - current_episode
       properties:
-        model_id:
+        instance_id:
           type: string
           format: uuid
           description: Unique identifier for the created model instance
@@ -881,33 +1051,41 @@ components:
           type: string
           description: Name of the current episode for this model
           example: "default"
-    DeleteModelRequest:
+
+    DeleteModelInstanceRequest:
       type: object
       required:
-        - model_id
+        - instance_id
       properties:
-        model_id:
+        instance_id:
           type: string
           format: uuid
-          description: ID of the model to delete
-    ModelState:
+          description: ID of the model instance to delete
+
+    ModelInstanceState:
       type: object
       required:
         - state
       properties:
         state:
           type: object
-          description: Model-specific state
+          description: |
+            An object containing the current state of the model instance. 
+            May include arbitrary fields specific to the model. See the model documentation for more details.
           additionalProperties: true
-    AttachMetadataToEventRequest:
+
+    ModelInstanceParameters:
       type: object
       required:
-        - metadata
+        - parameters
       properties:
-        metadata:
+        parameters:
           type: object
-          description: Metadata to attach to the event
+          description: |
+            An object containing the current parameters of the model instance.
+            The keys are the parameter names as defined in the model configuration, and the values are the parameter values.
           additionalProperties: true
+
     InferRequest:
       type: object
       required:
@@ -927,6 +1105,7 @@ components:
           description: Name of the episode to run inference on
           default: "default"
           example: "default"
+
     InferResponse:
       type: object
       required:
@@ -947,6 +1126,7 @@ components:
           description: List of errors that occurred during the inference call, but were not fatal and the inference was still completed successfully
           items:
             $ref: '#/components/schemas/ErrorResponse'
+    
     LearnRequest:
       type: object
       required:
@@ -959,12 +1139,7 @@ components:
           items:
             type: string
             description: Name of the episode to learn from
-        parameters:
-          type: array
-          description: Which parameters to learn from the episodes, if not specified, all parameters will be learned
-          items:
-            type: string
-            description: Name of the parameter to learn from
+
     LearnResponse:
       type: object
       required:
@@ -974,19 +1149,29 @@ components:
           type: object
           description: A dictionary of learned parameters and their values
           additionalProperties: true
+
+    CreateEpisodeRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the episode to create
+
     EpisodeInfo:
       type: object
       required:
-        - model_id
-        - name
+        - instance_id
+        - episode_name
         - created_at
         - events
       properties:
-        model_id:
+        instance_id:
           type: string
           format: uuid
-          description: ID of the model this episode belongs to
-        name:
+          description: ID of the model instance this episode belongs to
+        episode_name:
           type: string
           description: Name of the episode
         created_at:
@@ -1000,6 +1185,41 @@ components:
             type: object
             additionalProperties: true
       example:
-        model_id: "123e4567-e89b-12d3-a456-426614174000"
-        name: "default"
+        instance_id: "123e4567-e89b-12d3-a456-426614174000"
+        episode_name: "default"
         created_at: "2024-03-20T12:00:00Z"
+        events: []
+
+    AttachEventsToEpisodeRequest:
+      type: object
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          description: List of events to attach to the episode
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+                description: Timestamp of the event
+              data:
+                type: object
+                description: Arbitrary data to attach to the event, model-specific
+                additionalProperties: true
+              metadata:
+                type: object
+                description: Arbitrary metadata to attach to the event, model-specific
+                additionalProperties: true
+
+    AttachMetadataToEventRequest:
+      type: object
+      required:
+        - metadata
+      properties:
+        metadata:
+          type: object
+          description: Metadata to attach to the event
+          additionalProperties: true

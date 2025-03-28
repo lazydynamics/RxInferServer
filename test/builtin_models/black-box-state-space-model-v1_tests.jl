@@ -59,8 +59,8 @@ end
         return A, x, y
     end
 
-    @testset for k in (2, 4, 8)
-        A, x, y = generate_rotate_ssm_data(100, k)
+    @testset for n in (50, 100, 200), k in (2, 4, 8)
+        A, x, y = generate_rotate_ssm_data(n, k)
 
         client = TestUtils.TestClient()
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)

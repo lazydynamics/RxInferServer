@@ -6,7 +6,7 @@ Handles model discovery, loading, and provides access to models through a dispat
 """
 module Models
 
-using YAML, Base.ScopedValues
+using YAML, Base.ScopedValues, Serialization
 
 """
     RXINFER_SERVER_MODELS_LOCATIONS
@@ -24,6 +24,7 @@ RxInferServer.serve()
 """
 RXINFER_SERVER_MODELS_LOCATIONS() = split(get(ENV, "RXINFER_SERVER_MODELS_LOCATIONS", "models:custom_models"), ':')
 
+include("model_utils.jl")
 include("model_config.jl")
 include("loaded_model.jl")
 include("dispatcher.jl")

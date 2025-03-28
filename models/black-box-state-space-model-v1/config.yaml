@@ -1,5 +1,5 @@
 
-name: BlackBoxKalmanFilter-v1
+name: BlackBoxStateSpaceModel-v1
 description: |
   This model represents a linear Guassian dynamical system with unknown dynamics.
   The state transition is modeled as a matrix with Gaussian prior on the elements.
@@ -9,7 +9,7 @@ roles:
   - user
 
 arguments:
-  - name: state_dim
+  - name: state_dimension
     description: The dimension of the state space
     type: int
     required: true

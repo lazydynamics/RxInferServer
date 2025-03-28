@@ -81,8 +81,8 @@ function create_model_instance(req::HTTP.Request, create_model_request::RxInferS
     # Check if the retrieved model name is correct
     if !isequal(create_model_request.model_name, model.details.name)
         @debug "Could not create a new model instance, `model_name` from the request is not equal to the retrieved `model.details.name`" create_model_request.model_name model.details.name
-        return RxInferServerOpenAPI.ErrorResponse(
-            error = "Bad Request", message = "The requested model name `$model_name` could not be found"
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model name `$model_name` could not be found"
         )
     end
 
@@ -96,6 +96,7 @@ function create_model_instance(req::HTTP.Request, create_model_request::RxInferS
     # Validate the arguments against the model's configuration schema
     arguments_validation = Models.validate_model_config_arguments(model.config, arguments)
     if !isnothing(arguments_validation)
+        @debug "Invalid arguments provided to the model" model_name arguments
         return RxInferServerOpenAPI.ErrorResponse(error = "Bad Request", message = arguments_validation)
     end
 
@@ -445,12 +446,19 @@ function __database_op_get_model_instance(; token, instance_id)
         @debug "Successfully retrieved model instance" token instance_id
     end
 
+    # Deserialize the state if it exists and in binary format
+    if !isnothing(result) && haskey(result, "state") && isa(result["state"], Vector{UInt8})
+        result = Dict(result)
+        result["state"] = Models.deserialize_state(result["state"])
+    end
+
     return result
 end
 
 function __database_op_create_model_instance(; token, model_name, description, arguments, initial_state)
     @debug "Creating new model instance in the database" model_name token
 
+    serialized_state = Models.serialize_state(initial_state)
     instance_id = string(UUIDs.uuid4())
     document = Mongoc.BSON(
         "instance_id" => instance_id,
@@ -459,7 +467,7 @@ function __database_op_create_model_instance(; token, model_name, description, a
         "created_at" => Dates.now(),
         "created_by" => token,
         "arguments" => arguments,
-        "state" => initial_state,
+        "state" => serialized_state,
         "current_episode" => "default",
         "deleted" => false
     )
@@ -631,7 +639,7 @@ function __database_op_update_model_state(; instance_id::String, new_state::Any)
     @debug "Attempting to update model state" instance_id
     collection = Database.collection("models")
     query = Mongoc.BSON("instance_id" => instance_id)
-    update = Mongoc.BSON("\$set" => Mongoc.BSON("state" => new_state))
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("state" => Models.serialize_state(new_state)))
     result = Mongoc.update_one(collection, query, update)
 
     if result["matchedCount"] != 1

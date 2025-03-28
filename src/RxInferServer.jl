@@ -3,7 +3,7 @@ module RxInferServer
 # Core dependencies for API server, hot reloading, and preferences
 using RxInfer
 using HTTP, Sockets, JSON, RxInferServerOpenAPI
-using Dates, Pkg
+using Dates, Pkg, Serialization
 
 include("macro.jl")
 include("dotenv.jl")

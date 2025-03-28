@@ -87,6 +87,7 @@ end
 const _returntypes_create_model_instance_ModelsApi = Dict{Regex,Type}(
     Regex("^" * replace("200", "x"=>".") * "\$") => CreateModelInstanceResponse,
     Regex("^" * replace("401", "x"=>".") * "\$") => UnauthorizedResponse,
+    Regex("^" * replace("400", "x"=>".") * "\$") => ErrorResponse,
     Regex("^" * replace("404", "x"=>".") * "\$") => NotFoundResponse,
 )
 

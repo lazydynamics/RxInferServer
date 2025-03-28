@@ -31,7 +31,7 @@ The function checks the existence of the following named keys:
 
 # Returns
 - `nothing`: If the model configuration is valid
-- [`RxInferServer.ModelConfigurationValidationError`](@ref): If the model configuration is invalid
+- [`RxInferServer.Models.ModelConfigurationValidationError`](@ref): If the model configuration is invalid
 """
 function validate_model_config_header(config)
     if !haskey(config, "name")

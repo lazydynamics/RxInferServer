@@ -89,9 +89,15 @@ function create_model_instance(req::HTTP.Request, create_model_request::RxInferS
     # Merge the default arguments with the arguments provided by the user
     # If user has not provided any arguments merge with the empty dictionary
     arguments = merge(
-        Models.parse_default_arguments_from_config(model.config),
+        Models.parse_model_config_default_arguments(model.config),
         @something(create_model_request.arguments, Dict{String, Any}())
     )
+
+    # Validate the arguments against the model's configuration schema
+    arguments_validation = Models.validate_model_config_arguments(model.config, arguments)
+    if !isnothing(arguments_validation)
+        return RxInferServerOpenAPI.ErrorResponse(error = "Bad Request", message = arguments_validation)
+    end
 
     # If user has not provided a description, use empty description
     description = @something(create_model_request.description, "")

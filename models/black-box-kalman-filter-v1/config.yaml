@@ -1,0 +1,15 @@
+
+name: BlackBoxKalmanFilter-v1
+description: |
+  This model represents a linear Guassian dynamical system with unknown dynamics.
+  The state transition is modeled as a matrix with Gaussian prior on the elements.
+  The observational model is assumed to be the diagonal matrix with `1` on the diagonal.
+author: Lazy Dynamics
+roles:
+  - user
+
+arguments:
+  - name: state_dim
+    description: The dimension of the state space
+    type: int
+    required: true

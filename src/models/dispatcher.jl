@@ -68,8 +68,7 @@ function load_models!(models, locations)
                     models[model.name] = model
                     @debug "Model `$(model.name)` has been added to the dispatcher"
                 catch e
-                    @error "Error loading model from `$potential_model_dir`. Check debug logs for more details."
-                    @debug "Error loading model from `$potential_model_dir`" exception = (e, catch_backtrace())
+                    @error "Error loading model from `$potential_model_dir`" exception = (e, catch_backtrace())
                 end
             end
         end

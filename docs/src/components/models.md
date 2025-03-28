@@ -59,6 +59,8 @@ The configuration file defines the model's metadata and must contain at least th
 name: ModelName-v1             # Model name with version identifier
 description: Model description # A brief description of the model
 author: Author Name            # Name of the model's author
+roles:                         # The roles that can use the model
+  - user                       # Can contain arbitrary roles
 ```
 
 ### Model Implementation (model.jl)

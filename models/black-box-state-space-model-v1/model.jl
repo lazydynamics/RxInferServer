@@ -8,14 +8,17 @@ function initial_parameters(arguments)
     return Dict("A" => zeros(arguments["state_dimension"], arguments["state_dimension"]))
 end
 
-@model function state_space_model_prediction(dim, A, horizon, current_state, y)
-    s[0] ~ MvNormal(μ = current_state, Σ = diageye(dim))
-    y[0] ~ MvNormal(μ = s[0], Σ = diageye(dim))
+@model function state_space_model_prediction(dim, A, horizon, current_state, observation)
+    state ~ MvNormal(μ = current_state, Σ = diageye(dim))
+    observation ~ MvNormal(μ = state, Σ = diageye(dim))
 
     for t in 1:horizon
-        s[t] ~ MvNormal(μ = A * s[t - 1], Σ = diageye(dim))
-        y[t] ~ MvNormal(μ = s[t], Σ = diageye(dim))
+        s[t] ~ MvNormal(μ = A * state, Σ = diageye(dim))
+        state = s[t]
     end
+
+    # hacky wacky
+    s[end] ~ MvNormal(μ = zeros(dim), Σ = 1e10 * diageye(dim))
 end
 
 ### ---------------------------------------------- ###
@@ -47,7 +50,19 @@ end
 end
 
 function run_inference(state, parameters, data)
-    return Dict(), state
+    observation = Float64.(data["observation"])
+    current_state = Float64.(data["current_state"])
+    results = infer(
+        model = state_space_model_prediction(
+            dim = state["state_dimension"], A = parameters["A"], horizon = state["horizon"]
+        ),
+        data = (observation = observation, current_state = current_state),
+        options = (limit_stack_depth = 300,)
+    )
+
+    result = Dict("states" => mean.(results.posteriors[:s]))
+
+    return result, state
 end
 
 function run_learning(state, parameters, events)

@@ -344,7 +344,7 @@ function run_action_read(handler)
         openapi_params = Dict{String,Any}()
         path_params = HTTP.getparams(req)
         openapi_params["model_id"] = OpenAPI.Servers.to_param(String, path_params, "model_id", required=true, )
-        openapi_params["ActRequest"] = OpenAPI.Servers.to_param_type(ActRequest, String(req.body))
+        openapi_params["ActionRequest"] = OpenAPI.Servers.to_param_type(ActionRequest, String(req.body))
         req.context[:openapi_params] = openapi_params
 
         return handler(req)
@@ -362,7 +362,7 @@ end
 function run_action_invoke(impl; post_invoke=nothing)
     function run_action_invoke_handler(req::HTTP.Request)
         openapi_params = req.context[:openapi_params]
-        ret = impl.run_action(req::HTTP.Request, openapi_params["model_id"], openapi_params["ActRequest"];)
+        ret = impl.run_action(req::HTTP.Request, openapi_params["model_id"], openapi_params["ActionRequest"];)
         resp = OpenAPI.Servers.server_response(ret)
         return (post_invoke === nothing) ? resp : post_invoke(req, resp)
     end

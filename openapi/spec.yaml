@@ -377,6 +377,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundResponse'
+  /models/{model_id}/act:
+    post:
+      tags:
+        - Models
+      summary: Run action on a model
+      operationId: runAction
+      description: Run action on a specific model instance
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the model to run action on
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionRequest'
+      responses:
+        '200':
+          description: Successfully ran action on the model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResponse'
+        '401':
+          description: Access token is missing, invalid or has no access to the specific model
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/UnauthorizedResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
   /models/{model_id}/plan:
     post:
       tags:
@@ -1024,6 +1064,45 @@ components:
         errors:
           type: array
           description: List of errors that occurred during the planning call, but were not fatal and the planning was still completed successfully
+          items:
+            $ref: '#/components/schemas/ErrorResponse'
+    ActionRequest:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          description: Model-specific data to run action on
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the action request, used to mark the event in the episode
+          example: "2024-03-20T12:00:00Z"
+        episode_name:
+          type: string
+          description: Name of the episode to run action on
+          default: "default"
+          example: "default"
+    ActionResponse:
+      type: object
+      required:
+        - event_id
+        - results
+        - errors
+      properties:
+        event_id:
+          type: integer
+          format: int64
+          description: Unique identifier for the action event
+        results:
+          type: object
+          description: Model-specific results of the action
+          additionalProperties: true
+        errors:
+          type: array
+          description: List of errors that occurred during the action call, but were not fatal and the action was still completed successfully
           items:
             $ref: '#/components/schemas/ErrorResponse'
     LearnRequest:

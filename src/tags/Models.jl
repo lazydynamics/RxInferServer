@@ -388,6 +388,122 @@ function run_learning(req::HTTP.Request, model_id::String, learn_request::RxInfe
     return RxInferServerOpenAPI.LearnResponse(learned_parameters = learning_result)
 end
 
+function run_action(req::HTTP.Request, model_id::String, action_request::RxInferServerOpenAPI.ActionRequest)
+    @debug "Attempting to run action" model_id
+    token = current_token()
+
+    # Query the database for the model
+    collection = Database.collection("models")
+    query = Mongoc.BSON("model_id" => model_id, "created_by" => token, "deleted" => false)
+    model = Mongoc.find_one(collection, query)
+
+    if isnothing(model)
+        @debug "Cannot run action because the model does not exist or token has no access to it" model_id
+        return RxInferServerOpenAPI.NotFoundResponse(
+            error = "Not Found", message = "The requested model could not be found"
+        )
+    end
+
+    # Asynchronously attach data to the specified episode
+    @debug "Attaching data to the episode" model_id action_request.episode_name
+    fill_episode_task = Threads.@spawn begin
+        # Query the database for the episode
+        collection = Database.collection("episodes")
+        query = Mongoc.BSON("model_id" => model_id, "name" => action_request.episode_name, "deleted" => false)
+
+        # Get the current number of events from the n_events field
+        options = Mongoc.BSON("projection" => Mongoc.BSON("events_id_counter" => 1))
+        current = Mongoc.find_one(collection, query; options = options)
+        next_id = isnothing(current) ? 1 : current["events_id_counter"] + 1
+
+        update = Mongoc.BSON(
+            "\$push" => Mongoc.BSON(
+                "events" => Dict(
+                    "event_id" => next_id,
+                    "data" => action_request.data,
+                    "timestamp" => DateTime(something(action_request.timestamp, Dates.now())) # OpenAPI eh?
+                )
+            ),
+            "\$set" => Mongoc.BSON("events_id_counter" => next_id)
+        )
+
+        options = Mongoc.BSON(
+            "returnDocument" => "after", "projection" => Mongoc.BSON("event_id" => Mongoc.BSON("\$size" => "\$events"))
+        )
+        result = Mongoc.find_one_and_update(collection, query, update; options = options)
+
+        if isnothing(result)
+            @debug "Unable to attach data to the episode due to internal error" model_id action_request.episode_name
+            return RxInferServerOpenAPI.ErrorResponse(
+                error = "Bad Request", message = "Unable to attach data to the episode due to internal error"
+            )
+        end
+
+        @debug "Successfully attached data to the episode" model_id action_request.episode_name next_id
+        return next_id
+    end
+
+    # Asynchronously run the inference
+    @debug "Running action" model_id
+    action_task = Threads.@spawn begin
+        # Get the model's dispatcher
+        dispatcher = Models.get_models_dispatcher()
+
+        # Run the inference
+        try
+            model_name = model["model_name"]
+            model_state = model["state"]
+
+            action_result, new_state = Models.dispatch(
+                dispatcher, model_name, :run_action, model_state, action_request.data
+            )
+
+            # Update the model's state
+            collection = Database.collection("models")
+            query = Mongoc.BSON("model_id" => model_id)
+            update = Mongoc.BSON("\$set" => Mongoc.BSON("state" => new_state))
+            result = Mongoc.update_one(collection, query, update)
+
+            if result["matchedCount"] != 1
+                @debug "Unable to update model's state due to internal error" model_id
+                return RxInferServerOpenAPI.ErrorResponse(
+                    error = "Bad Request", message = "Unable to update model's state due to internal error"
+                )
+            end
+
+            @debug "Successfully updated model's state" model_id
+            return action_result
+        catch e
+            @error "Unable to run action due to internal error. Check debug logs for more information." model_id
+            @debug "Unable to run action due to internal error." exception = (e, catch_backtrace())
+            return RxInferServerOpenAPI.ErrorResponse(
+                error = "Bad Request", message = "Unable to run action due to internal error"
+            )
+        end
+    end
+
+    # Wait for the episode to be filled and the inference to be run
+    action_task_result = fetch(action_task)
+
+    if isa(action_task_result, RxInferServerOpenAPI.ErrorResponse)
+        return action_task_result
+    end
+
+    # Inference completed successfully, but there might be non-fatal errors
+    # for example, the episode might not be filled successfully, which is sad, but not a big deal
+    errors = []
+    event_id = nothing
+
+    fill_episode_task_result = fetch(fill_episode_task)
+
+    if isa(fill_episode_task_result, RxInferServerOpenAPI.ErrorResponse)
+        push!(errors, fill_episode_task_result)
+    else
+        event_id = fill_episode_task_result
+    end
+
+    return RxInferServerOpenAPI.ActionResponse(event_id = event_id, results = action_task_result, errors = errors)
+end
 
 function run_planning(req::HTTP.Request, model_id::String, planning_request::RxInferServerOpenAPI.PlanningRequest)
     @debug "Attempting to run planning" model_id

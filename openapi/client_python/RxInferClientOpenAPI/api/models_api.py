@@ -19,8 +19,8 @@ from typing_extensions import Annotated
 from pydantic import Field, StrictInt, StrictStr
 from typing import List
 from typing_extensions import Annotated
-from RxInferClientOpenAPI.models.act_request import ActRequest
-from RxInferClientOpenAPI.models.act_response import ActResponse
+from RxInferClientOpenAPI.models.action_request import ActionRequest
+from RxInferClientOpenAPI.models.action_response import ActionResponse
 from RxInferClientOpenAPI.models.attach_metadata_to_event_request import AttachMetadataToEventRequest
 from RxInferClientOpenAPI.models.create_model_request import CreateModelRequest
 from RxInferClientOpenAPI.models.create_model_response import CreateModelResponse
@@ -3349,7 +3349,7 @@ class ModelsApi:
     def run_action(
         self,
         model_id: Annotated[StrictStr, Field(description="ID of the model to run action on")],
-        act_request: ActRequest,
+        action_request: ActionRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -3362,15 +3362,15 @@ class ModelsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ActResponse:
+    ) -> ActionResponse:
         """Run action on a model
 
         Run action on a specific model instance
 
         :param model_id: ID of the model to run action on (required)
         :type model_id: str
-        :param act_request: (required)
-        :type act_request: ActRequest
+        :param action_request: (required)
+        :type action_request: ActionRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3395,7 +3395,7 @@ class ModelsApi:
 
         _param = self._run_action_serialize(
             model_id=model_id,
-            act_request=act_request,
+            action_request=action_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -3403,7 +3403,7 @@ class ModelsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ActResponse",
+            '200': "ActionResponse",
             '401': "UnauthorizedResponse",
             '404': "NotFoundResponse",
         }
@@ -3422,7 +3422,7 @@ class ModelsApi:
     def run_action_with_http_info(
         self,
         model_id: Annotated[StrictStr, Field(description="ID of the model to run action on")],
-        act_request: ActRequest,
+        action_request: ActionRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -3435,15 +3435,15 @@ class ModelsApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[ActResponse]:
+    ) -> ApiResponse[ActionResponse]:
         """Run action on a model
 
         Run action on a specific model instance
 
         :param model_id: ID of the model to run action on (required)
         :type model_id: str
-        :param act_request: (required)
-        :type act_request: ActRequest
+        :param action_request: (required)
+        :type action_request: ActionRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3468,7 +3468,7 @@ class ModelsApi:
 
         _param = self._run_action_serialize(
             model_id=model_id,
-            act_request=act_request,
+            action_request=action_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -3476,7 +3476,7 @@ class ModelsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ActResponse",
+            '200': "ActionResponse",
             '401': "UnauthorizedResponse",
             '404': "NotFoundResponse",
         }
@@ -3495,7 +3495,7 @@ class ModelsApi:
     def run_action_without_preload_content(
         self,
         model_id: Annotated[StrictStr, Field(description="ID of the model to run action on")],
-        act_request: ActRequest,
+        action_request: ActionRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -3515,8 +3515,8 @@ class ModelsApi:
 
         :param model_id: ID of the model to run action on (required)
         :type model_id: str
-        :param act_request: (required)
-        :type act_request: ActRequest
+        :param action_request: (required)
+        :type action_request: ActionRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3541,7 +3541,7 @@ class ModelsApi:
 
         _param = self._run_action_serialize(
             model_id=model_id,
-            act_request=act_request,
+            action_request=action_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -3549,7 +3549,7 @@ class ModelsApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ActResponse",
+            '200': "ActionResponse",
             '401': "UnauthorizedResponse",
             '404': "NotFoundResponse",
         }
@@ -3563,7 +3563,7 @@ class ModelsApi:
     def _run_action_serialize(
         self,
         model_id,
-        act_request,
+        action_request,
         _request_auth,
         _content_type,
         _headers,
@@ -3591,8 +3591,8 @@ class ModelsApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if act_request is not None:
-            _body_params = act_request
+        if action_request is not None:
+            _body_params = action_request
 
 
         # set the HTTP header `Accept`

@@ -13,8 +13,8 @@ RxInferClientOpenAPI/api_response.py
 RxInferClientOpenAPI/configuration.py
 RxInferClientOpenAPI/exceptions.py
 RxInferClientOpenAPI/models/__init__.py
-RxInferClientOpenAPI/models/act_request.py
-RxInferClientOpenAPI/models/act_response.py
+RxInferClientOpenAPI/models/action_request.py
+RxInferClientOpenAPI/models/action_response.py
 RxInferClientOpenAPI/models/attach_metadata_to_event_request.py
 RxInferClientOpenAPI/models/create_model_request.py
 RxInferClientOpenAPI/models/create_model_response.py
@@ -40,8 +40,8 @@ RxInferClientOpenAPI/models/token_response.py
 RxInferClientOpenAPI/models/unauthorized_response.py
 RxInferClientOpenAPI/py.typed
 RxInferClientOpenAPI/rest.py
-docs/ActRequest.md
-docs/ActResponse.md
+docs/ActionRequest.md
+docs/ActionResponse.md
 docs/AttachMetadataToEventRequest.md
 docs/AuthenticationApi.md
 docs/CreateModelRequest.md
@@ -75,4 +75,6 @@ setup.cfg
 setup.py
 test-requirements.txt
 test/__init__.py
+test/test_action_request.py
+test/test_action_response.py
 tox.ini

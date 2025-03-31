@@ -349,7 +349,7 @@ This endpoint does not need any parameter.
 
 <a name="runAction"></a>
 # **runAction**
-> ActResponse runAction(model\_id, ActRequest)
+> ActionResponse runAction(model\_id, ActionRequest)
 
 Run action on a model
 
@@ -360,11 +360,11 @@ Run action on a model
 |Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **model\_id** | **UUID**| ID of the model to run action on | [default to null] |
-| **ActRequest** | [**ActRequest**](../Models/ActRequest.md)|  | |
+| **ActionRequest** | [**ActionRequest**](../Models/ActionRequest.md)|  | |
 
 ### Return type
 
-[**ActResponse**](../Models/ActResponse.md)
+[**ActionResponse**](../Models/ActionResponse.md)
 
 ### Authorization
 

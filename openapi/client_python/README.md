@@ -11,7 +11,7 @@ For more information, please visit [https://github.com/lazydynamics/RxInferServe
 
 ## Requirements.
 
-Python 3.8+
+Python 3.9+
 
 ## Installation & Usage
 ### pip install
@@ -109,8 +109,8 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
- - [ActRequest](docs/ActRequest.md)
- - [ActResponse](docs/ActResponse.md)
+ - [ActionRequest](docs/ActionRequest.md)
+ - [ActionResponse](docs/ActionResponse.md)
  - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [CreateModelRequest](docs/CreateModelRequest.md)
  - [CreateModelResponse](docs/CreateModelResponse.md)

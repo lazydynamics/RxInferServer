@@ -46,8 +46,8 @@ Class | Method
 
 ## Models
 
- - [ActRequest](docs/ActRequest.md)
- - [ActResponse](docs/ActResponse.md)
+ - [ActionRequest](docs/ActionRequest.md)
+ - [ActionResponse](docs/ActionResponse.md)
  - [AttachMetadataToEventRequest](docs/AttachMetadataToEventRequest.md)
  - [CreateModelRequest](docs/CreateModelRequest.md)
  - [CreateModelResponse](docs/CreateModelResponse.md)

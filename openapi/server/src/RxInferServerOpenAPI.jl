@@ -48,7 +48,7 @@ The following server methods must be implemented:
     - *signature:* get_models(req::HTTP.Request;) -> ModelList
 - **run_action**
     - *invocation:* POST /models/{model_id}/act
-    - *signature:* run_action(req::HTTP.Request, model_id::String, act_request::ActRequest;) -> ActResponse
+    - *signature:* run_action(req::HTTP.Request, model_id::String, action_request::ActionRequest;) -> ActionResponse
 - **run_inference**
     - *invocation:* POST /models/{model_id}/infer
     - *signature:* run_inference(req::HTTP.Request, model_id::String, infer_request::InferRequest;) -> InferResponse

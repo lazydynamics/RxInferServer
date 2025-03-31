@@ -32,8 +32,8 @@ All URIs are relative to *http://localhost:8000/v1*
 <a name="documentation-for-models"></a>
 ## Documentation for Models
 
- - [ActRequest](./Models/ActRequest.md)
- - [ActResponse](./Models/ActResponse.md)
+ - [ActionRequest](./Models/ActionRequest.md)
+ - [ActionResponse](./Models/ActionResponse.md)
  - [AttachMetadataToEventRequest](./Models/AttachMetadataToEventRequest.md)
  - [CreateModelRequest](./Models/CreateModelRequest.md)
  - [CreateModelResponse](./Models/CreateModelResponse.md)

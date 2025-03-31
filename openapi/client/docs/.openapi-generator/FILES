@@ -2,8 +2,8 @@
 Apis/AuthenticationApi.md
 Apis/ModelsApi.md
 Apis/ServerApi.md
-Models/ActRequest.md
-Models/ActResponse.md
+Models/ActionRequest.md
+Models/ActionResponse.md
 Models/AttachMetadataToEventRequest.md
 Models/CreateModelRequest.md
 Models/CreateModelResponse.md

@@ -14,8 +14,8 @@
 
 
 # import models into model package
-from RxInferClientOpenAPI.models.act_request import ActRequest
-from RxInferClientOpenAPI.models.act_response import ActResponse
+from RxInferClientOpenAPI.models.action_request import ActionRequest
+from RxInferClientOpenAPI.models.action_response import ActionResponse
 from RxInferClientOpenAPI.models.attach_metadata_to_event_request import AttachMetadataToEventRequest
 from RxInferClientOpenAPI.models.create_model_request import CreateModelRequest
 from RxInferClientOpenAPI.models.create_model_response import CreateModelResponse

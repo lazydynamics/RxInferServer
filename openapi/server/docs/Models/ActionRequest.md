@@ -1,4 +1,4 @@
-# ActRequest
+# ActionRequest
 ## Properties
 
 | Name | Type | Description | Notes |

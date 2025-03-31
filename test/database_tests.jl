@@ -4,6 +4,8 @@
     client = Mongoc.Client(RxInferServer.Database.RXINFER_SERVER_MONGODB_URL())
     ping = Mongoc.ping(client)
     @test isone(ping["ok"])
+    # https://github.com/felipenoris/Mongoc.jl/issues/124
+    Mongoc.destroy!(client)
 end
 
 @testitem "Test database connection (direct, sync)" begin

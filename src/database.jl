@@ -46,6 +46,103 @@ const MONGODB_CLIENT = ScopedValue{Mongoc.Client}()
 const MONGODB_DATABASE = ScopedValue{Mongoc.Database}()
 
 """
+    RedactedURL(url::String)
+
+A type that redacts the URL for logging and display purposes.
+Removes credentials and sensitive parameters from the URL.
+"""
+struct RedactedURL
+    url::String
+end
+
+RedactedURL(url::RedactedURL) = url
+
+function Base.convert(::Type{String}, url::RedactedURL)
+    result = url.url
+
+    # Hide username:password
+    if contains(url.url, '@')
+        protocol_part, rest = split(url.url, "://", limit = 2)
+
+        if contains(rest, '@')
+            credentials_part, server_part = split(rest, '@', limit = 2)
+            result = "$protocol_part://****:****@$server_part"
+        end
+    end
+
+    # Hide sensitive parameters if URL contains query string
+    sensitive_params = ["tlsCertificateKeyFile", "tlsCAFile"]
+
+    if any(param -> contains(result, "$param="), sensitive_params) && contains(result, "?")
+        base_url, query_string = split(result, "?", limit = 2)
+
+        # Split query parameters
+        query_params = split(query_string, "&")
+
+        # Process each parameter
+        for (i, param) in enumerate(query_params)
+            for sensitive_param in sensitive_params
+                if startswith(param, "$sensitive_param=")
+                    key_value = split(param, "=", limit = 2)
+                    if length(key_value) == 2
+                        query_params[i] = "$(key_value[1])=****"
+                    end
+                    break
+                end
+            end
+        end
+
+        # Reassemble URL
+        result = base_url * "?" * join(query_params, "&")
+    end
+
+    return result
+end
+
+function Base.show(io::IO, url::RedactedURL)
+    print(io, convert(String, url))
+end
+
+"""
+    DatabaseFailedConnectionError(url, cause) <: Exception
+
+An error that occurs when the server fails to connect to the MongoDB database.
+"""
+struct DatabaseFailedConnectionError <: Exception
+    url::RedactedURL
+    cause::Union{Exception, Nothing}
+end
+
+DatabaseFailedConnectionError(url::String, cause::Union{Exception, Nothing} = nothing) =
+    DatabaseFailedConnectionError(RedactedURL(url), cause)
+
+function Base.showerror(io::IO, e::DatabaseFailedConnectionError)
+    message = lazy"""
+    Failed to connect to MongoDB server at $(e.url). 
+    Potential reasons:
+    - Database is not running
+      ⋅ Make sure that the server is running and accepting connections.
+      ⋅ If running locally, use `make docker` to start the Docker compose environment with local MongoDB database.
+    - Database is not reachable
+      ⋅ Make sure that the server is accepting connections from your network.
+      ⋅ Mongo Atlas clusters are limiting the incoming connections to the public IP addresses by default.
+        Check the cluster configuration and allow the incoming connections from the your IP address.
+    - Credentials are invalid
+      ⋅ Make sure that the credentials used to connect to the server are correct.
+    - Missing TLS configuration
+      ⋅ Make sure that the server is configured to accept encrypted connections, 
+        see `RXINFER_SERVER_SSL_CA_FILE` environment variable for more information.
+      ⋅ RxInferServer attempts to automatically find a CA certificate if `RXINFER_SERVER_SSL_CA_FILE` is not set, 
+        but this might fail if the certificate is not located in a standard location.
+    """
+    print(io, message)
+    if !isnothing(e.cause)
+        print(io, "\nCaused by: ")
+        showerror(io, e.cause)
+    end
+end
+
+"""
     with_connection(f::F; url::String = RXINFER_SERVER_MONGODB_URL(), database::String = RXINFER_SERVER_MONGODB_DATABASE(), check_connection::Bool = true) where {F}
 
 Establishes a connection to the MongoDB database and executes the given function with the connection and database scoped.
@@ -72,34 +169,34 @@ function with_connection(
     url::String = RXINFER_SERVER_MONGODB_URL(),
     database::String = RXINFER_SERVER_MONGODB_DATABASE(),
     check_connection::Bool = true,
-    verbose::Bool = true
+    verbose::Bool = false
 ) where {F}
-    _url_with_tls = inject_tls_ca_file(url)
-    _client = Mongoc.Client(_url_with_tls)::Mongoc.Client
-    _database = _client[database]::Mongoc.Database
-    _hidden_url = hidden_url(_url_with_tls)
-    if verbose
-        @info "Connecting to MongoDB server at $_hidden_url"
-    end
-    if check_connection
-        try
-            ping = Mongoc.ping(_client)
-            if !isone(ping["ok"])
-                error(lazy"Failed to connect to MongoDB server at $_hidden_url")
-            end
-        catch e
-            @error lazy"Failed to connect to MongoDB server at $_hidden_url. Is the server running? If running locally, use `make docker` to start the Docker compose environment with local MongoDB database."
-            rethrow(e)
+    _url = inject_tls_ca_file(url; verbose = verbose)
+    _client = Ref{Mongoc.Client}()
+    _database = Ref{Mongoc.Database}()
+    _redacted_url = RedactedURL(_url)
+    try
+        if verbose
+            @info lazy"Connecting to MongoDB server at $_redacted_url"
         end
-    end
-    if verbose
-        @info "Connected to MongoDB server at $_hidden_url"
-    end
-    return with(MONGODB_CLIENT => _client, MONGODB_DATABASE => _database) do
-        result = f()
+        _client[] = Mongoc.Client(_url)::Mongoc.Client
+        _database[] = _client[][database]::Mongoc.Database
+        if check_connection
+            ping = Mongoc.ping(_client[])
+            if !isone(ping["ok"])
+                error(lazy"ping failed: $ping")
+            end
+        end
+        if verbose
+            @info lazy"Connected to MongoDB server at $_redacted_url"
+        end
+        return with(f, MONGODB_CLIENT => _client[], MONGODB_DATABASE => _database[])
+    catch e
+        throw(DatabaseFailedConnectionError(_redacted_url, e))
+    finally
         # https://github.com/felipenoris/Mongoc.jl/issues/124
-        Mongoc.destroy!(_client)
-        return result
+        isassigned(_client) && Mongoc.destroy!(_client[])
+        isassigned(_database) && Mongoc.destroy!(_database[])
     end
 end
 
@@ -141,58 +238,6 @@ function collection(name::String)::Mongoc.Collection
 end
 
 """
-    hidden_url(url::String)::String
-
-Returns the MongoDB URL with sensitive information hidden for logging and display purposes.
-If the URL contains credentials (username:password), they will be replaced with "****:****".
-Additionally, sensitive query parameters like `tlsCertificateKeyFile` and `tlsCAFile` will have their values hidden.
-
-# Arguments
-- `url::String`: The MongoDB connection URL
-"""
-function hidden_url(url::String)::String
-    result = url
-
-    # Hide username:password
-    if contains(url, '@')
-        protocol_part, rest = split(url, "://", limit = 2)
-
-        if contains(rest, '@')
-            credentials_part, server_part = split(rest, '@', limit = 2)
-            result = "$protocol_part://****:****@$server_part"
-        end
-    end
-
-    # Hide sensitive parameters if URL contains query string
-    sensitive_params = ["tlsCertificateKeyFile", "tlsCAFile"]
-
-    if any(param -> contains(result, "$param="), sensitive_params) && contains(result, "?")
-        base_url, query_string = split(result, "?", limit = 2)
-
-        # Split query parameters
-        query_params = split(query_string, "&")
-
-        # Process each parameter
-        for (i, param) in enumerate(query_params)
-            for sensitive_param in sensitive_params
-                if startswith(param, "$sensitive_param=")
-                    key_value = split(param, "=", limit = 2)
-                    if length(key_value) == 2
-                        query_params[i] = "$(key_value[1])=****"
-                    end
-                    break
-                end
-            end
-        end
-
-        # Reassemble URL
-        result = base_url * "?" * join(query_params, "&")
-    end
-
-    return result
-end
-
-"""
     inject_tls_ca_file(url::String)::String
 
 Injects the TLS CA file into the MongoDB connection URL if it's not already present.
@@ -207,7 +252,7 @@ This function adds the tlsCAFile parameter to the URL in the following priority:
 # Returns
 - `String`: The MongoDB connection URL with tlsCAFile parameter added if needed
 """
-function inject_tls_ca_file(url::String)::String
+function inject_tls_ca_file(url::String; verbose::Bool = false)::String
     # If URL already has tlsCAFile or is localhost, don't modify
     if contains(url, "tlsCAFile") || contains(url, "localhost") || contains(url, "127.0.0.1")
         return url
@@ -222,7 +267,9 @@ function inject_tls_ca_file(url::String)::String
         if !isempty(certificates["ca_certs"])
             # Use the first CA certificate found
             tls_ca_file = first(certificates["ca_certs"])
-            @info "Automatically using CA certificate: $tls_ca_file"
+            if verbose
+                @info "Automatically using CA certificate: $tls_ca_file"
+            end
         end
     end
 

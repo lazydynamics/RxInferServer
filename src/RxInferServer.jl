@@ -270,7 +270,7 @@ function serve()
             # Start HTTP server on port `RXINFER_SERVER_PORT`
             server_task = Threads.@spawn begin
                 try
-                    Database.with_connection() do
+                    Database.with_connection(verbose = true) do
                         # Start the HTTP server in non-blocking mode in order to trigger the `server_instantiated` event
                         s = HTTP.serve!(server.router, server.ip, server.port, server = socket)
                         # Flip the server running flag to true
@@ -281,7 +281,7 @@ function serve()
                         wait(s)
                     end
                 catch e
-                    @error "Server task encountered an error: $e"
+                    @error "Server task encountered an error" exception = (e, catch_backtrace())
                     set_server_running(server, false)
                     set_server_errored(server, true)
                     notify_instantiated(server)

@@ -17,7 +17,8 @@ RxInferServer.Database.with_connection
 RxInferServer.Database.client
 RxInferServer.Database.database
 RxInferServer.Database.collection
-RxInferServer.Database.hidden_url
 RxInferServer.Database.find_ssl_certificates
 RxInferServer.Database.inject_tls_ca_file
+RxInferServer.Database.RedactedURL
+RxInferServer.Database.DatabaseFailedConnectionError
 ```

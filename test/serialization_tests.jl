@@ -36,8 +36,8 @@
         @test from_json("[1.0,2.0,3.0]") == [1.0, 2.0, 3.0]
         @test to_json([[1], [2], [3]]) == "[[1],[2],[3]]"
         @test to_json([[[1]], [[2]], [[3]]]) == "[[[1]],[[2]],[[3]]]"
-        @test to_json([ "a", "b", "c" ]) == "[\"a\",\"b\",\"c\"]"
-        @test from_json("[\"a\",\"b\",\"c\"]") == [ "a", "b", "c" ]
+        @test to_json(["a", "b", "c"]) == "[\"a\",\"b\",\"c\"]"
+        @test from_json("[\"a\",\"b\",\"c\"]") == ["a", "b", "c"]
         @test to_json([[1, 2, 3], [4, 5, 6]]) == "[[1,2,3],[4,5,6]]"
         @test from_json("[[1,2,3],[4,5,6]]") == [[1, 2, 3], [4, 5, 6]]
         @test from_json("[[[1]],[[2]],[[3]]]") == [[[1]], [[2]], [[3]]]
@@ -102,50 +102,85 @@ end
 
 @testitem "Multi-dimensional arrays should be serialized based on the preference: ArrayOfArrays" begin
     import RxInferServer.Serialization:
-        to_json, from_json, MultiDimensionalArrayTransformPreference, SerializationPreferences, DefaultSerialization
+        to_json, from_json, MultiDimensionalArrayTransform, SerializationPreferences, DefaultSerialization
 
-    preferences = SerializationPreferences(mdarray_transform = MultiDimensionalArrayTransformPreference.ArrayOfArrays)
+    preferences = SerializationPreferences(mdarray_transform = MultiDimensionalArrayTransform.ArrayOfArrays)
 
-    @test to_json(preferences, [1 2; 3 4]) == "[[1,3],[2,4]]" # array of arrays is row based by default
-    @test to_json(preferences, [1 3; 2 4]) == "[[1,2],[3,4]]"
-    @test to_json(preferences, [1 2 3; 4 5 6]) == "[[1,4],[2,5],[3,6]]"
-    @test to_json(preferences, [1 2 3; 4 5 6; 7 8 9]) == "[[1,4,7],[2,5,8],[3,6,9]]"
+    @test to_json(preferences, [1 2; 3 4]) ==
+        "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[2,2],\"data\":[[1,3],[2,4]]}"
+    @test to_json(preferences, [1 3; 2 4]) ==
+        "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[2,2],\"data\":[[1,2],[3,4]]}"
+    @test to_json(preferences, [1 2 3; 4 5 6]) ==
+        "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[2,3],\"data\":[[1,4],[2,5],[3,6]]}"
+    @test to_json(preferences, [1 2 3; 4 5 6; 7 8 9]) ==
+        "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[3,3],\"data\":[[1,4,7],[2,5,8],[3,6,9]]}"
     @test to_json(preferences, [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16]) ==
-        "[[1,5,9,13],[2,6,10,14],[3,7,11,15],[4,8,12,16]]"
-    @test to_json(preferences, [1, 2, 3, 4]') == "[[1],[2],[3],[4]]"
+        "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[4,4],\"data\":[[1,5,9,13],[2,6,10,14],[3,7,11,15],[4,8,12,16]]}"
+    @test to_json(preferences, [1, 2, 3, 4]') ==
+        "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[1,4],\"data\":[[1],[2],[3],[4]]}"
 
-    # Test 3-dimensional tensors
-    tensor_3d = zeros(Int, 2, 3, 2)
-    tensor_3d[1, 1, 1] = 1
-    tensor_3d[2, 1, 1] = 2
-    tensor_3d[1, 2, 1] = 3
-    tensor_3d[2, 2, 1] = 4
-    tensor_3d[1, 3, 1] = 5
-    tensor_3d[2, 3, 1] = 6
-    tensor_3d[1, 1, 2] = 7
-    tensor_3d[2, 1, 2] = 8
-    tensor_3d[1, 2, 2] = 9
-    tensor_3d[2, 2, 2] = 10
-    tensor_3d[1, 3, 2] = 11
-    tensor_3d[2, 3, 2] = 12
-    
+    # Test 3-dimensional tensors using array concatenation syntax
+    tensor_3d = [
+        1 3 5; 2 4 6;;;
+        7 9 11; 8 10 12
+    ]
+
     # 3D tensor should be serialized as array of arrays of arrays
-    @test to_json(preferences, tensor_3d) == "[[[1,2],[3,4],[5,6]],[[7,8],[9,10],[11,12]]]"
-    
-    # Test another 3D tensor with different dimensions
-    tensor_3d_2 = zeros(Int, 2, 2, 3)
-    tensor_3d_2[1, 1, 1] = 1
-    tensor_3d_2[2, 1, 1] = 2
-    tensor_3d_2[1, 2, 1] = 3
-    tensor_3d_2[2, 2, 1] = 4
-    tensor_3d_2[1, 1, 2] = 5
-    tensor_3d_2[2, 1, 2] = 6
-    tensor_3d_2[1, 2, 2] = 7
-    tensor_3d_2[2, 2, 2] = 8
-    tensor_3d_2[1, 1, 3] = 9
-    tensor_3d_2[2, 1, 3] = 10
-    tensor_3d_2[1, 2, 3] = 11
-    tensor_3d_2[2, 2, 3] = 12
-    
-    @test to_json(preferences, tensor_3d_2) == "[[[1,2],[3,4]],[[5,6],[7,8]],[[9,10],[11,12]]]"
+    @test to_json(preferences, tensor_3d) ==
+        "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[2,3,2],\"data\":[[[1,2],[3,4],[5,6]],[[7,8],[9,10],[11,12]]]}"
+
+    # Test 4-dimensional tensor
+    tensor_4d = [1 2;;; 3 4;;;; 5 6;;; 7 8]
+    @test to_json(preferences, tensor_4d) ==
+        "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[1,2,2,2],\"data\":[[[[1],[2]],[[3],[4]]],[[[5],[6]],[[7],[8]]]]}"
+
+    # Test equivalent 4D tensor construction using nested arrays
+    tensor_4d_2 = [[1 2;;; 3 4];;;; [5 6];;; [7 8]]
+    @test to_json(preferences, tensor_4d_2) ==
+        "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[1,2,2,2],\"data\":[[[[1],[2]],[[3],[4]]],[[[5],[6]],[[7],[8]]]]}"
+end
+
+@testitem "Metadata for multi-dimensional arrays should be included based on the preference" begin
+    import RxInferServer.Serialization:
+        to_json,
+        from_json,
+        MultiDimensionalArrayTransform,
+        MultiDimensionalArrayMetadata,
+        SerializationPreferences,
+        DefaultSerialization
+
+    base_transform = MultiDimensionalArrayTransform.ArrayOfArrays
+
+    @testset "All" begin
+        preferences = SerializationPreferences(
+            mdarray_transform = base_transform, mdarray_metadata = MultiDimensionalArrayMetadata.All
+        )
+
+        @test to_json(preferences, [1 2; 3 4]) ==
+            "{\"type\":\"mdarray\",\"encoding\":\"array_of_arrays\",\"shape\":[2,2],\"data\":[[1,3],[2,4]]}"
+    end
+
+    @testset "TypeAndShape" begin
+        preferences = SerializationPreferences(
+            mdarray_transform = base_transform, mdarray_metadata = MultiDimensionalArrayMetadata.TypeAndShape
+        )
+
+        @test to_json(preferences, [1 2; 3 4]) == "{\"type\":\"mdarray\",\"shape\":[2,2],\"data\":[[1,3],[2,4]]}"
+    end
+
+    @testset "Shape" begin
+        preferences = SerializationPreferences(
+            mdarray_transform = base_transform, mdarray_metadata = MultiDimensionalArrayMetadata.Shape
+        )
+
+        @test to_json(preferences, [1 2; 3 4]) == "{\"shape\":[2,2],\"data\":[[1,3],[2,4]]}"
+    end
+
+    @testset "Compact" begin
+        preferences = SerializationPreferences(
+            mdarray_transform = base_transform, mdarray_metadata = MultiDimensionalArrayMetadata.Compact
+        )
+
+        @test to_json(preferences, [1 2; 3 4]) == "[[1,3],[2,4]]"
+    end
 end

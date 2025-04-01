@@ -77,6 +77,7 @@ RxInferServer.Serialization.MultiDimensionalArrayRepr.DictShape
 RxInferServer.Serialization.MultiDimensionalArrayRepr.Data
 RxInferServer.Serialization.MultiDimensionalArrayData
 RxInferServer.Serialization.MultiDimensionalArrayData.ArrayOfArrays
+RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeColumnMajor
 ```
 
 ## API Reference

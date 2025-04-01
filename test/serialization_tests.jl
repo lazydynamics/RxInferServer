@@ -206,21 +206,75 @@ end
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [2, 3, 2],
-        "data" => [[[1,7],[3,9],[5,11]],[[2,8],[4,10],[6,12]]]
+        "data" => [[[1, 7], [3, 9], [5, 11]], [[2, 8], [4, 10], [6, 12]]]
     )
 
     @test_json_serialization s [1 2;;; 3 4;;;; 5 6;;; 7 8] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [1, 2, 2, 2],
-        "data" => [[[[1,5],[3,7]],[[2,6],[4,8]]]]
+        "data" => [[[[1, 5], [3, 7]], [[2, 6], [4, 8]]]]
     )
 
     @test_json_serialization s [[1 2;;; 3 4];;;; [5 6];;; [7 8]] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [1, 2, 2, 2],
-        "data" => [[[[1,5],[3,7]],[[2,6],[4,8]]]]
+        "data" => [[[[1, 5], [3, 7]], [[2, 6], [4, 8]]]]
+    )
+
+    # Shouldn't affect the serialization of 1D arrays
+    @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
+end
+
+@testitem "Multi-dimensional arrays should be serialized based on the preference: ReshapeColumnMajor" setup = [
+    SerializationTestUtils
+] begin
+    import .SerializationTestUtils: to_from_json, @test_json_serialization
+    import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization
+
+    s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ReshapeColumnMajor)
+
+    @test_json_serialization s [1 2; 3 4] =>
+        Dict("type" => "mdarray", "encoding" => "reshape_column_major", "shape" => [2, 2], "data" => [1, 3, 2, 4])
+
+    @test_json_serialization s [1 3; 2 4] =>
+        Dict("type" => "mdarray", "encoding" => "reshape_column_major", "shape" => [2, 2], "data" => [1, 2, 3, 4])
+
+    @test_json_serialization s [1 2 3; 4 5 6] =>
+        Dict("type" => "mdarray", "encoding" => "reshape_column_major", "shape" => [2, 3], "data" => [1, 4, 2, 5, 3, 6])
+
+    @test_json_serialization s [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16] => Dict(
+        "type" => "mdarray",
+        "encoding" => "reshape_column_major",
+        "shape" => [4, 4],
+        "data" => [1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16]
+    )
+
+    @test_json_serialization s [1 2 3 4] =>
+        Dict("type" => "mdarray", "encoding" => "reshape_column_major", "shape" => [1, 4], "data" => [1, 2, 3, 4])
+    @test_json_serialization s [1 2 3 4]' =>
+        Dict("type" => "mdarray", "encoding" => "reshape_column_major", "shape" => [4, 1], "data" => [1, 2, 3, 4])
+
+    @test_json_serialization s [1 3 5; 2 4 6;;; 7 9 11; 8 10 12] => Dict(
+        "type" => "mdarray",
+        "encoding" => "reshape_column_major",
+        "shape" => [2, 3, 2],
+        "data" => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    )
+
+    @test_json_serialization s [1 2;;; 3 4;;;; 5 6;;; 7 8] => Dict(
+        "type" => "mdarray",
+        "encoding" => "reshape_column_major",
+        "shape" => [1, 2, 2, 2],
+        "data" => [1, 2, 3, 4, 5, 6, 7, 8]
+    )
+
+    @test_json_serialization s [[1 2;;; 3 4];;;; [5 6];;; [7 8]] => Dict(
+        "type" => "mdarray",
+        "encoding" => "reshape_column_major",
+        "shape" => [1, 2, 2, 2],
+        "data" => [1, 2, 3, 4, 5, 6, 7, 8]
     )
 
     # Shouldn't affect the serialization of 1D arrays

@@ -30,6 +30,26 @@ See also: [`RxInferServer.Serialization.MultiDimensionalArrayRepr`](@ref)
         Julia uses column-major ordering for multi-dimensional arrays, but this setting explicitly uses row-major ordering.
     """
     ArrayOfArrays
+
+    """
+    Encodes the data of multi-dimensional arrays as a flattened array using column-major ordering.
+
+    ```jldoctest
+    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
+
+    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ReshapeColumnMajor);
+
+    julia> to_json(s, [1 2; 3 4])
+    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_column_major\\",\\"shape\\":[2,2],\\"data\\":[1,3,2,4]}"
+
+    julia> to_json(s, [1 3; 2 4])
+    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_column_major\\",\\"shape\\":[2,2],\\"data\\":[1,2,3,4]}"
+    ```
+
+    !!! note
+        Julia uses column-major ordering for multi-dimensional arrays, so this encoding preserves the natural ordering of elements in memory.
+    """
+    ReshapeColumnMajor
 end
 
 # This is mostly for convenience to convert the preference to a UInt8.
@@ -238,7 +258,7 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
 
     if mdarray_repr == MultiDimensionalArrayRepr.Dict
         show_pair(io, JSON.StandardSerialization(), :type => :mdarray)
-        show_pair(io, JSON.StandardSerialization(), :encoding => :array_of_arrays)
+        show_pair(io, JSON.StandardSerialization(), :encoding => __mdarray_data_encoding(mdarray_data))
         show_pair(io, JSON.StandardSerialization(), :shape => size(value))
         show_key(io, :data)
     elseif mdarray_repr == MultiDimensionalArrayRepr.DictTypeAndShape
@@ -256,6 +276,8 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
 
     if mdarray_data == MultiDimensionalArrayData.ArrayOfArrays
         __show_mdarray_data_array_of_arrays(io, serialization, value)
+    elseif mdarray_data == MultiDimensionalArrayData.ReshapeColumnMajor
+        __show_mdarray_data_reshape_column_major(io, serialization, value)
     else
         throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
     end
@@ -265,22 +287,44 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
     end
 end
 
+function __mdarray_data_encoding(mdarray_data::UInt8)
+    if mdarray_data == MultiDimensionalArrayData.ArrayOfArrays
+        return :array_of_arrays
+    elseif mdarray_data == MultiDimensionalArrayData.ReshapeColumnMajor
+        return :reshape_column_major
+    else
+        throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
+    end
+end
+
+## MultiDimensionalArrayData.ArrayOfArrays implementation
 function __show_mdarray_data_array_of_arrays(
     io::StructuralContext, serialization::JSONSerialization, array::AbstractVector
 )
-    begin_array(io)
-    foreach(element -> show_element(io, serialization, element), array)
-    end_array(io)
+    show_json(io, serialization, array)
 end
-
 function __show_mdarray_data_array_of_arrays(
     io::StructuralContext, serialization::JSONSerialization, array::AbstractArray
 )
+    # This function recursively calls itself for each slice of the tensor untill an abstract vector is reached.
+    # In this case the function above is called
     begin_array(io)
     foreach(eachslice(array, dims = 1)) do row
         delimit(io)
         indent(io)
         __show_mdarray_data_array_of_arrays(io, serialization, row)
+    end
+    end_array(io)
+end
+
+## MultiDimensionalArrayData.ReshapeColumnMajor implementation
+function __show_mdarray_data_reshape_column_major(
+    io::StructuralContext, serialization::JSONSerialization, array::AbstractArray
+)
+    # Julia is already using column-major ordering, so we just need to flatten the array
+    begin_array(io)
+    foreach(Iterators.flatten(array)) do element
+        show_element(io, serialization, element)
     end
     end_array(io)
 end

@@ -67,7 +67,7 @@ See [`RxInferServer.Serialization.MultiDimensionalArrayData`](@ref) for more det
     ```jldoctest
     julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
 
-    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictAll, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
+    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.Dict, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
     julia> to_json(s, [1 2; 3 4])
     "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
@@ -140,8 +140,7 @@ end
 
 # Using `JSON` instead for `to_json` of `JSON3` here is intentional.
 # `JSON3` does not support custom serializers, and `JSON` does.
-using JSON
-
+import JSON
 import JSON.Writer: StructuralContext, begin_object, end_object, show_pair, show_key, show_json
 
 """
@@ -151,8 +150,8 @@ Default serialization of Julia objects to JSON used by RxInferServer, which nati
 Provides additional preferences for serializing objects that are not natively supported by OpenAPI specification.
 
 The following preferences are supported:
-- `mdarray_repr`: Preference for multidimensional arrays representation in the serialization of multi-dimensional arrays. See [`RxInferServer.Serialization.MultiDimensionalArrayTransform`](@ref) for more details.
-- `mdarray_data`: Preference for serialization of multidimensional arrays data. See [`RxInferServer.Serialization.MultiDimensionalArrayTransform`](@ref) for more details.
+- `mdarray_repr`: Preference for multidimensional arrays representation in the serialization of multi-dimensional arrays. See [`RxInferServer.Serialization.MultiDimensionalArrayRepr`](@ref) for more details.
+- `mdarray_data`: Preference for serialization of multidimensional arrays data. See [`RxInferServer.Serialization.MultiDimensionalArrayData`](@ref) for more details.
 """
 Base.@kwdef struct JSONSerialization <: JSON.Serializations.Serialization
     mdarray_repr::UInt8 = MultiDimensionalArrayRepr.Dict
@@ -229,19 +228,39 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
 end
 
 """
-    to_json([io::IO], [preferences::SerializationPreferences], value)
+    to_json([io::IO], [serialization::JSONSerialization], value)
 
-Serialize a `value` to `io` as a JSON string using the given `preferences`.
+Serialize a `value` to `io` as a JSON string using the given `serialization`.
 The `io` argument is optional, returns a string if not provided.
-The `preferences` argument is optional, defaults to `SerializationPreferences()`.
+The `serialization` argument is optional, defaults to `JSONSerialization()`.
 
-See [`RxInferServer.Serialization.SerializationPreferences`](@ref) for more details about the preferences.
+See [`RxInferServer.Serialization.JSONSerialization`](@ref) for more details about the serialization.
 """
 function to_json end
 
-to_json(io::IO, value) = to_json(io, JSONSerialization(), value)
+to_json(value) = to_json(JSONSerialization(), value)
 to_json(s::JSONSerialization, value) = sprint(show_json, s, value)
+to_json(io::IO, value) = show_json(io, JSONSerialization(), value)
+to_json(io::IO, s::JSONSerialization, value) = show_json(io, s, value)
 
+"""
+    from_json(string)
+
+Deserialize a JSON string to a `value`. Note that no-extra post-processing is done on the deserialized value.
+
+```jldoctest
+julia> import RxInferServer.Serialization: JSONSerialization, MultiDimensionalArrayRepr, MultiDimensionalArrayData, to_json, from_json
+
+julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.Dict, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
+
+julia> from_json(to_json(s, [1 2; 3 4]))
+Dict{String, Any} with 4 entries:
+  "shape"    => Any[2, 2]
+  "encoding" => "array_of_arrays"
+  "data"     => Any[Any[1, 3], Any[2, 4]]
+  "type"     => "mdarray"
+```
+"""
 from_json(string) = JSON.parse(string)
 
 end

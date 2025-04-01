@@ -111,6 +111,7 @@ end
 
 function postprocess_response(req, res)
     s = Serialization.JSONSerialization()
+    @debug "Postprocessing response" res
     return HTTP.Response(200, ["Content-Type" => "application/json"]; body = Serialization.to_json(s, res))
 end
 

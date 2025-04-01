@@ -24,55 +24,102 @@ end
 end
 
 @testmodule SerializationTestUtils begin
+    using Test
+
     import RxInferServer.Serialization: to_json, from_json, JSONSerialization
 
     to_from_json(value) = from_json(to_json(JSONSerialization(), value))
     to_from_json(s::JSONSerialization, value) = from_json(to_json(s, value))
+
+    # The use for this macro is something like this 
+    # @test_json_serialization JSONSerialization() 1       # same as 1 => 1
+    # @test_json_serialization JSONSerialization() 1 => 1
+    # @test_json_serialization JSONSerialization(mdarray_data = MultiDimensionalArrayData.ArrayOfArrays) [1 2; 3 4] => Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
+    macro test_json_serialization(serialization, value_expected)
+        return __test_json_serialization(serialization, value_expected)
+    end
+
+    macro test_json_serialization(value_expected)
+        return __test_json_serialization(JSONSerialization(), value_expected)
+    end
+
+    function __test_json_serialization(serialization, value_expected)
+        (input, expected) =
+            if isa(value_expected, Expr) && value_expected.head == :call && value_expected.args[1] == :(=>)
+                (value_expected.args[2], value_expected.args[3])
+            else
+                (value_expected, value_expected)
+            end
+
+        # This function tests JSON serialization and deserialization for various nested data structures
+        # It verifies that the input value can be serialized to JSON and deserialized back to the original value
+        # For complex cases, it also tests that the input can be transformed to an expected different value
+        ret = quote
+            @test SerializationTestUtils.to_from_json($serialization, $input) == $expected
+            @test SerializationTestUtils.to_from_json($serialization, [$input]) == [$expected]
+            @test SerializationTestUtils.to_from_json($serialization, [[$input]]) == [[$expected]]
+            @test SerializationTestUtils.to_from_json($serialization, [[$input, $input]]) == [[$expected, $expected]]
+            @test SerializationTestUtils.to_from_json($serialization, [Dict("a" => $input)]) == [Dict("a" => $expected)]
+            @test SerializationTestUtils.to_from_json($serialization, [$input, Dict("a" => $input)]) ==
+                [$expected, Dict("a" => $expected)]
+            @test SerializationTestUtils.to_from_json($serialization, Dict("wrapper" => $input)) ==
+                Dict("wrapper" => $expected)
+            @test SerializationTestUtils.to_from_json($serialization, Dict("a" => $input, "b" => $input)) ==
+                Dict("a" => $expected, "b" => $expected)
+            @test SerializationTestUtils.to_from_json($serialization, Dict("wrapper" => Dict("wrapper" => $input))) == Dict("wrapper" => Dict("wrapper" => $expected))
+            @test SerializationTestUtils.to_from_json($serialization, Dict("wrapper" => [$input])) ==
+                Dict("wrapper" => [$expected])
+            @test SerializationTestUtils.to_from_json($serialization, Dict("wrapper" => [[$input]])) ==
+                Dict("wrapper" => [[$expected]])
+        end
+
+        return esc(ret)
+    end
 end
 
 @testitem "RxInferServer JSON serialization should work for OpenAPI data-types" setup = [SerializationTestUtils] begin
-    import .SerializationTestUtils: to_from_json
+    import .SerializationTestUtils: to_from_json, @test_json_serialization
 
     @testset "string" begin
-        @test to_from_json("test") == "test"
-        @test to_from_json("test2") == "test2"
+        @test_json_serialization "test"
+        @test_json_serialization "test2"
     end
 
     @testset "number" begin
-        @test to_from_json(1.0) == 1.0
-        @test to_from_json(2.0) == 2.0
+        @test_json_serialization 1.0
+        @test_json_serialization 2.0
     end
 
     @testset "integer" begin
-        @test to_from_json(1) == 1
-        @test to_from_json(2) == 2
+        @test_json_serialization 1
+        @test_json_serialization 2
     end
 
     @testset "boolean" begin
-        @test to_from_json(true) == true
-        @test to_from_json(false) == false
+        @test_json_serialization true
+        @test_json_serialization false
     end
 
     @testset "array" begin
-        @test to_from_json([1, 2, 3]) == [1, 2, 3]
-        @test to_from_json([1.0, 2.0, 3.0]) == [1.0, 2.0, 3.0]
-        @test to_from_json([[1], [2], [3]]) == [[1], [2], [3]]
-        @test to_from_json([[[1]], [[2]], [[3]]]) == [[[1]], [[2]], [[3]]]
-        @test to_from_json(["a", "b", "c"]) == ["a", "b", "c"]
-        @test to_from_json([[1, 2, 3], [4, 5, 6]]) == [[1, 2, 3], [4, 5, 6]]
-        @test to_from_json([[[1]], [[2]], [[3]]]) == [[[1]], [[2]], [[3]]]
-        @test to_from_json((1, 2, 3)) == [1, 2, 3]
+        @test_json_serialization [1, 2, 3]
+        @test_json_serialization [1.0, 2.0, 3.0]
+        @test_json_serialization [[1], [2], [3]]
+        @test_json_serialization [[[1]], [[2]], [[3]]]
+        @test_json_serialization ["a", "b", "c"]
+        @test_json_serialization [[1, 2, 3], [4, 5, 6]]
+        @test_json_serialization [[[1]], [[2]], [[3]]]
+        @test_json_serialization (1, 2, 3) => [1, 2, 3]
     end
 
     @testset "object" begin
-        @test to_from_json(Dict(:a => 1, :b => 2)) == Dict("a" => 1, "b" => 2)
-        @test to_from_json(Dict("a" => 1, "b" => 2, "c" => 3)) == Dict("a" => 1, "b" => 2, "c" => 3)
-        @test to_from_json((a = 1, b = 2)) == Dict("a" => 1, "b" => 2)
+        @test_json_serialization Dict("a" => 1, "b" => 2, "c" => 3)
+        @test_json_serialization Dict(:a => 1, :b => 2) => Dict("a" => 1, "b" => 2)
+        @test_json_serialization (a = 1, b = 2) => Dict("a" => 1, "b" => 2)
     end
 
     @testset "missing" begin
-        @test to_from_json(missing) == nothing 
-        @test to_from_json(nothing) == nothing
+        @test_json_serialization missing => nothing
+        @test_json_serialization nothing => nothing
     end
 end
 
@@ -111,48 +158,53 @@ end
 @testitem "Multi-dimensional arrays should be serialized based on the preference: ArrayOfArrays" setup = [
     SerializationTestUtils
 ] begin
-    import .SerializationTestUtils: to_from_json
+    import .SerializationTestUtils: to_from_json, @test_json_serialization
     import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization
 
     s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ArrayOfArrays)
 
-    @test to_from_json(s, [1 2; 3 4]) ==
+    @test_json_serialization s [1 2; 3 4] =>
         Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
-    @test to_from_json(s, [1 3; 2 4]) ==
+
+    @test_json_serialization s [1 3; 2 4] =>
         Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 2], [3, 4]])
-    @test to_from_json(s, [1 2 3; 4 5 6]) == Dict(
+
+    @test_json_serialization s [1 2 3; 4 5 6] => Dict(
         "type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 3], "data" => [[1, 4], [2, 5], [3, 6]]
     )
-    @test to_from_json(s, [1 2 3; 4 5 6; 7 8 9]) == Dict(
+
+    @test_json_serialization s [1 2 3; 4 5 6; 7 8 9] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [3, 3],
         "data" => [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
     )
-    @test to_from_json(s, [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16]) == Dict(
+
+    @test_json_serialization s [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [4, 4],
         "data" => [[1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15], [4, 8, 12, 16]]
     )
-    @test to_from_json(s, [1, 2, 3, 4]') ==
+
+    @test_json_serialization s [1, 2, 3, 4]' =>
         Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [1, 4], "data" => [[1], [2], [3], [4]])
 
-    @test to_from_json(s, [1 3 5; 2 4 6;;; 7 9 11; 8 10 12]) == Dict(
+    @test_json_serialization s [1 3 5; 2 4 6;;; 7 9 11; 8 10 12] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [2, 3, 2],
         "data" => [[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]
     )
 
-    @test to_from_json(s, [1 2;;; 3 4;;;; 5 6;;; 7 8]) == Dict(
+    @test_json_serialization s [1 2;;; 3 4;;;; 5 6;;; 7 8] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [1, 2, 2, 2],
         "data" => [[[[1], [2]], [[3], [4]]], [[[5], [6]], [[7], [8]]]]
     )
 
-    @test to_from_json(s, [[1 2;;; 3 4];;;; [5 6];;; [7 8]]) == Dict(
+    @test_json_serialization s [[1 2;;; 3 4];;;; [5 6];;; [7 8]] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [1, 2, 2, 2],
@@ -160,13 +212,13 @@ end
     )
 
     # Shouldn't affect the serialization of 1D arrays
-    @test to_from_json(s, [1, 2, 3, 4]) == [1, 2, 3, 4]
+    @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
 end
 
 @testitem "Metadata for multi-dimensional arrays should be included based on the preference" setup = [
     SerializationTestUtils
 ] begin
-    import .SerializationTestUtils: to_from_json
+    import .SerializationTestUtils: to_from_json, @test_json_serialization
     import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization
 
     base_transform = MultiDimensionalArrayData.ArrayOfArrays
@@ -174,25 +226,26 @@ end
     @testset "All" begin
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.Dict)
 
-        @test to_from_json(s, [1 2; 3 4]) ==
+        @test_json_serialization s [1 2; 3 4] =>
             Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
     end
 
     @testset "TypeAndShape" begin
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.DictTypeAndShape)
 
-        @test to_from_json(s, [1 2; 3 4]) == Dict("type" => "mdarray", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
+        @test_json_serialization s [1 2; 3 4] =>
+            Dict("type" => "mdarray", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
     end
 
     @testset "Shape" begin
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.DictShape)
 
-        @test to_from_json(s, [1 2; 3 4]) == Dict("shape" => [2, 2], "data" => [[1, 3], [2, 4]])
+        @test_json_serialization s [1 2; 3 4] => Dict("shape" => [2, 2], "data" => [[1, 3], [2, 4]])
     end
 
     @testset "Data" begin
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.Data)
 
-        @test to_from_json(s, [1 2; 3 4]) == [[1, 3], [2, 4]]
+        @test_json_serialization s [1 2; 3 4] => [[1, 3], [2, 4]]
     end
 end

@@ -130,7 +130,8 @@ end
 # Using `JSON` instead for `to_json` of `JSON3` here is intentional.
 # `JSON3` does not support custom serializers, and `JSON` does.
 import JSON
-import JSON.Writer: StructuralContext, begin_object, end_object, show_pair, show_key, show_json
+import JSON.Writer:
+    StructuralContext, begin_object, end_object, begin_array, end_array, show_pair, show_key, show_json, show_element
 
 """
     JSONSerialization(; kwargs...)
@@ -171,21 +172,41 @@ show_json(io::StructuralContext, ::JSONSerialization, value::String) =
 show_json(io::StructuralContext, ::JSONSerialization, value::Number) =
     show_json(io, JSON.StandardSerialization(), value)
 show_json(io::StructuralContext, ::JSONSerialization, value::Bool) = show_json(io, JSON.StandardSerialization(), value)
-show_json(io::StructuralContext, ::JSONSerialization, value::AbstractVector) =
-    show_json(io, JSON.StandardSerialization(), value)
-show_json(io::StructuralContext, ::JSONSerialization, value::Tuple) = show_json(io, JSON.StandardSerialization(), value)
-show_json(io::StructuralContext, ::JSONSerialization, value::AbstractDict) =
-    show_json(io, JSON.StandardSerialization(), value)
-show_json(io::StructuralContext, ::JSONSerialization, value::NamedTuple) =
-    show_json(io, JSON.StandardSerialization(), value)
 show_json(io::StructuralContext, ::JSONSerialization, value::Union{Missing, Nothing}) =
     show_json(io, JSON.StandardSerialization(), value)
+
+# Vector-like values
+show_json(io::StructuralContext, s::JSONSerialization, value::Tuple) = __json_serialization_vector_like(io, s, value)
+show_json(io::StructuralContext, s::JSONSerialization, value::AbstractVector) =
+    __json_serialization_vector_like(io, s, value)
+
+function __json_serialization_vector_like(io::StructuralContext, s::JSONSerialization, vectorlike)
+    begin_array(io)
+    foreach(element -> show_element(io, s, element), vectorlike)
+    end_array(io)
+end
+
+# Dict-like values
+show_json(io::StructuralContext, s::JSONSerialization, value::NamedTuple) = __json_serialization_dict_like(io, s, value)
+show_json(io::StructuralContext, s::JSONSerialization, value::AbstractDict) =
+    __json_serialization_dict_like(io, s, value)
+
+function __json_serialization_dict_like(io::StructuralContext, s::JSONSerialization, dictlike)
+    begin_object(io)
+    foreach(pair -> show_pair(io, s, pair), pairs(dictlike))
+    end_object(io)
+end
 
 # We also support serialization of OpenAPI defined types, which are subtypes of `APIModel`
 using RxInferServerOpenAPI
 
-show_json(io::StructuralContext, ::JSONSerialization, value::RxInferServerOpenAPI.OpenAPI.APIModel) =
-    show_json(io, JSON.StandardSerialization(), value)
+function show_json(io::StructuralContext, s::JSONSerialization, value::RxInferServerOpenAPI.OpenAPI.APIModel)
+    begin_object(io)
+    for field in propertynames(value)
+        show_pair(io, s, field => getproperty(value, field))
+    end
+    end_object(io)
+end
 
 # Multi-dimensional arrays, preference based serialization
 

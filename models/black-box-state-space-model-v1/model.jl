@@ -80,9 +80,12 @@ function run_learning(state, parameters, events)
         iterations = 50,
         options = (limit_stack_depth = 300,)
     )
-    parameters["A"] = reshape(mean(results.posteriors[:H]), state["state_dimension"], state["state_dimension"])
 
-    result = Dict("A_flattened" => mean(results.posteriors[:H]))
+    learnedA = reshape(mean(results.posteriors[:H]), state["state_dimension"], state["state_dimension"])
+
+    parameters["A"] = learnedA
+
+    result = Dict("A" => learnedA)
 
     return result, state, parameters
 end

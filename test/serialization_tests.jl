@@ -171,51 +171,56 @@ end
     s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ArrayOfArrays)
 
     @test_json_serialization s [1 2; 3 4] =>
-        Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
-
-    @test_json_serialization s [1 3; 2 4] =>
         Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 2], [3, 4]])
 
-    @test_json_serialization s [1 2 3; 4 5 6] => Dict(
-        "type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 3], "data" => [[1, 4], [2, 5], [3, 6]]
-    )
+    @test_json_serialization s [1 3; 2 4] =>
+        Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
+
+    @test_json_serialization s [1 2 3; 4 5 6] =>
+        Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 3], "data" => [[1, 2, 3], [4, 5, 6]])
 
     @test_json_serialization s [1 2 3; 4 5 6; 7 8 9] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [3, 3],
-        "data" => [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
+        "data" => [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    )
+
+    @test_json_serialization s [1 2; 3 4; 5 6] => Dict(
+        "type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [3, 2], "data" => [[1, 2], [3, 4], [5, 6]]
     )
 
     @test_json_serialization s [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [4, 4],
-        "data" => [[1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15], [4, 8, 12, 16]]
+        "data" => [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]
     )
 
-    @test_json_serialization s [1, 2, 3, 4]' =>
-        Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [1, 4], "data" => [[1], [2], [3], [4]])
+    @test_json_serialization s [1 2 3 4] =>
+        Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [1, 4], "data" => [[1, 2, 3, 4]])
+    @test_json_serialization s [1 2 3 4]' =>
+        Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [4, 1], "data" => [[1], [2], [3], [4]])
 
     @test_json_serialization s [1 3 5; 2 4 6;;; 7 9 11; 8 10 12] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [2, 3, 2],
-        "data" => [[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]
+        "data" => [[[1,7],[3,9],[5,11]],[[2,8],[4,10],[6,12]]]
     )
 
     @test_json_serialization s [1 2;;; 3 4;;;; 5 6;;; 7 8] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [1, 2, 2, 2],
-        "data" => [[[[1], [2]], [[3], [4]]], [[[5], [6]], [[7], [8]]]]
+        "data" => [[[[1,5],[3,7]],[[2,6],[4,8]]]]
     )
 
     @test_json_serialization s [[1 2;;; 3 4];;;; [5 6];;; [7 8]] => Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [1, 2, 2, 2],
-        "data" => [[[[1], [2]], [[3], [4]]], [[[5], [6]], [[7], [8]]]]
+        "data" => [[[[1,5],[3,7]],[[2,6],[4,8]]]]
     )
 
     # Shouldn't affect the serialization of 1D arrays
@@ -234,25 +239,25 @@ end
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.Dict)
 
         @test_json_serialization s [1 2; 3 4] =>
-            Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
+            Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 2], [3, 4]])
     end
 
     @testset "TypeAndShape" begin
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.DictTypeAndShape)
 
         @test_json_serialization s [1 2; 3 4] =>
-            Dict("type" => "mdarray", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
+            Dict("type" => "mdarray", "shape" => [2, 2], "data" => [[1, 2], [3, 4]])
     end
 
     @testset "Shape" begin
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.DictShape)
 
-        @test_json_serialization s [1 2; 3 4] => Dict("shape" => [2, 2], "data" => [[1, 3], [2, 4]])
+        @test_json_serialization s [1 2; 3 4] => Dict("shape" => [2, 2], "data" => [[1, 2], [3, 4]])
     end
 
     @testset "Data" begin
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.Data)
 
-        @test_json_serialization s [1 2; 3 4] => [[1, 3], [2, 4]]
+        @test_json_serialization s [1 2; 3 4] => [[1, 2], [3, 4]]
     end
 end

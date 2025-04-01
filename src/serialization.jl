@@ -20,10 +20,10 @@ See also: [`RxInferServer.Serialization.MultiDimensionalArrayRepr`](@ref)
     julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
     julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
+    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
 
     julia> to_json(s, [1 3; 2 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
+    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
     ```
 
     !!! note
@@ -56,7 +56,7 @@ See also: [`RxInferServer.Serialization.MultiDimensionalArrayData`](@ref)
     julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.Dict, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
     julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
+    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
     ```
     """
     Dict
@@ -70,7 +70,7 @@ See also: [`RxInferServer.Serialization.MultiDimensionalArrayData`](@ref)
     julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictTypeAndShape, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
     julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
+    "{\\"type\\":\\"mdarray\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
     ```
     """
     DictTypeAndShape
@@ -84,7 +84,7 @@ See also: [`RxInferServer.Serialization.MultiDimensionalArrayData`](@ref)
     julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictShape, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
     julia> to_json(s, [1 2; 3 4])
-    "{\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
+    "{\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
     ```
     """
     DictShape
@@ -98,7 +98,7 @@ See also: [`RxInferServer.Serialization.MultiDimensionalArrayData`](@ref)
     julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.Data, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
     julia> to_json(s, [1 2; 3 4])
-    "[[1,3],[2,4]]"
+    "[[1,2],[3,4]]"
     ```
     """
     Data
@@ -131,7 +131,17 @@ end
 # `JSON3` does not support custom serializers, and `JSON` does.
 import JSON
 import JSON.Writer:
-    StructuralContext, begin_object, end_object, begin_array, end_array, show_pair, show_key, show_json, show_element
+    StructuralContext,
+    begin_object,
+    end_object,
+    begin_array,
+    end_array,
+    show_pair,
+    show_key,
+    show_json,
+    show_element,
+    delimit,
+    indent
 
 """
     JSONSerialization(; kwargs...)
@@ -245,7 +255,7 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
     end
 
     if mdarray_data == MultiDimensionalArrayData.ArrayOfArrays
-        show_json(io, JSON.StandardSerialization(), value)
+        __show_mdarray_data_array_of_arrays(io, serialization, value)
     else
         throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
     end
@@ -253,6 +263,26 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
     if mdarray_repr != MultiDimensionalArrayRepr.Data
         end_object(io)
     end
+end
+
+function __show_mdarray_data_array_of_arrays(
+    io::StructuralContext, serialization::JSONSerialization, array::AbstractVector
+)
+    begin_array(io)
+    foreach(element -> show_element(io, serialization, element), array)
+    end_array(io)
+end
+
+function __show_mdarray_data_array_of_arrays(
+    io::StructuralContext, serialization::JSONSerialization, array::AbstractArray
+)
+    begin_array(io)
+    foreach(eachslice(array, dims = 1)) do row
+        delimit(io)
+        indent(io)
+        __show_mdarray_data_array_of_arrays(io, serialization, row)
+    end
+    end_array(io)
 end
 
 """
@@ -285,7 +315,7 @@ julia> from_json(to_json(s, [1 2; 3 4]))
 Dict{String, Any} with 4 entries:
   "shape"    => Any[2, 2]
   "encoding" => "array_of_arrays"
-  "data"     => Any[Any[1, 3], Any[2, 4]]
+  "data"     => Any[Any[1, 2], Any[3, 4]]
   "type"     => "mdarray"
 ```
 

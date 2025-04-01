@@ -61,11 +61,18 @@ end
         @test to_from_json(["a", "b", "c"]) == ["a", "b", "c"]
         @test to_from_json([[1, 2, 3], [4, 5, 6]]) == [[1, 2, 3], [4, 5, 6]]
         @test to_from_json([[[1]], [[2]], [[3]]]) == [[[1]], [[2]], [[3]]]
+        @test to_from_json((1, 2, 3)) == [1, 2, 3]
     end
 
     @testset "object" begin
         @test to_from_json(Dict(:a => 1, :b => 2)) == Dict("a" => 1, "b" => 2)
         @test to_from_json(Dict("a" => 1, "b" => 2, "c" => 3)) == Dict("a" => 1, "b" => 2, "c" => 3)
+        @test to_from_json((a = 1, b = 2)) == Dict("a" => 1, "b" => 2)
+    end
+
+    @testset "missing" begin
+        @test to_from_json(missing) == nothing 
+        @test to_from_json(nothing) == nothing
     end
 end
 

@@ -6,136 +6,119 @@ module Serialization
 using EnumX
 
 """
-    MultiDimensionalArrayTransform
+    MultiDimensionalArrayData
 
-Preference for serializing multi-dimensional arrays as arrays of arrays.
+Preference for serializing the underlying data of multi-dimensional arrays.
 
 Possible options are:
-- [`RxInferServer.Serialization.MultiDimensionalArrayTransform.ArrayOfArrays`](@ref)
+- [`RxInferServer.Serialization.MultiDimensionalArrayData.ArrayOfArrays`](@ref)
 
-The serialized objects include metadata information by default. 
-See [`RxInferServer.Serialization.MultiDimensionalArrayMetadata`](@ref) for more details.
+Also see [`RxInferServer.Serialization.MultiDimensionalArrayRepr`](@ref) for different representations of multi-dimensional arrays.
 """
-@enumx MultiDimensionalArrayTransform::UInt8 begin
+@enumx MultiDimensionalArrayData::UInt8 begin
     """
-    Encodes multi-dimensional arrays as arrays of arrays with row-major ordering and metadata information.
+    Encodes the data of multi-dimensional arrays as arrays of arrays with row-major ordering.
 
     ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayTransform, SerializationPreferences, to_json
+    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
 
-    julia> p = SerializationPreferences(mdarray_transform=MultiDimensionalArrayTransform.ArrayOfArrays);
+    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
-    julia> to_json(p, [1 2; 3 4])
+    julia> to_json(s, [1 2; 3 4])
     "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
 
-    julia> to_json(p, [1 3; 2 4])
+    julia> to_json(s, [1 3; 2 4])
     "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
     ```
 
     !!! note
-        Julia uses column-major ordering for multi-dimensional arrays, but this preference uses row-major ordering.
+        Julia uses column-major ordering for multi-dimensional arrays, but this setting explicitly uses row-major ordering.
     """
     ArrayOfArrays
 end
 
 # This is mostly for convenience to convert the preference to a UInt8.
-Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayTransform.T) = Integer(preference)::UInt8
-@inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayTransform.T) = a == Integer(b)
-@inline Base.:(==)(a::MultiDimensionalArrayTransform.T, b::UInt8) = Integer(a) == b
+Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayData.T) = Integer(preference)::UInt8
+@inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayData.T) = a == Integer(b)
+@inline Base.:(==)(a::MultiDimensionalArrayData.T, b::UInt8) = Integer(a) == b
 
 """
-    MultiDimensionalArrayMetadata
+    MultiDimensionalArrayRepr
 
-Preference for including metadata in the serialization of multi-dimensional arrays.
+Preference for the representation of multi-dimensional arrays during the serialization.
 Choosing different options might be beneficial to save network bandwidth and/or storage.
 
 Possible options are:
-- [`RxInferServer.Serialization.MultiDimensionalArrayMetadata.All`](@ref)
-- [`RxInferServer.Serialization.MultiDimensionalArrayMetadata.TypeAndShape`](@ref)
-- [`RxInferServer.Serialization.MultiDimensionalArrayMetadata.Shape`](@ref)
-- [`RxInferServer.Serialization.MultiDimensionalArrayMetadata.Compact`](@ref)
+- [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict`](@ref)
+- [`RxInferServer.Serialization.MultiDimensionalArrayRepr.DictTypeAndShape`](@ref)
+- [`RxInferServer.Serialization.MultiDimensionalArrayRepr.DictShape`](@ref)
+- [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Data`](@ref)
 
-See [`RxInferServer.Serialization.MultiDimensionalArrayTransform`](@ref) for more details about the serialization transformation preferences.
+See [`RxInferServer.Serialization.MultiDimensionalArrayData`](@ref) for more details about the serialization of the underlying data.
 """
-@enumx MultiDimensionalArrayMetadata::UInt8 begin
+@enumx MultiDimensionalArrayRepr::UInt8 begin
     """
-    Include all metadata for multi-dimensional arrays, which includes:
+    Represents the multi-dimensional array as a dictionary with the following keys:
     - `type` set to `"mdarray"`
     - `encoding` set to to a selected transformation of the array, e.g. `"array_of_arrays"`
     - `shape` set to the size of the array
     - `data` set to the encoded array itself as defined by the transformation
 
     ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayTransform, MultiDimensionalArrayMetadata, SerializationPreferences, to_json
+    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
 
-    julia> p = SerializationPreferences(mdarray_transform=MultiDimensionalArrayTransform.ArrayOfArrays, mdarray_metadata=MultiDimensionalArrayMetadata.All);
+    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictAll, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
-    julia> to_json(p, [1 2; 3 4])
+    julia> to_json(s, [1 2; 3 4])
     "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
     ```
     """
-    All
+    Dict
 
     """
-    Include `type`, `shape` and `data` in the metadata. `type` is always set to `"mdarray"`.
+    Same as [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict`](@ref), but excludes the `encoding` key, leaving only the `type`, `shape` and `data` keys.
 
     ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayTransform, MultiDimensionalArrayMetadata, SerializationPreferences, to_json
+    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
 
-    julia> p = SerializationPreferences(mdarray_transform=MultiDimensionalArrayTransform.ArrayOfArrays, mdarray_metadata=MultiDimensionalArrayMetadata.TypeAndShape);
+    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictTypeAndShape, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
-    julia> to_json(p, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
+    julia> to_json(s, [1 2; 3 4])
+    "{\\"type\\":\\"mdarray\\",\\"shape\\":[2,2]}"
     """
-    TypeAndShape
+    DictTypeAndShape
 
     """
-    Include only the `shape` and `data` of the multi-dimensional array in the metadata.
+    Same as [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict`](@ref), but excludes the `encoding` and `type` keys, leaving only the `shape` and `data` keys.
 
     ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayTransform, MultiDimensionalArrayMetadata, SerializationPreferences, to_json
+    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
 
-    julia> p = SerializationPreferences(mdarray_transform=MultiDimensionalArrayTransform.ArrayOfArrays, mdarray_metadata=MultiDimensionalArrayMetadata.Shape);
+    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictShape, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
-    julia> to_json(p, [1 2; 3 4])
+    julia> to_json(s, [1 2; 3 4])
     "{\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
     """
-    Shape
+    DictShape
 
     """
-    Returns the compact representation of the multi-dimensional array as returned from the transformation.
+    Compact representation of the multi-dimensional array as returned from the transformation.
 
     ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayTransform, MultiDimensionalArrayMetadata, SerializationPreferences, to_json
+    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
 
-    julia> p = SerializationPreferences(mdarray_transform=MultiDimensionalArrayTransform.ArrayOfArrays, mdarray_metadata=MultiDimensionalArrayMetadata.Compact);
+    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.Data, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
-    julia> to_json(p, [1 2; 3 4])
+    julia> to_json(s, [1 2; 3 4])
     "[[1,3],[2,4]]"
     """
-    Compact
+    Data
 end
 
 # This is mostly for convenience to convert the preference to a UInt8.
-Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayMetadata.T) = Integer(preference)::UInt8
-@inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayMetadata.T) = a == Integer(b)
-@inline Base.:(==)(a::MultiDimensionalArrayMetadata.T, b::UInt8) = Integer(a) == b
-
-"""
-    SerializationPreferences
-
-Preferences for serializing objects that are not natively supported by OpenAPI specification.
-
-The following preferences are supported:
-- `mdarray_transform`: Preference for serializing multi-dimensional arrays, such as matrices and tensors. See [`RxInferServer.Serialization.MultiDimensionalArrayTransform`](@ref) for more details.
-- `mdarray_metadata`: Preference for including metadata in the serialization of multi-dimensional arrays. See [`RxInferServer.Serialization.MultiDimensionalArrayMetadata`](@ref) for more details.
-
-See also [`RxInferServer.Serialization.to_json`](@ref).
-"""
-Base.@kwdef struct SerializationPreferences
-    mdarray_transform::UInt8 = MultiDimensionalArrayTransform.ArrayOfArrays
-    mdarray_metadata::UInt8 = MultiDimensionalArrayMetadata.All
-end
+Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayRepr.T) = Integer(preference)::UInt8
+@inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayRepr.T) = a == Integer(b)
+@inline Base.:(==)(a::MultiDimensionalArrayRepr.T, b::UInt8) = Integer(a) == b
 
 """
     UnsupportedPreferenceError(option, available, preference)
@@ -162,16 +145,18 @@ using JSON
 import JSON.Writer: StructuralContext, begin_object, end_object, show_pair, show_key, show_json
 
 """
-    DefaultSerialization(; preferences::SerializationPreferences)
+    JSONSerialization(; preferences::SerializationPreferences)
 
-Default serialization of Julia objects to JSON used by RxInferServer.
-The main reason for using a custom serialization instead of built-in from `JSON` is that
-- Only support OpenAPI data-types and explicitly exclude all other types.
-- Additional support for preference based serialization of multidimensional arrays and distributions.
-See [`RxInferServer.Serialization.SerializationPreferences`](@ref) for more details about different preferences.
+Default serialization of Julia objects to JSON used by RxInferServer, which natively supports OpenAPI data-types.
+Provides additional preferences for serializing objects that are not natively supported by OpenAPI specification.
+
+The following preferences are supported:
+- `mdarray_repr`: Preference for multidimensional arrays representation in the serialization of multi-dimensional arrays. See [`RxInferServer.Serialization.MultiDimensionalArrayTransform`](@ref) for more details.
+- `mdarray_data`: Preference for serialization of multidimensional arrays data. See [`RxInferServer.Serialization.MultiDimensionalArrayTransform`](@ref) for more details.
 """
-Base.@kwdef struct DefaultSerialization <: JSON.Serializations.Serialization
-    preferences::SerializationPreferences = SerializationPreferences()
+Base.@kwdef struct JSONSerialization <: JSON.Serializations.Serialization
+    mdarray_repr::UInt8 = MultiDimensionalArrayRepr.All
+    mdarray_data::UInt8 = MultiDimensionalArrayData.ArrayOfArrays
 end
 
 struct UnsupportedTypeSerializationError <: Exception
@@ -182,7 +167,7 @@ function Base.showerror(io::IO, e::UnsupportedTypeSerializationError)
     print(io, "serialization of type $(e.type) is not supported")
 end
 
-function show_json(::StructuralContext, ::DefaultSerialization, value)
+function show_json(::StructuralContext, ::JSONSerialization, value)
     throw(UnsupportedTypeSerializationError(typeof(value)))
 end
 
@@ -194,48 +179,51 @@ end
 # - boolean
 # - array 
 # - object
-show_json(io::StructuralContext, ::DefaultSerialization, value::String) =
+show_json(io::StructuralContext, ::JSONSerialization, value::String) =
     show_json(io, JSON.StandardSerialization(), value)
-show_json(io::StructuralContext, ::DefaultSerialization, value::Number) =
+show_json(io::StructuralContext, ::JSONSerialization, value::Number) =
     show_json(io, JSON.StandardSerialization(), value)
-show_json(io::StructuralContext, ::DefaultSerialization, value::Bool) =
+show_json(io::StructuralContext, ::JSONSerialization, value::Bool) = show_json(io, JSON.StandardSerialization(), value)
+show_json(io::StructuralContext, ::JSONSerialization, value::AbstractVector) =
     show_json(io, JSON.StandardSerialization(), value)
-show_json(io::StructuralContext, ::DefaultSerialization, value::AbstractVector) =
-    show_json(io, JSON.StandardSerialization(), value)
-show_json(io::StructuralContext, ::DefaultSerialization, value::AbstractDict) =
+show_json(io::StructuralContext, ::JSONSerialization, value::AbstractDict) =
     show_json(io, JSON.StandardSerialization(), value)
 
 # Multi-dimensional arrays, preference based serialization
 
-function show_json(io::StructuralContext, serialization::DefaultSerialization, value::AbstractArray)
-    preference = serialization.preferences.mdarray_transform
-    metadata = serialization.preferences.mdarray_metadata
+function show_json(io::StructuralContext, serialization::JSONSerialization, value::AbstractArray)
+    mdarray_data = serialization.mdarray_data
+    mdarray_repr = serialization.mdarray_repr
 
-    if metadata != MultiDimensionalArrayMetadata.Compact
+    if mdarray_repr != MultiDimensionalArrayMetadata.Compact
         begin_object(io)
     end
 
-    if metadata == MultiDimensionalArrayMetadata.All
+    if mdarray_repr == MultiDimensionalArrayMetadata.All
         show_pair(io, JSON.StandardSerialization(), :type => :mdarray)
         show_pair(io, JSON.StandardSerialization(), :encoding => :array_of_arrays)
         show_pair(io, JSON.StandardSerialization(), :shape => size(value))
         show_key(io, :data)
-    elseif metadata == MultiDimensionalArrayMetadata.TypeAndShape
+    elseif mdarray_repr == MultiDimensionalArrayMetadata.TypeAndShape
         show_pair(io, JSON.StandardSerialization(), :type => :mdarray)
         show_pair(io, JSON.StandardSerialization(), :shape => size(value))
         show_key(io, :data)
-    elseif metadata == MultiDimensionalArrayMetadata.Shape
+    elseif mdarray_repr == MultiDimensionalArrayMetadata.Shape
         show_pair(io, JSON.StandardSerialization(), :shape => size(value))
         show_key(io, :data)
+    elseif mdarray_repr == MultiDimensionalArrayMetadata.Compact
+        # noop
+    else
+        throw(UnsupportedPreferenceError(:mdarray_repr, MultiDimensionalArrayMetadata, mdarray_repr))
     end
 
-    if preference == MultiDimensionalArrayTransform.ArrayOfArrays
+    if mdarray_data == MultiDimensionalArrayTransform.ArrayOfArrays
         show_json(io, JSON.StandardSerialization(), value)
     else
-        throw(UnsupportedPreferenceError(:mdarray_transform, MultiDimensionalArrayTransform, preference))
+        throw(UnsupportedPreferenceError(:mdarray_transform, MultiDimensionalArrayTransform, mdarray_data))
     end
 
-    if metadata != MultiDimensionalArrayMetadata.Compact
+    if mdarray_repr != MultiDimensionalArrayMetadata.Compact
         end_object(io)
     end
 end
@@ -251,11 +239,8 @@ See [`RxInferServer.Serialization.SerializationPreferences`](@ref) for more deta
 """
 function to_json end
 
-to_json(io::IO, preferences::SerializationPreferences, value) = show_json(io, DefaultSerialization(preferences), value)
-to_json(io::IO, value) = to_json(io, SerializationPreferences(), value)
-
-to_json(value) = sprint(to_json, value)
-to_json(preferences::SerializationPreferences, value) = sprint(to_json, preferences, value)
+to_json(io::IO, value) = to_json(io, JSONSerialization(), value)
+to_json(s::JSONSerialization, value) = sprint(show_json, s, value)
 
 from_json(string) = JSON.parse(string)
 

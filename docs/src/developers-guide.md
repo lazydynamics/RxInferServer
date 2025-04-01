@@ -403,6 +403,7 @@ RxInferServer uses a `ServerState` struct to manage the server's lifecycle and s
 
 ```@docs
 RxInferServer.ServerState
+RxInferServer.RoutesHandler
 RxInferServer.is_server_running
 RxInferServer.set_server_running
 RxInferServer.is_server_errored

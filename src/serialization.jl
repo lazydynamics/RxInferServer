@@ -181,6 +181,12 @@ show_json(io::StructuralContext, ::JSONSerialization, value::NamedTuple) =
 show_json(io::StructuralContext, ::JSONSerialization, value::Union{Missing, Nothing}) =
     show_json(io, JSON.StandardSerialization(), value)
 
+# We also support serialization of OpenAPI defined types, which are subtypes of `APIModel`
+using RxInferServerOpenAPI
+
+show_json(io::StructuralContext, ::JSONSerialization, value::RxInferServerOpenAPI.OpenAPI.APIModel) =
+    show_json(io, JSON.StandardSerialization(), value)
+
 # Multi-dimensional arrays, preference based serialization
 
 function show_json(io::StructuralContext, serialization::JSONSerialization, value::AbstractArray)

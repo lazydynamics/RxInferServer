@@ -9,6 +9,7 @@ include("macro.jl")
 include("dotenv.jl")
 include("database.jl")
 include("logging.jl")
+include("serialization.jl")
 
 # This is NOT a file with model definitions, but a file that functions to
 # load models from the `RXINFER_SERVER_MODELS_LOCATION` directory

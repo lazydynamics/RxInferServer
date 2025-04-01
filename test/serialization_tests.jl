@@ -162,9 +162,7 @@ end
     end
 end
 
-@testitem "Multi-dimensional arrays should be serialized based on the preference: ArrayOfArrays" setup = [
-    SerializationTestUtils
-] begin
+@testitem "MultiDimensionalArrayData.ArrayOfArrays" setup = [SerializationTestUtils] begin
     import .SerializationTestUtils: to_from_json, @test_json_serialization
     import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization
 
@@ -227,9 +225,7 @@ end
     @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
 end
 
-@testitem "Multi-dimensional arrays should be serialized based on the preference: ReshapeColumnMajor" setup = [
-    SerializationTestUtils
-] begin
+@testitem "MultiDimensionalArrayData.ReshapeColumnMajor" setup = [SerializationTestUtils] begin
     import .SerializationTestUtils: to_from_json, @test_json_serialization
     import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization
 
@@ -281,9 +277,59 @@ end
     @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
 end
 
-@testitem "Metadata for multi-dimensional arrays should be included based on the preference" setup = [
-    SerializationTestUtils
-] begin
+@testitem "MultiDimensionalArrayData.ReshapeRowMajor" setup = [SerializationTestUtils] begin
+    import .SerializationTestUtils: to_from_json, @test_json_serialization
+    import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization
+
+    s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ReshapeRowMajor)
+
+    @test_json_serialization s [1 2; 3 4] =>
+        Dict("type" => "mdarray", "encoding" => "reshape_row_major", "shape" => [2, 2], "data" => [1, 2, 3, 4])
+
+    @test_json_serialization s [1 3; 2 4] =>
+        Dict("type" => "mdarray", "encoding" => "reshape_row_major", "shape" => [2, 2], "data" => [1, 3, 2, 4])
+
+    @test_json_serialization s [1 2 3; 4 5 6] =>
+        Dict("type" => "mdarray", "encoding" => "reshape_row_major", "shape" => [2, 3], "data" => [1, 2, 3, 4, 5, 6])
+
+    @test_json_serialization s [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16] => Dict(
+        "type" => "mdarray",
+        "encoding" => "reshape_row_major",
+        "shape" => [4, 4],
+        "data" => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    )
+
+    @test_json_serialization s [1 2 3 4] =>
+        Dict("type" => "mdarray", "encoding" => "reshape_row_major", "shape" => [1, 4], "data" => [1, 2, 3, 4])
+    @test_json_serialization s [1 2 3 4]' =>
+        Dict("type" => "mdarray", "encoding" => "reshape_row_major", "shape" => [4, 1], "data" => [1, 2, 3, 4])
+
+    @test_json_serialization s [1 3 5; 2 4 6;;; 7 9 11; 8 10 12] => Dict(
+        "type" => "mdarray",
+        "encoding" => "reshape_row_major",
+        "shape" => [2, 3, 2],
+        "data" => [1, 7, 3, 9, 5, 11, 2, 8, 4, 10, 6, 12]
+    )
+
+    @test_json_serialization s [1 2;;; 3 4;;;; 5 6;;; 7 8] => Dict(
+        "type" => "mdarray",
+        "encoding" => "reshape_row_major",
+        "shape" => [1, 2, 2, 2],
+        "data" => [1, 5, 3, 7, 2, 6, 4, 8]
+    )
+
+    @test_json_serialization s [[1 2;;; 3 4];;;; [5 6];;; [7 8]] => Dict(
+        "type" => "mdarray",
+        "encoding" => "reshape_row_major",
+        "shape" => [1, 2, 2, 2],
+        "data" => [1, 5, 3, 7, 2, 6, 4, 8]
+    )
+
+    # Shouldn't affect the serialization of 1D arrays
+    @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
+end
+
+@testitem "MultiDimensionalArrayRepr" setup = [SerializationTestUtils] begin
     import .SerializationTestUtils: to_from_json, @test_json_serialization
     import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization
 

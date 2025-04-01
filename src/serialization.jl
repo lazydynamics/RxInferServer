@@ -50,6 +50,27 @@ See also: [`RxInferServer.Serialization.MultiDimensionalArrayRepr`](@ref)
         Julia uses column-major ordering for multi-dimensional arrays, so this encoding preserves the natural ordering of elements in memory.
     """
     ReshapeColumnMajor
+
+    """
+    Encodes the data of multi-dimensional arrays as a flattened array using row-major ordering.
+
+    ```jldoctest
+    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
+
+    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ReshapeRowMajor);
+
+    julia> to_json(s, [1 2; 3 4])
+    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_row_major\\",\\"shape\\":[2,2],\\"data\\":[1,2,3,4]}"
+
+    julia> to_json(s, [1 3; 2 4])
+    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_row_major\\",\\"shape\\":[2,2],\\"data\\":[1,3,2,4]}"
+    ```
+
+    !!! note
+        This encoding traverses the array in row-major order, which is different from Julia's native column-major storage,
+        but is compatible with `numpy.ndarray` memory layout.
+    """
+    ReshapeRowMajor
 end
 
 # This is mostly for convenience to convert the preference to a UInt8.
@@ -278,6 +299,8 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
         __show_mdarray_data_array_of_arrays(io, serialization, value)
     elseif mdarray_data == MultiDimensionalArrayData.ReshapeColumnMajor
         __show_mdarray_data_reshape_column_major(io, serialization, value)
+    elseif mdarray_data == MultiDimensionalArrayData.ReshapeRowMajor
+        __show_mdarray_data_reshape_row_major(io, serialization, value)
     else
         throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
     end
@@ -292,6 +315,8 @@ function __mdarray_data_encoding(mdarray_data::UInt8)
         return :array_of_arrays
     elseif mdarray_data == MultiDimensionalArrayData.ReshapeColumnMajor
         return :reshape_column_major
+    elseif mdarray_data == MultiDimensionalArrayData.ReshapeRowMajor
+        return :reshape_row_major
     else
         throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
     end
@@ -327,6 +352,24 @@ function __show_mdarray_data_reshape_column_major(
         show_element(io, serialization, element)
     end
     end_array(io)
+end
+
+## MultiDimensionalArrayData.ReshapeRowMajor implementation
+function __show_mdarray_data_reshape_row_major(
+    io::StructuralContext, serialization::JSONSerialization, array::AbstractVector; first = true
+)
+    foreach(element -> show_element(io, serialization, element), array)
+end
+function __show_mdarray_data_reshape_row_major(
+    io::StructuralContext, serialization::JSONSerialization, array::AbstractArray; first = true
+)
+    # This function recursively calls itself for each slice of the tensor untill an abstract vector is reached.
+    # In this case the function above is called
+    first && begin_array(io)
+    foreach(eachslice(array, dims = 1)) do row
+        __show_mdarray_data_reshape_row_major(io, serialization, row; first = false)
+    end
+    first && end_array(io)
 end
 
 """

@@ -78,6 +78,7 @@ RxInferServer.Serialization.MultiDimensionalArrayRepr.Data
 RxInferServer.Serialization.MultiDimensionalArrayData
 RxInferServer.Serialization.MultiDimensionalArrayData.ArrayOfArrays
 RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeColumnMajor
+RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeRowMajor
 ```
 
 ## API Reference

@@ -244,7 +244,17 @@ learn_response, _ = run_learning(api, instance_id, learn_request)
 learn_response
 ```
 
-The learning process returns a `LearnResponse` containing the model's learned parameters. The model's state has been updated automatically with the new parameters. We now, for example, can use the model to make predictions on new data by calling the inference endpoint:
+The learning process returns a `LearnResponse` containing the model's learned parameters. The model's state has been updated automatically with the new parameters. We can verify this by fetching the current model parameters:
+
+```@example learning-api
+import RxInferClientOpenAPI: get_model_instance_parameters
+
+response, _ = get_model_instance_parameters(api, instance_id)
+@test !isnothing(response) #hide
+response
+```
+
+After the learning process is complete, we can use the model to make predictions on new data by calling the inference endpoint:
 
 ```@example learning-api
 import RxInferClientOpenAPI: InferRequest, run_inference

@@ -1,10 +1,12 @@
 @testitem "RxInferServer JSON serialization should not work for custom types" begin
-    import RxInferServer.Serialization: to_json, UnsupportedTypeSerializationError
+    import RxInferServer.Serialization: to_json, JSONSerialization, UnsupportedTypeSerializationError
 
     struct CustomTypeToTriggerSerializationError end
 
     @testset "custom type" begin
-        @test_throws UnsupportedTypeSerializationError to_json(CustomTypeToTriggerSerializationError())
+        @test_throws UnsupportedTypeSerializationError to_json(
+            JSONSerialization(), CustomTypeToTriggerSerializationError()
+        )
     end
 end
 
@@ -22,10 +24,10 @@ end
 end
 
 @testmodule SerializationTestUtils begin
-    import RxInferServer.Serialization: to_json, from_json, SerializationPreferences
+    import RxInferServer.Serialization: to_json, from_json, JSONSerialization
 
-    to_from_json(value) = from_json(to_json(value))
-    to_from_json(preferences::SerializationPreferences, value) = from_json(to_json(preferences, value))
+    to_from_json(value) = from_json(to_json(JSONSerialization(), value))
+    to_from_json(s::JSONSerialization, value) = from_json(to_json(s, value))
 end
 
 @testitem "RxInferServer JSON serialization should work for OpenAPI data-types" setup = [SerializationTestUtils] begin
@@ -86,58 +88,64 @@ end
 end
 
 @testitem "Multi-dimensional arrays should throw an error if unknown preference is used" begin
-    import RxInferServer.Serialization: to_json, from_json, SerializationPreferences, UnsupportedPreferenceError
+    import RxInferServer.Serialization: to_json, JSONSerialization, UnsupportedPreferenceError
 
-    preferences = SerializationPreferences(mdarray_transform = UInt8(123))
+    @testset "mdarray_data" begin
+        s = JSONSerialization(mdarray_data = UInt8(123))
+        @test_throws UnsupportedPreferenceError to_json(s, [1 2; 3 4])
+    end
 
-    @test_throws UnsupportedPreferenceError to_json(preferences, [1 2; 3 4])
+    @testset "mdarray_repr" begin
+        s = JSONSerialization(mdarray_repr = UInt8(123))
+        @test_throws UnsupportedPreferenceError to_json(s, [1 2; 3 4])
+    end
 end
 
 @testitem "Multi-dimensional arrays should be serialized based on the preference: ArrayOfArrays" setup = [
     SerializationTestUtils
 ] begin
     import .SerializationTestUtils: to_from_json
-    import RxInferServer.Serialization: MultiDimensionalArrayTransform, SerializationPreferences
+    import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization
 
-    preferences = SerializationPreferences(mdarray_transform = MultiDimensionalArrayTransform.ArrayOfArrays)
+    s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ArrayOfArrays)
 
-    @test to_from_json(preferences, [1 2; 3 4]) ==
+    @test to_from_json(s, [1 2; 3 4]) ==
         Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
-    @test to_from_json(preferences, [1 3; 2 4]) ==
+    @test to_from_json(s, [1 3; 2 4]) ==
         Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 2], [3, 4]])
-    @test to_from_json(preferences, [1 2 3; 4 5 6]) == Dict(
+    @test to_from_json(s, [1 2 3; 4 5 6]) == Dict(
         "type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 3], "data" => [[1, 4], [2, 5], [3, 6]]
     )
-    @test to_from_json(preferences, [1 2 3; 4 5 6; 7 8 9]) == Dict(
+    @test to_from_json(s, [1 2 3; 4 5 6; 7 8 9]) == Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [3, 3],
         "data" => [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
     )
-    @test to_from_json(preferences, [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16]) == Dict(
+    @test to_from_json(s, [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16]) == Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [4, 4],
         "data" => [[1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15], [4, 8, 12, 16]]
     )
-    @test to_from_json(preferences, [1, 2, 3, 4]') ==
+    @test to_from_json(s, [1, 2, 3, 4]') ==
         Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [1, 4], "data" => [[1], [2], [3], [4]])
 
-    @test to_from_json(preferences, [1 3 5; 2 4 6;;; 7 9 11; 8 10 12]) == Dict(
+    @test to_from_json(s, [1 3 5; 2 4 6;;; 7 9 11; 8 10 12]) == Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [2, 3, 2],
         "data" => [[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]]
     )
 
-    @test to_from_json(preferences, [1 2;;; 3 4;;;; 5 6;;; 7 8]) == Dict(
+    @test to_from_json(s, [1 2;;; 3 4;;;; 5 6;;; 7 8]) == Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [1, 2, 2, 2],
         "data" => [[[[1], [2]], [[3], [4]]], [[[5], [6]], [[7], [8]]]]
     )
 
-    @test to_from_json(preferences, [[1 2;;; 3 4];;;; [5 6];;; [7 8]]) == Dict(
+    @test to_from_json(s, [[1 2;;; 3 4];;;; [5 6];;; [7 8]]) == Dict(
         "type" => "mdarray",
         "encoding" => "array_of_arrays",
         "shape" => [1, 2, 2, 2],
@@ -145,46 +153,39 @@ end
     )
 
     # Shouldn't affect the serialization of 1D arrays
-    @test to_from_json(preferences, [1, 2, 3, 4]) == [1, 2, 3, 4]
+    @test to_from_json(s, [1, 2, 3, 4]) == [1, 2, 3, 4]
 end
 
 @testitem "Metadata for multi-dimensional arrays should be included based on the preference" setup = [
     SerializationTestUtils
 ] begin
     import .SerializationTestUtils: to_from_json
-    import RxInferServer.Serialization:
-        MultiDimensionalArrayTransform, MultiDimensionalArrayMetadata, SerializationPreferences
+    import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization
 
-    base_transform = MultiDimensionalArrayTransform.ArrayOfArrays
+    base_transform = MultiDimensionalArrayData.ArrayOfArrays
 
     @testset "All" begin
-        preferences = SerializationPreferences(
-            mdarray_transform = base_transform, mdarray_metadata = MultiDimensionalArrayMetadata.All
-        )
+        s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.Dict)
 
-        @test to_from_json(preferences, [1 2; 3 4]) ==
+        @test to_from_json(s, [1 2; 3 4]) ==
             Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
     end
 
     @testset "TypeAndShape" begin
-        preferences = SerializationPreferences(
-            mdarray_transform = base_transform, mdarray_metadata = MultiDimensionalArrayMetadata.TypeAndShape
-        )
-        @test to_from_json(preferences, [1 2; 3 4]) ==
-            Dict("type" => "mdarray", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
+        s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.DictTypeAndShape)
+
+        @test to_from_json(s, [1 2; 3 4]) == Dict("type" => "mdarray", "shape" => [2, 2], "data" => [[1, 3], [2, 4]])
     end
 
     @testset "Shape" begin
-        preferences = SerializationPreferences(
-            mdarray_transform = base_transform, mdarray_metadata = MultiDimensionalArrayMetadata.Shape
-        )
-        @test to_from_json(preferences, [1 2; 3 4]) == Dict("shape" => [2, 2], "data" => [[1, 3], [2, 4]])
+        s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.DictShape)
+
+        @test to_from_json(s, [1 2; 3 4]) == Dict("shape" => [2, 2], "data" => [[1, 3], [2, 4]])
     end
 
-    @testset "Compact" begin
-        preferences = SerializationPreferences(
-            mdarray_transform = base_transform, mdarray_metadata = MultiDimensionalArrayMetadata.Compact
-        )
-        @test to_from_json(preferences, [1 2; 3 4]) == [[1, 3], [2, 4]]
+    @testset "Data" begin
+        s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.Data)
+
+        @test to_from_json(s, [1 2; 3 4]) == [[1, 3], [2, 4]]
     end
 end

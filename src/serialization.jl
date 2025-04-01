@@ -155,7 +155,7 @@ The following preferences are supported:
 - `mdarray_data`: Preference for serialization of multidimensional arrays data. See [`RxInferServer.Serialization.MultiDimensionalArrayTransform`](@ref) for more details.
 """
 Base.@kwdef struct JSONSerialization <: JSON.Serializations.Serialization
-    mdarray_repr::UInt8 = MultiDimensionalArrayRepr.All
+    mdarray_repr::UInt8 = MultiDimensionalArrayRepr.Dict
     mdarray_data::UInt8 = MultiDimensionalArrayData.ArrayOfArrays
 end
 
@@ -195,35 +195,35 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
     mdarray_data = serialization.mdarray_data
     mdarray_repr = serialization.mdarray_repr
 
-    if mdarray_repr != MultiDimensionalArrayMetadata.Compact
+    if mdarray_repr != MultiDimensionalArrayRepr.Data
         begin_object(io)
     end
 
-    if mdarray_repr == MultiDimensionalArrayMetadata.All
+    if mdarray_repr == MultiDimensionalArrayRepr.Dict
         show_pair(io, JSON.StandardSerialization(), :type => :mdarray)
         show_pair(io, JSON.StandardSerialization(), :encoding => :array_of_arrays)
         show_pair(io, JSON.StandardSerialization(), :shape => size(value))
         show_key(io, :data)
-    elseif mdarray_repr == MultiDimensionalArrayMetadata.TypeAndShape
+    elseif mdarray_repr == MultiDimensionalArrayRepr.DictTypeAndShape
         show_pair(io, JSON.StandardSerialization(), :type => :mdarray)
         show_pair(io, JSON.StandardSerialization(), :shape => size(value))
         show_key(io, :data)
-    elseif mdarray_repr == MultiDimensionalArrayMetadata.Shape
+    elseif mdarray_repr == MultiDimensionalArrayRepr.DictShape
         show_pair(io, JSON.StandardSerialization(), :shape => size(value))
         show_key(io, :data)
-    elseif mdarray_repr == MultiDimensionalArrayMetadata.Compact
+    elseif mdarray_repr == MultiDimensionalArrayRepr.Data
         # noop
     else
-        throw(UnsupportedPreferenceError(:mdarray_repr, MultiDimensionalArrayMetadata, mdarray_repr))
+        throw(UnsupportedPreferenceError(:mdarray_repr, MultiDimensionalArrayRepr, mdarray_repr))
     end
 
-    if mdarray_data == MultiDimensionalArrayTransform.ArrayOfArrays
+    if mdarray_data == MultiDimensionalArrayData.ArrayOfArrays
         show_json(io, JSON.StandardSerialization(), value)
     else
-        throw(UnsupportedPreferenceError(:mdarray_transform, MultiDimensionalArrayTransform, mdarray_data))
+        throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
     end
 
-    if mdarray_repr != MultiDimensionalArrayMetadata.Compact
+    if mdarray_repr != MultiDimensionalArrayRepr.Data
         end_object(io)
     end
 end

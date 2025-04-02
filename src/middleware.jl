@@ -90,15 +90,39 @@ function middleware_post_invoke_cors(res::HTTP.Response)
     return res
 end
 
-function RxInferServerOpenAPI.OpenAPI.Servers.server_response(res::RxInferServerOpenAPI.UnauthorizedResponse)
+"""
+    RoutesHandler
+
+A structure that is used to handle the routes.
+It is used to inject extra post-processing logic into the routes, 
+e.g. overriding the JSON serialization settings and the response codes.
+"""
+struct RoutesHandler end
+
+@inline function Base.getproperty(::RoutesHandler, prop::Symbol)
+    return let handler = @inline Base.getproperty(@__MODULE__, prop)
+        (req::HTTP.Request, args...; kwargs...) -> postprocess_response(req, handler(req, args...; kwargs...))
+    end
+end
+
+function postprocess_response(req, res::HTTP.Response)
+    return res
+end
+
+function postprocess_response(req, res)
+    s = Serialization.JSONSerialization()
+    return HTTP.Response(200, ["Content-Type" => "application/json"]; body = Serialization.to_json(s, res))
+end
+
+function postprocess_response(req, res::RxInferServerOpenAPI.UnauthorizedResponse)
     return HTTP.Response(401, res)
 end
 
-function RxInferServerOpenAPI.OpenAPI.Servers.server_response(res::RxInferServerOpenAPI.NotFoundResponse)
+function postprocess_response(req, res::RxInferServerOpenAPI.NotFoundResponse)
     return HTTP.Response(404, res)
 end
 
-function RxInferServerOpenAPI.OpenAPI.Servers.server_response(res::RxInferServerOpenAPI.ErrorResponse)
+function postprocess_response(req, res::RxInferServerOpenAPI.ErrorResponse)
     return HTTP.Response(400, res)
 end
 

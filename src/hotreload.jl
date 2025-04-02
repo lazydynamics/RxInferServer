@@ -101,7 +101,7 @@ function hot_reload_task_source_code(state::ServerState)
         Logging.with_simple_logger(io) do
             RxInferServerOpenAPI.register(
                 state.router,
-                @__MODULE__;
+                state.handler;
                 path_prefix = API_PATH_PREFIX,
                 pre_validation = middleware_pre_validation,
                 post_invoke = middleware_post_invoke

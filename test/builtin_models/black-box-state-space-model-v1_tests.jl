@@ -109,7 +109,7 @@ end
 
         @test info.status == 200
         @test !isnothing(learn_response)
-        @test isapprox(A, reshape(learn_response.learned_parameters["A_flattened"], 2, 2), rtol = 0.1)
+        @test isapprox(A, stack(learn_response.learned_parameters["A"]["data"]; dims = 1), rtol = 0.1)
 
         inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(
             data = Dict("observation" => y[end], "current_state" => x[end])

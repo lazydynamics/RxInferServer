@@ -226,7 +226,8 @@ makedocs(;
         "Server components" => [
             "Models" => "components/models.md", 
             "Database" => "components/database.md", 
-            "Logging" => "components/logging.md"
+            "Logging" => "components/logging.md",
+            "Serialization" => "components/serialization.md"
         ],
         "Developers guide" => "developers-guide.md",
         "OpenAPI documentation" =>

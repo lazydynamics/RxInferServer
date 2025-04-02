@@ -9,6 +9,7 @@ include("macro.jl")
 include("dotenv.jl")
 include("database.jl")
 include("logging.jl")
+include("serialization.jl")
 
 # This is NOT a file with model definitions, but a file that functions to
 # load models from the `RXINFER_SERVER_MODELS_LOCATION` directory
@@ -56,16 +57,18 @@ Used internally to check server status and manage server lifecycle events.
 - `event_instantiated::Base.Threads.Event`: Event triggered when server is instantiated
 - `pid_file::String`: File path used to trigger the hot reload task
 - `router::HTTP.Router`: The HTTP router handling server requests
+- `handler::H`: The handler for the routes, defaults to `RxInferServer.RoutesHandler()`
 - `ip::Sockets.IPv4`: IP address the server binds to
 - `port::Int`: Port number the server listens on
 """
-Base.@kwdef struct ServerState{R}
+Base.@kwdef struct ServerState{R, H}
     is_running::Threads.Atomic{Bool} = Threads.Atomic{Bool}(false)
     is_errored::Threads.Atomic{Bool} = Threads.Atomic{Bool}(false)
     event_instantiated::Base.Threads.Event = Base.Threads.Event()
     pid_file::String = tempname() # this is a file that is used to trigger the hot reload task
 
     router::R = HTTP.Router(cors404, cors405)
+    handler::H = RoutesHandler()
     ip::Sockets.IPv4 = ip"0.0.0.0"
     port::Int = RXINFER_SERVER_PORT()
 end
@@ -259,7 +262,7 @@ function serve()
             # Register all API endpoints defined in OpenAPI spec
             RxInferServerOpenAPI.register(
                 server.router,
-                @__MODULE__;
+                server.handler;
                 path_prefix = API_PATH_PREFIX,
                 pre_validation = middleware_pre_validation,
                 post_invoke = middleware_post_invoke

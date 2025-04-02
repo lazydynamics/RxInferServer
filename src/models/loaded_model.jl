@@ -62,7 +62,7 @@ function LoadedModel(path::String)::LoadedModel
     mod = Module(Symbol(:LoadedModel, name))
     Base.include(mod, potential_model_file)
 
-    @debug "Model `$(name)` has been loaded from `$path`" name description author roles
+    @debug "Model `$(name)` has been loaded from `$path`" name author roles
     return LoadedModel(
         path = path, name = name, description = description, author = author, roles = roles, config = config, mod = mod
     )

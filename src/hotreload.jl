@@ -114,9 +114,15 @@ function hot_reload_task_source_code(state::ServerState)
 end
 
 function hot_reload_task_models(state::ServerState)
+    locations = Models.RXINFER_SERVER_MODELS_LOCATIONS()
+
+    if Models.RXINFER_SERVER_LOAD_TEST_MODELS()
+        locations = vcat(locations, [Models.RXINFER_SERVER_TEST_MODELS_LOCATION()])
+    end
+
     hot_reload_models_locations = [
-        joinpath(root, file) for location in Models.RXINFER_SERVER_MODELS_LOCATIONS() for
-        (root, _, files) in walkdir(location) if isdir(location) for file in files
+        joinpath(root, file) for location in locations for (root, _, files) in walkdir(location) if isdir(location) for
+        file in files
     ]
     return hot_reload_task(:models, state, hot_reload_models_locations, []; all = false) do
         Models.reload!(Models.get_models_dispatcher())

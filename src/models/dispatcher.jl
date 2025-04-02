@@ -30,6 +30,11 @@ Construct a ModelsDispatcher by scanning the provided locations for models.
 function ModelsDispatcher(locations)::ModelsDispatcher
     models = Dict{String, LoadedModel}()
 
+    if RXINFER_SERVER_LOAD_TEST_MODELS()
+        @debug "RXINFER_SERVER_LOAD_TEST_MODELS is set to `true`, adding test models from `$(RXINFER_SERVER_TEST_MODELS_LOCATION())` to the `locations` list"
+        locations = vcat(locations, [RXINFER_SERVER_TEST_MODELS_LOCATION()])
+    end
+
     @debug "Attempt to load models from `$locations`"
     load_models!(models, locations)
 

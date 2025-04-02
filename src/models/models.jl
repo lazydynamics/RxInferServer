@@ -24,6 +24,17 @@ RxInferServer.serve()
 """
 RXINFER_SERVER_MODELS_LOCATIONS() = split(get(ENV, "RXINFER_SERVER_MODELS_LOCATIONS", "models:custom_models"), ':')
 
+"""
+    RXINFER_SERVER_LOAD_TEST_MODELS
+
+Whether to load test models. The test models are located in the `test/models_for_testing` directory.
+`pkgdir(@__MODULE__)` is used to locate the project's directory and load the test models from there.
+"""
+RXINFER_SERVER_LOAD_TEST_MODELS() = lowercase(get(ENV, "RXINFER_SERVER_LOAD_TEST_MODELS", "false")) == "true"
+
+# This is fixed
+RXINFER_SERVER_TEST_MODELS_LOCATION() = joinpath(pkgdir(@__MODULE__), "test", "models_for_testing")
+
 include("model_utils.jl")
 include("model_config.jl")
 include("loaded_model.jl")
@@ -85,5 +96,11 @@ Get a specific model by name from the current dispatcher.
 - `LoadedModel` or `nothing`: The requested model if found, otherwise `nothing`
 """
 get_model(model_name::String) = get_model(get_models_dispatcher(), model_name)
+
+function loaded_models_banner_hint()
+    locations = RXINFER_SERVER_MODELS_LOCATIONS()
+    hint = "Models locations: $(join(map(l -> string('`', l, '`'), locations), ", "))"
+    return hint
+end
 
 end

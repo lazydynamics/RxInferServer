@@ -361,3 +361,40 @@ end
         @test_json_serialization s [1 2; 3 4] => [[1, 2], [3, 4]]
     end
 end
+
+@testitem "Serialization of matrices should change based on `Prefer` header" setup = [TestUtils] begin
+
+    # Ask the server for a matrix and return it to the caller
+    # The actual place of getting a matrix isn't really important here,
+    # so we just create a state space model as an example and get the matrix from it
+    # this code can be changed if the model is changed
+    function ask_server_for_matrix(f, headers)
+        client = TestUtils.TestClient(headers = headers)
+        models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+        create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+            model_name = "BlackBoxStateSpaceModel-v1",
+            description = "Testing black-box state space model",
+            arguments = Dict("state_dimension" => 2)
+        )
+
+        response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
+        instance_id = response.instance_id
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(models_api, instance_id)
+
+        f(response.parameters["A"])
+
+        response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
+        @test info.status == 200 && response.message == "Model instance deleted successfully"
+    end
+
+    @testset "ArrayOfArrays" begin
+        ask_server_for_matrix(["Prefer" => "mdarray_data=array_of_arrays"]) do matrix
+            @test matrix["type"] == "mdarray"
+            @test matrix["encoding"] == "array_of_arrays"
+            @test matrix["shape"] == [2, 2]
+            @test matrix["data"] == [[1, 2], [3, 4]]
+        end
+    end
+end

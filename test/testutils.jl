@@ -14,12 +14,16 @@
 
     current_test_token() = TEST_TOKEN[]
 
-    function TestClient(; authorized = true, token = current_test_token())
+    function TestClient(; headers = [], authorized = true, token = current_test_token())
         _client = Client(TEST_SERVER_URL)
         _token = @something token RxInferServer.RXINFER_SERVER_DEV_TOKEN()
 
         if authorized && !isnothing(_token)
             set_header(_client, "Authorization", "Bearer $(_token)")
+        end
+
+        for (key, value) in headers
+            set_header(_client, key, value)
         end
 
         if authorized && isnothing(_token)

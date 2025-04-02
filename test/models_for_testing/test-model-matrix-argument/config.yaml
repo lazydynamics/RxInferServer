@@ -1,0 +1,31 @@
+name: TestModelComplexState
+description: |
+  This model is used for testing the endpoints of the server implementation.
+  It is not a real model, does not do anything and should not be used in production.
+
+  This model is used to test the interaction between the server and the client
+  when a complex state is involved. The following argumnets are present in the state:
+
+  - 2x2 matrix called `A2` 
+  ```
+  [ 1 2 ]
+  [ 3 4 ]
+  ```
+  - 3x3 matrix called `A3`
+  ```
+  [ 1 2 3 ]
+  [ 4 5 6 ]
+  [ 7 8 9 ]
+  ```
+  - 4x4 matrix called `A4`
+  ```
+  [ 1 2 3 4 ]
+  [ 5 6 7 8 ]
+  [ 9 10 11 12 ]
+  [ 13 14 15 16 ]
+  ```
+
+  The model has no arguments.
+author: Lazy Dynamics
+roles:
+  - test-only

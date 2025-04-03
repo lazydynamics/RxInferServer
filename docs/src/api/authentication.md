@@ -28,7 +28,7 @@ response.token
 ```
 
 !!! tip "Development Mode"
-    During development, you can use the predefined token from [`RXINFER_SERVER_DEV_TOKEN`](@ref RxInferServer.RXINFER_SERVER_DEV_TOKEN) environment variable for authentication. This simplifies the development workflow, but should not be used in production.
+    During development, you can enable the development mode by setting the [`RXINFER_SERVER_ENABLE_DEV_TOKEN`](@ref RxInferServer.RXINFER_SERVER_ENABLE_DEV_TOKEN) environment variable to `true`.
 
 ### Using the Token
 

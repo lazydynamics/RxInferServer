@@ -50,7 +50,7 @@ For accessing protected resources, you need to provide a valid token. See the [A
 
 ```@example error-handling
 using RxInferServer #hide
-token = RxInferServer.RXINFER_SERVER_DEV_TOKEN() #hide
+token = RxInferServer.DEFAULT_DEV_TOKEN #hide
 client = Client(basepath(ServerApi); headers = Dict(
     "Authorization" => "Bearer $token"
 ))

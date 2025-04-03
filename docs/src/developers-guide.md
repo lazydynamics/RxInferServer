@@ -202,7 +202,7 @@ The API uses standard Bearer token authentication with the `Authorization` heade
    - Navigate to the `/generate-token` endpoint
    - Click "Try it out" followed by "Execute"
    - Copy the token from the response
-   - **For development**: You can use the predefined dev token (`dev-token`) configured in the environment variable `RXINFER_SERVER_DEV_TOKEN`
+   - **For development**: You can use the predefined dev token enabled by setting the [`RXINFER_SERVER_ENABLE_DEV_TOKEN`](@ref RxInferServer.RXINFER_SERVER_ENABLE_DEV_TOKEN) environment variable to `true`.
 
 2. **Set up authentication**:
    - Click the "Authorize" button (padlock icon) at the top of Swagger UI

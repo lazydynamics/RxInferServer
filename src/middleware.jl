@@ -142,7 +142,7 @@ const DEFAULT_DEV_TOKEN_ROLES = ["user"]
 
 """
 An environment variable that can be used to enable development token authentication.
-By default, the development token is disabled and the `RXINFER_SERVER_DEV_TOKEN` environment variable set to "false".
+By default, the development token is disabled and the `RXINFER_SERVER_ENABLE_DEV_TOKEN` environment variable set to "false".
 Set to "true" to enable development token authentication (do not use in production!).
 Note that RxInferServer checks this environment variable only once before starting the server.
 

@@ -105,13 +105,19 @@ struct RoutesHandler end
     end
 end
 
-function postprocess_response(req, res::HTTP.Response)
-    return res
+"""
+    RequestPreferences(req::HTTP.Request)
+
+A structure that is used to parse and store the request specific preferences from 
+the `Prefer` header.
+"""
+Base.@kwdef struct RequestPreferences
+    json_serialization::Serialization.JSONSerialization
+    applied_preferences::HTTP.Headers
 end
 
-function postprocess_response(req, res)
-    response_headers = HTTP.Headers()
-    HTTP.setheader(response_headers, HTTP.Header("Content-Type", "application/json"))
+function RequestPreferences(req::HTTP.Request)
+    applied_preferences = HTTP.Headers()
 
     preferences = HTTP.headers(req, "Prefer")
     preferences = Iterators.flatten(Iterators.map(p -> split(p, ","), preferences))
@@ -125,15 +131,31 @@ function postprocess_response(req, res)
         key, value = splitpreference
         if key == "mdarray_repr"
             preference_mdarray_repr = convert(Serialization.MultiDimensionalArrayRepr.T, value)
-            HTTP.setheader(response_headers, HTTP.Header("Preference-Applied", preference))
+            push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
         elseif key == "mdarray_data"
             preference_mdarray_data = convert(Serialization.MultiDimensionalArrayData.T, value)
-            HTTP.setheader(response_headers, HTTP.Header("Preference-Applied", preference))
+            push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
         end
     end
 
-    s = Serialization.JSONSerialization(mdarray_repr = preference_mdarray_repr, mdarray_data = preference_mdarray_data)
-    return HTTP.Response(200, response_headers; body = Serialization.to_json(s, res))
+    json_serialization = Serialization.JSONSerialization(
+        mdarray_repr = preference_mdarray_repr, mdarray_data = preference_mdarray_data
+    )
+
+    return RequestPreferences(json_serialization = json_serialization, applied_preferences = applied_preferences)
+end
+
+function postprocess_response(req, res)
+    response_headers = HTTP.Headers()
+    HTTP.setheader(response_headers, HTTP.Header("Content-Type", "application/json"))
+
+    preferences = RequestPreferences(req)
+
+    for header in preferences.applied_preferences
+        push!(response_headers, header)
+    end
+
+    return HTTP.Response(200, response_headers; body = Serialization.to_json(preferences.json_serialization, res))
 end
 
 function postprocess_response(req, res::RxInferServerOpenAPI.UnauthorizedResponse)

@@ -82,6 +82,7 @@ See also: [`RxInferServer.Serialization.MultiDimensionalArrayRepr`](@ref)
 
     julia> to_json(s, [1 2; 3 4])
     "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"diagonal\\",\\"shape\\":[2,2],\\"data\\":[1,4]}"
+    ```
     """
     Diagonal
 
@@ -441,9 +442,7 @@ function __show_mdarray_data_reshape_row_major(
 end
 
 ## MultiDimensionalArrayData.Diagonal implementation, only supports Array objects
-function __show_mdarray_data_diagonal(
-    io::StructuralContext, serialization::JSONSerialization, array::AbstractArray
-)
+function __show_mdarray_data_diagonal(io::StructuralContext, serialization::JSONSerialization, array::AbstractArray)
     if firstindex(array) !== 1
         throw(ArgumentError("Diagonal encoding only supports 1-based indexing"))
     end
@@ -457,13 +456,9 @@ function __show_mdarray_data_diagonal(
 end
 
 ## MultiDimensionalArrayData.None implementation
-function __show_mdarray_data_none(
-    io::StructuralContext, serialization::JSONSerialization, array::AbstractArray
-)
+function __show_mdarray_data_none(io::StructuralContext, serialization::JSONSerialization, array::AbstractArray)
     show_json(io, serialization, nothing)
 end
-
-
 
 """
     to_json([io::IO], [serialization::JSONSerialization], value)

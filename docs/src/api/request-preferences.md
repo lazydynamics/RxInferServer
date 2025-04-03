@@ -72,11 +72,11 @@ The `key` for the multi-dimensional array representation format is `mdarray_repr
 
 #### Examples 
 
-Here, how, as an example, a simple 2x2 matrix 
+Here, how, as an example, a simple 2x2 matrix would change its representation depending on different preferences:
+
 ```@example preferences
 A = [1 2; 3 4]
 ```
-would change its representation depending on different preferences
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_repr=dict")
@@ -134,11 +134,11 @@ The `key` for the multi-dimensional array data encoding is `mdarray_data`. The `
 
 #### Examples 
 
-Here, how, as an example, a simple 2x2 matrix 
+Here, how, as an example, a simple 2x2 matrix would change its representation depending on different preferences:
+
 ```@example preferences
 A = [1 2; 3 4]
 ```
-would change its representation depending on different preferences
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_data=array_of_arrays")
@@ -198,4 +198,8 @@ nothing #hide
 A
 ```
 
+## API Reference
 
+```@docs
+RxInferServer.RequestPreferences
+```

@@ -456,7 +456,7 @@ end
 end
 
 @testitem "Serialization of matrices should change based on `Prefer` header" setup = [TestUtils] begin
-    using LinearAlgebra
+    using LinearAlgebra, HTTP
 
     # Ask the server for a matrix and return it to the caller
     # The actual place of getting a matrix isn't really important here,
@@ -484,6 +484,11 @@ end
         response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(papi, instance_id)
         @test info.status == 200
         f(response.state["matrix"])
+
+        for p in split(preference, ",")
+            # Check that the preference was applied
+            @test any(h -> (lowercase(h[1]) => lowercase(h[2])) == ("preference-applied" => lowercase(p)), info.headers)
+        end
 
         response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
         @test info.status == 200 && response.message == "Model instance deleted successfully"

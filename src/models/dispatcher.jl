@@ -62,7 +62,6 @@ function load_models!(models, locations)
         for directory in readdir(location)
             potential_model_dir = joinpath(location, directory)
             if isdir(potential_model_dir)
-                @debug "Found potential model's directory `$directory`"
                 try
                     model = LoadedModel(potential_model_dir)
                     if haskey(models, model.name)

@@ -78,6 +78,18 @@ Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayData.T) = Integer(p
 @inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayData.T) = a == Integer(b)
 @inline Base.:(==)(a::MultiDimensionalArrayData.T, b::UInt8) = Integer(a) == b
 
+function Base.convert(::Type{MultiDimensionalArrayData.T}, preference::AbstractString)
+    if preference == "array_of_arrays"
+        return MultiDimensionalArrayData.ArrayOfArrays
+    elseif preference == "reshape_column_major"
+        return MultiDimensionalArrayData.ReshapeColumnMajor
+    elseif preference == "reshape_row_major"
+        return MultiDimensionalArrayData.ReshapeRowMajor
+    else
+        throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, preference))
+    end
+end
+
 """
 Specifies the JSON representation format for multi-dimensional arrays.
 
@@ -149,6 +161,20 @@ end
 Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayRepr.T) = Integer(preference)::UInt8
 @inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayRepr.T) = a == Integer(b)
 @inline Base.:(==)(a::MultiDimensionalArrayRepr.T, b::UInt8) = Integer(a) == b
+
+function Base.convert(::Type{MultiDimensionalArrayRepr.T}, preference::AbstractString)
+    if preference == "dict"
+        return MultiDimensionalArrayRepr.Dict
+    elseif preference == "dict_type_and_shape"
+        return MultiDimensionalArrayRepr.DictTypeAndShape
+    elseif preference == "dict_shape"
+        return MultiDimensionalArrayRepr.DictShape
+    elseif preference == "data"
+        return MultiDimensionalArrayRepr.Data
+    else
+        throw(UnsupportedPreferenceError(:mdarray_repr, MultiDimensionalArrayRepr, preference))
+    end
+end
 
 """
     UnsupportedPreferenceError(option, available, preference)

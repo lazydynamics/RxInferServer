@@ -110,8 +110,35 @@ function postprocess_response(req, res::HTTP.Response)
 end
 
 function postprocess_response(req, res)
-    s = Serialization.JSONSerialization()
-    return HTTP.Response(200, ["Content-Type" => "application/json"]; body = Serialization.to_json(s, res))
+    response_headers = HTTP.Headers()
+    HTTP.setheader(response_headers, HTTP.Header("Content-Type", "application/json"))
+
+    preferences = HTTP.headers(req, "Prefer")
+    preferences = Iterators.flatten(Iterators.map(p -> split(p, ","), preferences))
+
+    preference_mdarray_repr = Serialization.MultiDimensionalArrayRepr.Dict
+    preference_mdarray_data = Serialization.MultiDimensionalArrayData.ArrayOfArrays
+
+    @show HTTP.headers(req, "Prefer")
+    @show collect(preferences)
+
+    for preference in preferences
+        splitpreference = split(preference, "=")
+        length(splitpreference) == 2 || continue
+        key, value = splitpreference
+        if key == "mdarray_repr"
+            preference_mdarray_repr = convert(Serialization.MultiDimensionalArrayRepr.T, value)
+            HTTP.setheader(response_headers, HTTP.Header("Preference-Applied", preference))
+        elseif key == "mdarray_data"
+            preference_mdarray_data = convert(Serialization.MultiDimensionalArrayData.T, value)
+            HTTP.setheader(response_headers, HTTP.Header("Preference-Applied", preference))
+        end
+    end
+
+    @show response_headers
+
+    s = Serialization.JSONSerialization(mdarray_repr = preference_mdarray_repr, mdarray_data = preference_mdarray_data)
+    return HTTP.Response(200, response_headers; body = Serialization.to_json(s, res))
 end
 
 function postprocess_response(req, res::RxInferServerOpenAPI.UnauthorizedResponse)

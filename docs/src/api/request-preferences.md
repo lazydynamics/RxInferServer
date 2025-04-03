@@ -129,6 +129,8 @@ The `key` for the multi-dimensional array data encoding is `mdarray_data`. The `
 | `array_of_arrays` | Corresponds to [`RxInferServer.Serialization.MultiDimensionalArrayData.ArrayOfArrays`](@ref). |
 | `reshape_column_major` | Corresponds to [`RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeColumnMajor`](@ref). |
 | `reshape_row_major` | Corresponds to [`RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeRowMajor`](@ref). |
+| `diagonal` | Corresponds to [`RxInferServer.Serialization.MultiDimensionalArrayData.Diagonal`](@ref). |
+| `none` | Corresponds to [`RxInferServer.Serialization.MultiDimensionalArrayData.None`](@ref). |
 
 #### Examples 
 
@@ -168,6 +170,32 @@ nothing #hide
 A
 ```
 
+```@example preferences
+set_header(client, "Prefer", "mdarray_data=diagonal")
+A, info = hidden_get_matrix() #hide
+nothing #hide
+```
 
+```@example preferences
+A
+```
+
+```@example preferences
+set_header(client, "Prefer", "mdarray_data=none")
+A, info = hidden_get_matrix() #hide
+nothing #hide
+```
+
+It is possible to remove the matrices from the request entirely by setting the `mdarray_data` preference to `none` together with the `mdarray_repr` preference to `data`.
+
+```@example preferences
+set_header(client, "Prefer", "mdarray_repr=data,mdarray_data=none")
+A, info = hidden_get_matrix() #hide
+nothing #hide
+```
+
+```@example preferences
+A
+```
 
 

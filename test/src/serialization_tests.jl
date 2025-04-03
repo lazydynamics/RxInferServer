@@ -329,6 +329,78 @@ end
     @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
 end
 
+@testitem "MultiDimensionalArrayData.Diagonal" setup = [SerializationTestUtils] begin
+    import .SerializationTestUtils: to_from_json, @test_json_serialization
+    import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization
+
+    s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.Diagonal)
+
+    @test_json_serialization s [1 2; 3 4] =>
+        Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [2, 2], "data" => [1, 4])
+
+    @test_json_serialization s [1 3; 2 4] =>
+        Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [2, 2], "data" => [1, 4])
+
+    @test_json_serialization s [1 2 3; 4 5 6] =>
+        Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [2, 3], "data" => [1, 5])
+
+    @test_json_serialization s [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16] =>
+        Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [4, 4], "data" => [1, 6, 11, 16])
+
+    @test_json_serialization s [1 2 3 4] =>
+        Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [1, 4], "data" => [1])
+    @test_json_serialization s [1 2 3 4]' =>
+        Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [4, 1], "data" => [1])
+
+    @test_json_serialization s [1 3 5; 2 4 6;;; 7 9 11; 8 10 12] =>
+        Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [2, 3, 2], "data" => [1, 10])
+
+    @test_json_serialization s [1 2;;; 3 4;;;; 5 6;;; 7 8] =>
+        Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [1, 2, 2, 2], "data" => [1])
+
+    @test_json_serialization s [[1 2;;; 3 4];;;; [5 6];;; [7 8]] =>
+        Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [1, 2, 2, 2], "data" => [1])
+
+    # Shouldn't affect the serialization of 1D arrays
+    @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
+end
+
+@testitem "MultiDimensionalArrayData.None" setup = [SerializationTestUtils] begin
+    import .SerializationTestUtils: to_from_json, @test_json_serialization
+    import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization
+
+    s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.None)
+
+    @test_json_serialization s [1 2; 3 4] =>
+        Dict("type" => "mdarray", "encoding" => "none", "shape" => [2, 2], "data" => nothing)
+
+    @test_json_serialization s [1 3; 2 4] =>
+        Dict("type" => "mdarray", "encoding" => "none", "shape" => [2, 2], "data" => nothing)
+
+    @test_json_serialization s [1 2 3; 4 5 6] =>
+        Dict("type" => "mdarray", "encoding" => "none", "shape" => [2, 3], "data" => nothing)
+
+    @test_json_serialization s [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16] =>
+        Dict("type" => "mdarray", "encoding" => "none", "shape" => [4, 4], "data" => nothing)
+
+    @test_json_serialization s [1 2 3 4] =>
+        Dict("type" => "mdarray", "encoding" => "none", "shape" => [1, 4], "data" => nothing)
+    @test_json_serialization s [1 2 3 4]' =>
+        Dict("type" => "mdarray", "encoding" => "none", "shape" => [4, 1], "data" => nothing)
+
+    @test_json_serialization s [1 3 5; 2 4 6;;; 7 9 11; 8 10 12] =>
+        Dict("type" => "mdarray", "encoding" => "none", "shape" => [2, 3, 2], "data" => nothing)
+
+    @test_json_serialization s [1 2;;; 3 4;;;; 5 6;;; 7 8] =>
+        Dict("type" => "mdarray", "encoding" => "none", "shape" => [1, 2, 2, 2], "data" => nothing)
+
+    @test_json_serialization s [[1 2;;; 3 4];;;; [5 6];;; [7 8]] =>
+        Dict("type" => "mdarray", "encoding" => "none", "shape" => [1, 2, 2, 2], "data" => nothing)
+
+    # Shouldn't affect the serialization of 1D arrays
+    @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
+end
+
 @testitem "MultiDimensionalArrayRepr" setup = [SerializationTestUtils] begin
     import .SerializationTestUtils: to_from_json, @test_json_serialization
     import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization
@@ -384,6 +456,8 @@ end
 end
 
 @testitem "Serialization of matrices should change based on `Prefer` header" setup = [TestUtils] begin
+    using LinearAlgebra
+
     # Ask the server for a matrix and return it to the caller
     # The actual place of getting a matrix isn't really important here,
     # so we just a dummy model as an example and get the matrix from it
@@ -478,6 +552,34 @@ end
 
             get_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "reshape_row_major"
+                @test matrix["data"] == expected_matrix
+            end
+
+            get_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
+                @test matrix == expected_matrix
+            end
+        end
+
+        @testset let preference = "mdarray_data=diagonal"
+            # the expected matrix is flattened row by row
+            expected_matrix = collect(diag(permutedims(reshape(1:(size^2), size, size))))
+
+            get_sequential_matrix(; size, preference) do matrix
+                @test matrix["encoding"] == "diagonal"
+                @test matrix["data"] == expected_matrix
+            end
+
+            get_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
+                @test matrix == expected_matrix
+            end
+        end
+
+        @testset let preference = "mdarray_data=none"
+            # the expected matrix is flattened row by row
+            expected_matrix = nothing
+
+            get_sequential_matrix(; size, preference) do matrix
+                @test matrix["encoding"] == "none"
                 @test matrix["data"] == expected_matrix
             end
 

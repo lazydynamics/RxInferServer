@@ -35,7 +35,7 @@ function ModelsDispatcher(locations)::ModelsDispatcher
         locations = vcat(locations, [RXINFER_SERVER_TEST_MODELS_LOCATION()])
     end
 
-    @debug "Attempt to load models from `$locations`"
+    @debug "Attempt to load models from $(join(map(l -> string('`', relpath(l, pwd()), '`'), locations), ", ", " and "))"
     load_models!(models, locations)
 
     return ModelsDispatcher(locations = locations, models = models)

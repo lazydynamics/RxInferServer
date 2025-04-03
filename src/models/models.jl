@@ -27,13 +27,18 @@ RXINFER_SERVER_MODELS_LOCATIONS() = split(get(ENV, "RXINFER_SERVER_MODELS_LOCATI
 """
     RXINFER_SERVER_LOAD_TEST_MODELS
 
-Whether to load test models. The test models are located in the `test/models_for_testing` directory.
-`pkgdir(@__MODULE__)` is used to locate the project's directory and load the test models from there.
+Environment variable to determine whether to load test models. Can be either `true` or `false`.
+The test models are located under the `test` directory of the project.
+
+!!! note 
+    `pkgdir(@__MODULE__)` is used to locate the project's directory and load the test models from there.
+    This means that the test models can be loaded only when the package is installed in the development mode.
+    Do not use this variable in the production environment.
 """
 RXINFER_SERVER_LOAD_TEST_MODELS() = lowercase(get(ENV, "RXINFER_SERVER_LOAD_TEST_MODELS", "false")) == "true"
 
-# This is fixed
-RXINFER_SERVER_TEST_MODELS_LOCATION() = joinpath(pkgdir(@__MODULE__), "test", "models_for_testing")
+# This is fixed and cannot be changed
+RXINFER_SERVER_TEST_MODELS_LOCATION() = relpath(joinpath(pkgdir(@__MODULE__), "test", "models_for_testing"), pwd())
 
 include("model_utils.jl")
 include("model_config.jl")
@@ -99,7 +104,12 @@ get_model(model_name::String) = get_model(get_models_dispatcher(), model_name)
 
 function loaded_models_banner_hint()
     locations = RXINFER_SERVER_MODELS_LOCATIONS()
-    hint = "Models locations: $(join(map(l -> string('`', l, '`'), locations), ", "))"
+    hint = "Model locations are $(join(map(l -> string('`', l, '`', ifelse(isdir(l), "", " (missing)")), locations), ", "))"
+
+    if RXINFER_SERVER_LOAD_TEST_MODELS()
+        hint = string(hint, " and test models `", RXINFER_SERVER_TEST_MODELS_LOCATION(), "`")
+    end
+
     return hint
 end
 

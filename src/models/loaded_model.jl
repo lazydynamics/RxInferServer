@@ -47,7 +47,6 @@ function LoadedModel(path::String)::LoadedModel
     isfile(potential_model_config) ||
         error("Cannot create `LoadedModel` from `$path` because it does not have a `config.yaml` file.")
 
-    @debug "Reading model's config from `$potential_model_config`"
     config = YAML.load_file(potential_model_config)
 
     header_validation = validate_model_config_header(config)
@@ -58,11 +57,9 @@ function LoadedModel(path::String)::LoadedModel
     author = config["author"]
     roles = config["roles"]
 
-    @debug "Including model's code from `$potential_model_file`"
     mod = Module(Symbol(:LoadedModel, name))
     Base.include(mod, potential_model_file)
 
-    @debug "Model `$(name)` has been loaded from `$path`" name description author roles
     return LoadedModel(
         path = path, name = name, description = description, author = author, roles = roles, config = config, mod = mod
     )

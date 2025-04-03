@@ -237,14 +237,20 @@ function serve()
                 Welcome to RxInfer Server! (version: $(pkgversion(RxInferServer)))
                 Listening on $(server.ip):$(server.port)
                 
-                API Documentation: https://server.rxinfer.com
-                RxInfer Documentation: https://docs.rxinfer.com
+                • Documentation
+                  API: https://server.rxinfer.com
+                  RxInfer: https://docs.rxinfer.com
 
-                .env files: $(join(dotenv_loaded, ", "))
-                Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())`
-                $(Logging.is_debug_logging_enabled() ? "Debug level logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())/debug.log`" : "")
-                $(hot_reloading_banner_hint())
-                
+                • Environment: $(join(dotenv_loaded, ", "))
+                  $(RXINFER_SERVER_ENABLE_DEV_TOKEN() ? "Development token is enabled (! do not use in production !)" : "Development token is disabled")
+
+                • Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())` directory
+                  $(Logging.RXINFER_SERVER_ENABLE_DEBUG_LOGGING() ? "Debug logging is enabled and collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())/debug.log`" : "Debug logging is disabled")
+
+                • $(Models.loaded_models_banner_hint())
+                  
+                • $(hot_reloading_banner_hint())
+                  
                 $(RXINFER_SERVER_LISTEN_KEYBOARD() ? "Type 'q' or 'quit' and hit ENTER to quit the server" : "Server is not listening for keyboard input")
                 $(isinteractive() ? "Alternatively use Ctrl-C to quit." : "(Running in non-interactive mode, Ctrl-C may not work properly)")
 

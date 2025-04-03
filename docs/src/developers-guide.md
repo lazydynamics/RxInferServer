@@ -118,7 +118,14 @@ make docker-start
 # Stop the Docker environment
 make docker-stop
 
-# Start the RxInferServer, with debug logs enabled
+# Start the RxInferServer in production mode
+# (1) debug logging enabled
+# (2) hot-reloading enabled
+# (3) test models loaded
+# (4) development token enabled
+make dev
+
+# Start the RxInferServer normally
 make serve
 
 # Run the test suite
@@ -195,7 +202,7 @@ The API uses standard Bearer token authentication with the `Authorization` heade
    - Navigate to the `/generate-token` endpoint
    - Click "Try it out" followed by "Execute"
    - Copy the token from the response
-   - **For development**: You can use the predefined dev token (`dev-token`) configured in the environment variable `RXINFER_SERVER_DEV_TOKEN`
+   - **For development**: You can use the predefined dev token enabled by setting the [`RXINFER_SERVER_ENABLE_DEV_TOKEN`](@ref RxInferServer.RXINFER_SERVER_ENABLE_DEV_TOKEN) environment variable to `true`.
 
 2. **Set up authentication**:
    - Click the "Authorize" button (padlock icon) at the top of Swagger UI

@@ -1,6 +1,6 @@
 # RxInferServer.jl Makefile
 
-.PHONY: help docs docs-serve docs-clean docs-build deps test serve docker-start docker-stop clean format check-format generate-client generate-server generate-all
+.PHONY: help docs docs-serve docs-clean docs-build deps test serve dev docker-start docker-stop clean format check-format generate-client generate-server generate-all
 
 # Colors for terminal output
 ifdef NO_COLOR
@@ -32,7 +32,8 @@ help:
 	@echo '${GREEN}Development commands:${RESET}'
 	@echo '  ${YELLOW}deps${RESET}                 Install project dependencies'
 	@echo '  ${YELLOW}test${RESET}                 Run project tests'
-	@echo '  ${YELLOW}serve${RESET}                Run the server (with debug logging enabled)'
+	@echo '  ${YELLOW}serve${RESET}                Run the server'
+	@echo '  ${YELLOW}dev${RESET}                  Run the server in the development mode (do not use for production)'
 	@echo '  ${YELLOW}docker-start${RESET}         Start the docker compose environment'
 	@echo '  ${YELLOW}docker-stop${RESET}          Stop the docker compose environment'
 	@echo '  ${YELLOW}generate-client${RESET}      Generate OpenAPI client code'
@@ -73,10 +74,14 @@ deps: ## Install project dependencies
 test: deps ## Run project tests
 	julia --project -e 'using Pkg; Pkg.test()'
 
-serve: deps ## Run the server (with .env.development)
+serve: deps ## Run the server
+	julia --project -e 'using RxInferServer; RxInferServer.serve()'
+
+dev: deps ## Run the server (with .env.development)
 	$(eval TRACE_COMPILE_PATH ?=)
 	$(eval TRACE_COMPILE_FLAG := $(if $(TRACE_COMPILE_PATH),--trace-compile=$(TRACE_COMPILE_PATH),))
-	RXINFER_SERVER_ENV=development julia --project $(TRACE_COMPILE_FLAG) -e 'using RxInferServer; RxInferServer.serve()'
+	RXINFER_SERVER_ENV=development \
+	julia --project $(TRACE_COMPILE_FLAG) -e 'using RxInferServer; RxInferServer.serve()'
 
 docker: docker-start ## Starts the docker compose environment
 

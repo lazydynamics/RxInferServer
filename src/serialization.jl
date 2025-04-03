@@ -71,12 +71,59 @@ See also: [`RxInferServer.Serialization.MultiDimensionalArrayRepr`](@ref)
         but is compatible with `numpy.ndarray` memory layout.
     """
     ReshapeRowMajor
+
+    """
+    Encodes the data of multi-dimensional arrays as a single array containing only the diagonal elements of the parent array.
+
+    ```jldoctest
+    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
+
+    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.Diagonal);
+
+    julia> to_json(s, [1 2; 3 4])
+    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"diagonal\\",\\"shape\\":[2,2],\\"data\\":[1,4]}"
+    ```
+    """
+    Diagonal
+
+    """
+    Removes the multi-dimensional array data from the response entirely.
+
+    ```jldoctest
+    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
+
+    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.None);
+
+    julia> to_json(s, [1 2; 3 4])
+    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"none\\",\\"shape\\":[2,2],\\"data\\":null}"
+    ```
+
+    !!! note
+        Use [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Data`](@ref) to remove everything.
+    """
+    None
 end
 
 # This is mostly for convenience to convert the preference to a UInt8.
 Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayData.T) = Integer(preference)::UInt8
 @inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayData.T) = a == Integer(b)
 @inline Base.:(==)(a::MultiDimensionalArrayData.T, b::UInt8) = Integer(a) == b
+
+function Base.convert(::Type{MultiDimensionalArrayData.T}, preference::AbstractString)
+    if preference == "array_of_arrays"
+        return MultiDimensionalArrayData.ArrayOfArrays
+    elseif preference == "reshape_column_major"
+        return MultiDimensionalArrayData.ReshapeColumnMajor
+    elseif preference == "reshape_row_major"
+        return MultiDimensionalArrayData.ReshapeRowMajor
+    elseif preference == "diagonal"
+        return MultiDimensionalArrayData.Diagonal
+    elseif preference == "none"
+        return MultiDimensionalArrayData.None
+    else
+        throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, preference))
+    end
+end
 
 """
 Specifies the JSON representation format for multi-dimensional arrays.
@@ -149,6 +196,20 @@ end
 Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayRepr.T) = Integer(preference)::UInt8
 @inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayRepr.T) = a == Integer(b)
 @inline Base.:(==)(a::MultiDimensionalArrayRepr.T, b::UInt8) = Integer(a) == b
+
+function Base.convert(::Type{MultiDimensionalArrayRepr.T}, preference::AbstractString)
+    if preference == "dict"
+        return MultiDimensionalArrayRepr.Dict
+    elseif preference == "dict_type_and_shape"
+        return MultiDimensionalArrayRepr.DictTypeAndShape
+    elseif preference == "dict_shape"
+        return MultiDimensionalArrayRepr.DictShape
+    elseif preference == "data"
+        return MultiDimensionalArrayRepr.Data
+    else
+        throw(UnsupportedPreferenceError(:mdarray_repr, MultiDimensionalArrayRepr, preference))
+    end
+end
 
 """
     UnsupportedPreferenceError(option, available, preference)
@@ -301,6 +362,10 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
         __show_mdarray_data_reshape_column_major(io, serialization, value)
     elseif mdarray_data == MultiDimensionalArrayData.ReshapeRowMajor
         __show_mdarray_data_reshape_row_major(io, serialization, value)
+    elseif mdarray_data == MultiDimensionalArrayData.Diagonal
+        __show_mdarray_data_diagonal(io, serialization, value)
+    elseif mdarray_data == MultiDimensionalArrayData.None
+        __show_mdarray_data_none(io, serialization, value)
     else
         throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
     end
@@ -317,6 +382,10 @@ function __mdarray_data_encoding(mdarray_data::UInt8)
         return :reshape_column_major
     elseif mdarray_data == MultiDimensionalArrayData.ReshapeRowMajor
         return :reshape_row_major
+    elseif mdarray_data == MultiDimensionalArrayData.Diagonal
+        return :diagonal
+    elseif mdarray_data == MultiDimensionalArrayData.None
+        return :none
     else
         throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
     end
@@ -370,6 +439,25 @@ function __show_mdarray_data_reshape_row_major(
         __show_mdarray_data_reshape_row_major(io, serialization, row; first = false)
     end
     first && end_array(io)
+end
+
+## MultiDimensionalArrayData.Diagonal implementation, only supports Array objects
+function __show_mdarray_data_diagonal(io::StructuralContext, serialization::JSONSerialization, array::AbstractArray)
+    if firstindex(array) !== 1
+        throw(ArgumentError("Diagonal encoding only supports 1-based indexing"))
+    end
+    begin_array(io)
+    k = min(size(array)...)
+    l = length(size(array))
+    for i in 1:k
+        show_element(io, serialization, array[ntuple(_ -> i, l)...])
+    end
+    end_array(io)
+end
+
+## MultiDimensionalArrayData.None implementation
+function __show_mdarray_data_none(io::StructuralContext, serialization::JSONSerialization, array::AbstractArray)
+    show_json(io, serialization, nothing)
 end
 
 """

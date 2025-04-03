@@ -43,7 +43,7 @@ end
 end
 
 @testitem "Get token roles should return the list of roles for a token #1" setup = [TestUtils] begin
-    client = TestUtils.TestClient(authorized = true)
+    client = TestUtils.TestClient(authorized = true, roles = ["user"])
     api    = TestUtils.RxInferClientOpenAPI.AuthenticationApi(client)
 
     response, info = TestUtils.RxInferClientOpenAPI.token_roles(api)
@@ -52,15 +52,13 @@ end
 end
 
 @testitem "Get token roles should return the list of roles for a token #2" setup = [TestUtils] begin
-    TestUtils.with_temporary_token(roles = ["private-role-1", "private-role-2"]) do
-        client = TestUtils.TestClient(authorized = true)
-        api    = TestUtils.RxInferClientOpenAPI.AuthenticationApi(client)
+    client = TestUtils.TestClient(roles = ["private-role-1", "private-role-2"])
+    api    = TestUtils.RxInferClientOpenAPI.AuthenticationApi(client)
 
-        response, info = TestUtils.RxInferClientOpenAPI.token_roles(api)
-        @test info.status == 200
-        @test "private-role-1" in response.roles
-        @test "private-role-2" in response.roles
-        @test length(response.roles) == 2
-        @test !("user" in response.roles)
-    end
+    response, info = TestUtils.RxInferClientOpenAPI.token_roles(api)
+    @test info.status == 200
+    @test "private-role-1" in response.roles
+    @test "private-role-2" in response.roles
+    @test length(response.roles) == 2
+    @test !("user" in response.roles)
 end

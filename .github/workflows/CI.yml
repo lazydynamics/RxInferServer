@@ -48,7 +48,7 @@ jobs:
           make deps
           
           # Start the Julia server in the background with trace compilation
-          make serve & 
+          make dev & 
           SERVER_PID=$!
           
           # Run tests (runtests.jl has built-in server availability check)
@@ -87,7 +87,7 @@ jobs:
           make deps
           
           # Start the Julia server in the background with trace compilation
-          make serve &
+          make dev &
           SERVER_PID=$!
 
           # Build the documentation

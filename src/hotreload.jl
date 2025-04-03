@@ -63,7 +63,7 @@ end
 # Creates a task that hot reloads the server when the source code changes
 # Basically only one vaiable option for Julia is Revise.jl, see `ext/HotReloadExt/HotReloadExt.jl` for the actual implementation
 function hot_reload_task(
-    f::F, label::Symbol, state::ServerState, files, modules; all = false, postpone = true
+    f::F, label::Symbol, server::ServerState, files, modules; all = false, postpone = true
 ) where {F}
     if !is_hot_reload_enabled()
         @info "Hot reloading is disabled" label _id = :hot_reload
@@ -76,14 +76,14 @@ function hot_reload_task(
     end
     # Add the server pid file to the list of files to watch for changes
     # This is intended to trigger a hot reload when the server pid file is changed
-    files_with_pid_file = vcat(files, [state.pid_file])
-    return hot_reload_task(Val(:Revise), f, label, state, files_with_pid_file, modules; all = all, postpone = postpone)
+    files_with_pid_file = vcat(files, [server.pid_file])
+    return hot_reload_task(Val(:Revise), f, label, server, files_with_pid_file, modules; all = all, postpone = postpone)
 end
 
 # This is intentionally not implemented and is supposed to be overwritten by the actual implementation 
 #   - Revise.jl implementation in `ext/HotReloadExt/HotReloadExt.jl`
 function hot_reload_task(
-    hot_reload_backend, f::F, label::Symbol, state::ServerState, files, modules; all = false, postpone = true
+    hot_reload_backend, f::F, label::Symbol, server::ServerState, files, modules; all = false, postpone = true
 ) where {F}
     @warn "Hot reloading is not supported for the given hot reload backend: $hot_reload_backend" label _id = :hot_reload
     return nothing
@@ -93,15 +93,15 @@ end
 # - RxInferServerOpenAPI
 # - The current module, which is the module of the server 
 # !!! do not wrap this file in a separate module !!!
-function hot_reload_task_source_code(state::ServerState)
-    return hot_reload_task(:source_code, state, [], [RxInferServerOpenAPI, @__MODULE__]; all = true) do
+function hot_reload_task_source_code(server::ServerState)
+    return hot_reload_task(:source_code, server, [], [RxInferServerOpenAPI, @__MODULE__]; all = true) do
         io = IOBuffer()
         # The register function prints a lot of annoying warnings with routes being replaced
         # But this is the actual purpose of the hot reload task, so we suppress the warnings
         Logging.with_simple_logger(io) do
             RxInferServerOpenAPI.register(
-                state.router,
-                state.handler;
+                server.router,
+                server.handler;
                 path_prefix = API_PATH_PREFIX,
                 pre_validation = middleware_pre_validation,
                 post_invoke = middleware_post_invoke
@@ -113,12 +113,18 @@ function hot_reload_task_source_code(state::ServerState)
     end
 end
 
-function hot_reload_task_models(state::ServerState)
+function hot_reload_task_models(server::ServerState)
+    locations = Models.RXINFER_SERVER_MODELS_LOCATIONS()
+
+    if Models.RXINFER_SERVER_LOAD_TEST_MODELS()
+        locations = vcat(locations, [Models.RXINFER_SERVER_TEST_MODELS_LOCATION()])
+    end
+
     hot_reload_models_locations = [
-        joinpath(root, file) for location in Models.RXINFER_SERVER_MODELS_LOCATIONS() for
-        (root, _, files) in walkdir(location) if isdir(location) for file in files
+        joinpath(root, file) for location in locations for (root, _, files) in walkdir(location) if isdir(location) for
+        file in files
     ]
-    return hot_reload_task(:models, state, hot_reload_models_locations, []; all = false) do
+    return hot_reload_task(:models, server, hot_reload_models_locations, []; all = false) do
         Models.reload!(Models.get_models_dispatcher())
         @warn "[HOT-RELOAD] Models have been reloaded" _id = :hot_reload
     end

@@ -67,7 +67,9 @@ RxInferServer provides two key preferences to control how multi-dimensional arra
 
 2. **Array Representation Format** ([`RxInferServer.Serialization.MultiDimensionalArrayRepr`](@ref)): Controls the structure of the serialized output, offering several options ranging from a fully-specified dictionary with type, encoding, shape, and data fields to a minimal representation with just the data itself.
 
-These preferences can be configured when creating a [`RxInferServer.Serialization.JSONSerialization`](@ref) instance, allowing you to balance between explicit metadata and compact representation based on your specific needs.
+These preferences can be configured when creating a [`RxInferServer.Serialization.JSONSerialization`](@ref) instance, allowing you to balance between explicit metadata and compact representation based on your specific needs. Read the [Request Preferences](@ref request-preferences-api) section for more information on how to set these preferences in the request headers.
+
+#### [Multi-dimensional Array Representation Format](@id serialization-multi-dimensional-array-representation-format)
 
 ```@docs
 RxInferServer.Serialization.MultiDimensionalArrayRepr
@@ -75,10 +77,17 @@ RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict
 RxInferServer.Serialization.MultiDimensionalArrayRepr.DictTypeAndShape
 RxInferServer.Serialization.MultiDimensionalArrayRepr.DictShape
 RxInferServer.Serialization.MultiDimensionalArrayRepr.Data
+```
+
+#### [Multi-dimensional Array Data Encoding](@id serialization-multi-dimensional-array-data-encoding)
+
+```@docs 
 RxInferServer.Serialization.MultiDimensionalArrayData
 RxInferServer.Serialization.MultiDimensionalArrayData.ArrayOfArrays
 RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeColumnMajor
 RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeRowMajor
+RxInferServer.Serialization.MultiDimensionalArrayData.Diagonal
+RxInferServer.Serialization.MultiDimensionalArrayData.None
 ```
 
 ## API Reference

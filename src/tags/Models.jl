@@ -130,7 +130,7 @@ end
 function delete_model_instance(req::HTTP.Request, instance_id::String)
     token = current_token()
     @expect __database_op_delete_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
-        error = "Not Found", message = "The requested model instance could not be found or deleted"
+        error = "Not Found", message = "The requested model instance could not be found"
     )
     return RxInferServerOpenAPI.SuccessResponse(message = "Model instance deleted successfully")
 end
@@ -374,6 +374,11 @@ function attach_events_to_episode(
 end
 
 function delete_episode(req::HTTP.Request, instance_id::String, episode_name::String)
+    token = current_token()
+
+    instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The requested model could not be found"
+    )
 
     # Short-circuit if the episode is the default episode
     if episode_name == "default"
@@ -381,12 +386,6 @@ function delete_episode(req::HTTP.Request, instance_id::String, episode_name::St
             error = "Bad Request", message = "Default episode cannot be deleted, wipe data instead"
         )
     end
-
-    token = current_token()
-
-    instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
-        error = "Not Found", message = "The requested model could not be found"
-    )
 
     @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
         error = "Not Found", message = "The requested episode could not be found"

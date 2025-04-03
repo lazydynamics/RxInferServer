@@ -28,6 +28,7 @@ The server supports models configuration. The following environment variables ca
 
 ```@docs
 RxInferServer.Models.RXINFER_SERVER_MODELS_LOCATIONS
+RxInferServer.Models.RXINFER_SERVER_LOAD_TEST_MODELS
 ```
 
 # [Logging Configuration](@id logging-configuration)
@@ -37,7 +38,6 @@ The server implements a comprehensive logging system that writes logs both to th
 ```@docs
 RxInferServer.Logging.RXINFER_SERVER_LOGS_LOCATION
 RxInferServer.Logging.RXINFER_SERVER_ENABLE_DEBUG_LOGGING
-RxInferServer.Logging.is_debug_logging_enabled
 ```
 
 !!! note
@@ -95,29 +95,25 @@ RxInferServer.RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS
 
 The server implements standard Bearer token authentication using the HTTP `Authorization` header. Most of the endpoints except for `/generate-token` and `/ping` require authentication by default.
 
-Authentication for development can be configured through the environment variable:
-
-```@docs
-RxInferServer.RXINFER_SERVER_DEV_TOKEN
-```
-
 When implementing client applications, you must include the token in the `Authorization` header with the `Bearer` prefix:
 
 ```
 Authorization: Bearer your-token-here
 ```
 
-For development and testing, you can use the configured development token (default is `dev-token`):
-
-```
-Authorization: Bearer dev-token
-```
+A simplified authentication for development can be configured through the environment variable:
 
 ```@docs
-RxInferServer.is_dev_token_enabled
-RxInferServer.is_dev_token_disabled
-RxInferServer.is_dev_token
+RxInferServer.RXINFER_SERVER_ENABLE_DEV_TOKEN
+RxInferServer.DEFAULT_DEV_TOKEN
+RxInferServer.DEFAULT_DEV_TOKEN_ROLES
+RxInferServer.check_dev_token
 ```
+
+This is particularly useful for development and testing.
+
+!!! warning
+    Do not use the development token in production environments.
 
 # [Server Edition](@id server-edition-configuration)
 

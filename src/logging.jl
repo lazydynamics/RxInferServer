@@ -35,12 +35,7 @@ ENV["RXINFER_SERVER_ENABLE_DEBUG_LOGGING"] = "true"
 RxInferServer.serve()
 ```
 """
-RXINFER_SERVER_ENABLE_DEBUG_LOGGING() = lowercase(get(ENV, "RXINFER_SERVER_ENABLE_DEBUG_LOGGING", "false"))
-
-"""
-Returns `true` if debug logging is enabled, `false` otherwise.
-"""
-is_debug_logging_enabled() = RXINFER_SERVER_ENABLE_DEBUG_LOGGING() == "true"
+RXINFER_SERVER_ENABLE_DEBUG_LOGGING() = lowercase(get(ENV, "RXINFER_SERVER_ENABLE_DEBUG_LOGGING", "false")) == "true"
 
 """
     filter_by_group(group)
@@ -161,7 +156,7 @@ function with_logger(f::F) where {F}
     ]
 
     # If debug logging is enabled, add a debug logger that writes to the terminal
-    if is_debug_logging_enabled()
+    if RXINFER_SERVER_ENABLE_DEBUG_LOGGING()
         # Do not append to the debug log file, overwrite it each time the server is restarted
         debug_kwargs = merge(kwargs_logger, (append = false, minlevel = BaseLogging.Debug))
         debug_logger =
@@ -185,7 +180,7 @@ function with_logger(f::F) where {F}
 
     # Execute the provided function with the configured logger
     BaseLogging.with_logger(server_logger) do
-        if is_debug_logging_enabled()
+        if RXINFER_SERVER_ENABLE_DEBUG_LOGGING()
             @info "Debug logging is enabled, extra logs will be written to `$(joinpath(logs_location, "debug.log"))`"
         end
         return f()

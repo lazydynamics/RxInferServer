@@ -30,7 +30,12 @@ Construct a ModelsDispatcher by scanning the provided locations for models.
 function ModelsDispatcher(locations)::ModelsDispatcher
     models = Dict{String, LoadedModel}()
 
-    @debug "Attempt to load models from `$locations`"
+    if RXINFER_SERVER_LOAD_TEST_MODELS()
+        @debug "RXINFER_SERVER_LOAD_TEST_MODELS is set to `true`, adding test models from `$(RXINFER_SERVER_TEST_MODELS_LOCATION())` to the `locations` list"
+        locations = vcat(locations, [RXINFER_SERVER_TEST_MODELS_LOCATION()])
+    end
+
+    @debug "Attempt to load models from $(join(map(l -> string('`', relpath(l, pwd()), '`'), locations), ", ", " and "))"
     load_models!(models, locations)
 
     return ModelsDispatcher(locations = locations, models = models)
@@ -57,7 +62,6 @@ function load_models!(models, locations)
         for directory in readdir(location)
             potential_model_dir = joinpath(location, directory)
             if isdir(potential_model_dir)
-                @debug "Found potential model's directory `$directory`"
                 try
                     model = LoadedModel(potential_model_dir)
                     if haskey(models, model.name)

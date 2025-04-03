@@ -1,5 +1,5 @@
 @testitem "missing required arguments should lead to an error" setup = [TestUtils] begin
-    client = TestUtils.TestClient()
+    client = TestUtils.TestClient(roles = ["user"])
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
@@ -15,7 +15,7 @@
 end
 
 @testitem "it should be possible to create a model with the correct arguments" setup = [TestUtils] begin
-    client = TestUtils.TestClient()
+    client = TestUtils.TestClient(roles = ["user"])
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
@@ -68,7 +68,7 @@ end
         x_future = x_generated[(n + 1):end]
         y_future = y_generated[(n + 1):end]
 
-        client = TestUtils.TestClient()
+        client = TestUtils.TestClient(roles = ["user"])
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
         create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(

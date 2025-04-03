@@ -242,9 +242,10 @@ function serve()
                   RxInfer: https://docs.rxinfer.com
 
                 • Environment: $(join(dotenv_loaded, ", "))
+                  $(RXINFER_SERVER_ENABLE_DEV_TOKEN() ? "Development token is enabled (! do not use in production !)" : "Development token is disabled")
 
                 • Logs are collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())` directory
-                  $(Logging.is_debug_logging_enabled() ? "Debug logging is enabled and collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())/debug.log`" : "")
+                  $(Logging.RXINFER_SERVER_ENABLE_DEBUG_LOGGING() ? "Debug logging is enabled and collected in `$(Logging.RXINFER_SERVER_LOGS_LOCATION())/debug.log`" : "Debug logging is disabled")
 
                 • $(Models.loaded_models_banner_hint())
                   

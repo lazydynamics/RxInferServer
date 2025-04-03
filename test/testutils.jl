@@ -8,7 +8,7 @@
     import RxInferClientOpenAPI: ServerApi, AuthenticationApi, ModelsApi
 
     const TEST_SERVER_URL = "http://localhost:8000$(RxInferServer.API_PATH_PREFIX)"
-    const TEST_TOKEN = ScopedValue{String}(RxInferServer.RXINFER_SERVER_DEV_TOKEN())
+    const TEST_TOKEN = ScopedValue{String}(RxInferServer.DEFAULT_DEV_TOKEN)
 
     projectdir(paths...) = joinpath(@__DIR__, "..", paths...)
 
@@ -16,7 +16,7 @@
 
     function TestClient(; headers = [], authorized = true, token = current_test_token())
         _client = Client(TEST_SERVER_URL)
-        _token = @something token RxInferServer.RXINFER_SERVER_DEV_TOKEN()
+        _token = @something token RxInferServer.DEFAULT_DEV_TOKEN
 
         if authorized && !isnothing(_token)
             set_header(_client, "Authorization", "Bearer $(_token)")
@@ -28,7 +28,7 @@
 
         if authorized && isnothing(_token)
             error(
-                "Cannot be authorized if no token is provided. Use `RXINFER_SERVER_DEV_TOKEN` environment variable to set a default token for testing purposes."
+                "Cannot be authorized if no token is provided. Use `RXINFER_SERVER_ENABLE_DEV_TOKEN` environment variable to enable a development token for testing purposes."
             )
         end
 

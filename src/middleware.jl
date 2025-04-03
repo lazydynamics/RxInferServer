@@ -126,60 +126,86 @@ function postprocess_response(req, res::RxInferServerOpenAPI.ErrorResponse)
     return HTTP.Response(400, res)
 end
 
-const DEFAULT_DEV_TOKEN_ROLES = ["user", "admin", "test"]
+"""
+    DEFAULT_DEV_TOKEN
+
+The default development token.
+"""
+const DEFAULT_DEV_TOKEN = "dev-token"
 
 """
-The development authentication token.
-This can be configured using the `RXINFER_SERVER_DEV_TOKEN` environment variable.
-Defaults to "dev-token" if not specified.
-Set to "disabled" to disable development token authentication (production mode).
-The development token has `$(DEFAULT_DEV_TOKEN_ROLES)` roles by default.
+    DEFAULT_DEV_TOKEN_ROLES
+
+The default roles for the development token.
+"""
+const DEFAULT_DEV_TOKEN_ROLES = ["user"]
+
+"""
+An environment variable that can be used to enable development token authentication.
+By default, the development token is disabled and the `RXINFER_SERVER_DEV_TOKEN` environment variable set to "false".
+Set to "true" to enable development token authentication (do not use in production!).
+Note that RxInferServer checks this environment variable only once before starting the server.
 
 ```julia
 # Use a specific development token
-ENV["RXINFER_SERVER_DEV_TOKEN"] = "my-custom-token"
+ENV["RXINFER_SERVER_ENABLE_DEV_TOKEN"] = "true"
 
 # Disable development token (production mode)
-ENV["RXINFER_SERVER_DEV_TOKEN"] = "disabled"
+ENV["RXINFER_SERVER_ENABLE_DEV_TOKEN"] = "false"
+```
+
+If enabled use `$(DEFAULT_DEV_TOKEN)` as the development token.
+The development token has `$(DEFAULT_DEV_TOKEN_ROLES)` roles by default.
+This, however, can be overriden by appending a different comma-separated list of roles directly into
+the development token after the `:` symbol. For example:
+
+```julia
+ENV["RXINFER_SERVER_ENABLE_DEV_TOKEN"] = "true"
+
+# ...
+# token used for making requests with extra roles
+token = "$(DEFAULT_DEV_TOKEN):user,admin"
 ```
 
 !!! warning 
-    In production environments, you should always set `RXINFER_SERVER_DEV_TOKEN=disabled`.
+    In production environments, you should always set `RXINFER_SERVER_ENABLE_DEV_TOKEN=false`.
+    Failure to do so will make the development token available and usable by anyone,
+    which leads to a huge potential security risk.
 
-See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref), [`is_dev_token`](@ref)
+See also: [`check_dev_token`](@ref)
 """
-RXINFER_SERVER_DEV_TOKEN() = get(ENV, "RXINFER_SERVER_DEV_TOKEN", "dev-token")
-
-"""
-    is_dev_token_enabled()::Bool
-
-Returns true if the development token is enabled.
-Set the `RXINFER_SERVER_DEV_TOKEN` environment variable to `disabled` to disable the development token.
-Any other value will enable the development token.
-
-See also: [`is_dev_token_disabled`](@ref), [`is_dev_token`](@ref), [`RXINFER_SERVER_DEV_TOKEN`](@ref)
-"""
-is_dev_token_enabled() = RXINFER_SERVER_DEV_TOKEN() != "disabled"
+RXINFER_SERVER_ENABLE_DEV_TOKEN() = lowercase(get(ENV, "RXINFER_SERVER_ENABLE_DEV_TOKEN", "false")) == "true"
 
 """
-    is_dev_token_disabled()::Bool
+    check_dev_token(token::String)
 
-Returns true if the development token is disabled.
-Set the `RXINFER_SERVER_DEV_TOKEN` environment variable to `disabled` to disable the development token.
-Any other value will enable the development token.
+Checks if the token provided is the development token.
+Additionally, parses the token to extract the roles from the token.
+Returns both the token and the roles if the token is the development token.
+Returns nothing if the token is not the development token.
 
-See also: [`is_dev_token_enabled`](@ref), [`is_dev_token`](@ref), [`RXINFER_SERVER_DEV_TOKEN`](@ref)
+See also: [`RXINFER_SERVER_ENABLE_DEV_TOKEN`](@ref)
 """
-is_dev_token_disabled() = RXINFER_SERVER_DEV_TOKEN() == "disabled"
+function check_dev_token(token)
+    RXINFER_SERVER_ENABLE_DEV_TOKEN() || return nothing
 
-"""
-    is_dev_token(token::String)::Bool
+    splittoken = split(token, ":")
 
-Returns true if the token is the development token. Returns false if the development token is disabled.
-
-See also: [`is_dev_token_enabled`](@ref), [`is_dev_token_disabled`](@ref), [`RXINFER_SERVER_DEV_TOKEN`](@ref)
-"""
-is_dev_token(token) = is_dev_token_enabled() && token == RXINFER_SERVER_DEV_TOKEN()
+    if splittoken[1] == DEFAULT_DEV_TOKEN
+        if length(splittoken) == 1
+            # If token does not contain the `:` use the default roles
+            return DEFAULT_DEV_TOKEN, DEFAULT_DEV_TOKEN_ROLES
+        elseif length(splittoken) == 2
+            # If token contains the `:` use the roles from the token
+            roles = split(splittoken[2], ",")
+            return DEFAULT_DEV_TOKEN, roles
+        else
+            return nothing
+        end
+    else
+        return nothing
+    end
+end
 
 # List of URL paths that are exempt from authentication
 const AUTH_EXEMPT_PATHS = [string(API_PATH_PREFIX, "/token/generate"), string(API_PATH_PREFIX, "/ping")]
@@ -196,7 +222,9 @@ end
 # `cache` must be a Dict{String, Vector{String}} 
 #   - the token is automatically valid if it is present in the cache
 #   - the roles are added to the cache if the token is valid
-function middleware_extract_token(req::HTTP.Request, cache = nothing)::Union{Nothing, Tuple{String, Vector{String}}}
+function middleware_extract_token(
+    req::HTTP.Request, cache = nothing, dev_token_enabled = false
+)::Union{Nothing, Tuple{String, Vector{String}}}
     token = HTTP.header(req, "Authorization")
     if isnothing(token)
         return nothing
@@ -207,9 +235,13 @@ function middleware_extract_token(req::HTTP.Request, cache = nothing)::Union{Not
     end
     token = replace(token, "Bearer " => "")
 
-    # In development, accept the dev token (unless set to "disabled")
-    if is_dev_token_enabled() && is_dev_token(token)
-        return token, DEFAULT_DEV_TOKEN_ROLES
+    # In development mode, first check agains the dev token
+    if dev_token_enabled
+        dev = check_dev_token(token)
+        if !isnothing(dev)
+            devtoken, devroles = dev
+            return devtoken, devroles
+        end
     end
 
     # Check if the token is in the cache set already
@@ -222,10 +254,17 @@ function middleware_extract_token(req::HTTP.Request, cache = nothing)::Union{Not
     end
 
     # If the token is not in the cache set already, check if it exists in the database
+    @debug "Checking if token `$(token)` exists in the database"
     collection = Database.collection("tokens")
     query      = Mongoc.BSON("token" => token)
     result     = Mongoc.find_one(collection, query)
-    roles      = result["roles"]
+
+    if isnothing(result)
+        @debug "Token `$(token)` does not exist in the database"
+        return nothing
+    end
+
+    roles = result["roles"]
 
     if !isnothing(result) && !isnothing(cache)
         cache[token] = roles
@@ -234,15 +273,6 @@ function middleware_extract_token(req::HTTP.Request, cache = nothing)::Union{Not
 
     return !isnothing(result) ? (token, roles) : nothing
 end
-
-const UNAUTHORIZED_RESPONSE = RxInferServerOpenAPI.UnauthorizedResponse(
-    error = "Unauthorized",
-    message = ifelse(
-        is_dev_token_enabled(),
-        "The request requires authentication, generate a token using the /generate-token endpoint or use the development token `$(RXINFER_SERVER_DEV_TOKEN())`",
-        "The request requires authentication, generate a token using the /generate-token endpoint"
-    )
-)
 
 using Base.ScopedValues
 
@@ -292,26 +322,51 @@ function current_roles()
     )
 end
 
-function middleware_check_token(handler::F) where {F}
+struct MiddlewareCheckToken{H, C, U}
+    handler::H
+    cache::C
+    dev_token_enabled::Bool
+    unauthorized::U
+end
+
+function middleware_check_token(handler::H) where {H}
     cache = Dict{String, Vector{String}}()
-    return function (req::HTTP.Request)
-        # First check if this request should bypass 
-        # authentication entirely
-        if should_bypass_auth(req)
-            return handler(req)
-        end
+    dev_token_enabled = RXINFER_SERVER_ENABLE_DEV_TOKEN()
 
-        extracted = middleware_extract_token(req, cache)
+    # small optimization to avoid creating a new object 
+    # for the unauthorized responses multiple times
+    unauthorized = middleware_post_invoke_cors(
+        HTTP.Response(
+            401,
+            RxInferServerOpenAPI.UnauthorizedResponse(
+                error = "Unauthorized",
+                message = ifelse(
+                    dev_token_enabled,
+                    "The request requires authentication, generate a token using the /generate-token endpoint or use the development token `$(DEFAULT_DEV_TOKEN)`",
+                    "The request requires authentication, generate a token using the /generate-token endpoint"
+                )
+            )
+        )
+    )
 
-        if isnothing(extracted)
-            return middleware_post_invoke_cors(HTTP.Response(401, UNAUTHORIZED_RESPONSE))
-        end
+    return MiddlewareCheckToken(handler, cache, dev_token_enabled, unauthorized)
+end
 
-        token, roles = extracted
+function (m::MiddlewareCheckToken)(req::HTTP.Request)
+    # First check if this request should bypass 
+    # authentication entirely
+    should_bypass_auth(req) && return m.handler(req)
 
-        # Request is authenticated, proceed to the handler
-        with(_current_token => token::String, _current_roles => roles) do
-            return handler(req)
-        end
+    extracted = middleware_extract_token(req, m.cache, m.dev_token_enabled)
+
+    # If the token is not found, return the unauthorized response
+    isnothing(extracted) && return m.unauthorized
+
+    # Otherwise, the token is considered valid
+    token, roles = extracted
+
+    # Request is authenticated, proceed to the handler
+    with(_current_token => token::String, _current_roles => roles) do
+        return m.handler(req)
     end
 end

@@ -118,7 +118,14 @@ make docker-start
 # Stop the Docker environment
 make docker-stop
 
-# Start the RxInferServer, with debug logs enabled
+# Start the RxInferServer in production mode
+# (1) debug logging enabled
+# (2) hot-reloading enabled
+# (3) test models loaded
+# (4) development token enabled
+make dev
+
+# Start the RxInferServer normally
 make serve
 
 # Run the test suite

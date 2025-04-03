@@ -1,9 +1,6 @@
 
 function initial_state(arguments)
-    return Dict(
-        "number_of_inference_calls" => 0,
-        "number_of_learning_calls" => 0
-    )
+    return Dict("number_of_inference_calls" => 0, "number_of_learning_calls" => 0)
 end
 
 function initial_parameters(arguments)

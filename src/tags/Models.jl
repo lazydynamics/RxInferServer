@@ -374,7 +374,6 @@ function attach_events_to_episode(
 end
 
 function delete_episode(req::HTTP.Request, instance_id::String, episode_name::String)
-
     token = current_token()
 
     instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(

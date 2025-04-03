@@ -43,7 +43,7 @@ end
 end
 
 @testitem "Get token roles should return the list of roles for a token #1" setup = [TestUtils] begin
-    client = TestUtils.TestClient(authorized = true)
+    client = TestUtils.TestClient(authorized = true, roles = ["user"])
     api    = TestUtils.RxInferClientOpenAPI.AuthenticationApi(client)
 
     response, info = TestUtils.RxInferClientOpenAPI.token_roles(api)

@@ -14,7 +14,7 @@
     test_token(roles::Nothing) = RxInferServer.DEFAULT_DEV_TOKEN
     test_token(roles::Vector{String}) = "$(RxInferServer.DEFAULT_DEV_TOKEN):$(join(roles, ","))"
 
-    function TestClient(; headers = [], authorized = true, roles = [ "test-only" ], token = test_token(roles))
+    function TestClient(; headers = [], authorized = true, roles = ["test-only"], token = test_token(roles))
         _client = Client(TEST_SERVER_URL)
 
         if authorized

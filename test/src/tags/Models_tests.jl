@@ -835,16 +835,19 @@ end
         @test response.error == "Not Found"
         @test response.message == "The requested model instance could not be found"
 
-        response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(models_api, model_instance.instance_id)
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(
+            models_api, model_instance.instance_id
+        )
         @test info.status == 404
         @test response.error == "Not Found"
         @test response.message == "The requested model instance could not be found"
 
-        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "default")
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+            models_api, model_instance.instance_id, "default"
+        )
         @test info.status == 404
         @test response.error == "Not Found"
         @test response.message == "The requested model instance could not be found"
-
     end
 end
 
@@ -1379,9 +1382,7 @@ end
     @test !isnothing(model_parameters)
     @test model_parameters.parameters["parameter"] == 55
 
-    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(
-        models_api, model_instance.instance_id
-    )
+    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, model_instance.instance_id)
     @test info.status == 200
     @test !isnothing(model_state)
     @test model_state.state["number_of_learning_calls"] == 1
@@ -1405,9 +1406,7 @@ end
 
     @test learning_response.learned_parameters["parameter"] == 55
 
-    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(
-        models_api, model_instance.instance_id
-    )
+    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, model_instance.instance_id)
     @test info.status == 200
     @test !isnothing(model_state)
     @test model_state.state["number_of_learning_calls"] == 2

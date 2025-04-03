@@ -1,24 +1,19 @@
-@testitem "`get_available_models` operation should return a list of available models" setup = [TestUtils] begin
-    client = TestUtils.TestClient()
+@testitem "It should be possible to get a list of available models" setup = [TestUtils] begin
+    client = TestUtils.TestClient(roles = ["test-only"])
     server_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
     available_models, info = TestUtils.RxInferClientOpenAPI.get_available_models(server_api)
 
     @test info.status == 200
     @test !isnothing(available_models)
     @test !isempty(available_models)
-
-    # Check that the CoinToss model is present, which should be located under the `models` directory
-    @test any(m -> m.details.name === "BetaBernoulli-v1", available_models)
 end
 
-@testitem "`get_available_models` operation should return a list of available models specific to the user's roles" setup = [
-    TestUtils
-] begin
+@testitem "It should be possible to get a list of available models specific to the user's roles" setup = [TestUtils] begin
     # Check that an arbitrary user cannot access any models
     # In this case, the `available_models` should be empty because 
     # we don't have any models that are accessible to users with the role `arbitrary`
-    TestUtils.with_temporary_token(roles = ["arbitrary"]) do
-        client = TestUtils.TestClient()
+    @testset let roles = ["arbitrary"]
+        client = TestUtils.TestClient(roles = roles)
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
         available_models, info = TestUtils.RxInferClientOpenAPI.get_available_models(models_api)
         @test info.status == 200
@@ -26,36 +21,67 @@ end
     end
 
     # A user has multiple roles, and some of them are allowed to access some models
-    # In this case, the `available_models` should contain the models that are accessible to the role `user`
-    for roles in [["arbitrary", "user"], ["user", "arbitrary"]]
-        TestUtils.with_temporary_token(roles = roles) do
-            client = TestUtils.TestClient()
+    # In this case, the `available_models` should contain the models that are accessible to the role `test-only`
+    for roles in [["arbitrary", "test-only"], ["test-only", "arbitrary"]]
+        @testset let roles = roles
+            client = TestUtils.TestClient(roles = roles)
             models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
             available_models, info = TestUtils.RxInferClientOpenAPI.get_available_models(models_api)
             @test info.status == 200
             @test !isnothing(available_models)
             @test !isempty(available_models)
-            @test any(m -> m.details.name === "BetaBernoulli-v1", available_models)
         end
+    end
+
+    # Test particularly the `TestModelRolesAvailability` model which has a specific role
+    # that is required to access it called `test-model-roles-availability`
+    @testset "no access" begin
+        client = TestUtils.TestClient(roles = ["user", "test-only", "arbitrary"])
+        models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+        response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "TestModelRolesAvailability")
+
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model name `TestModelRolesAvailability` could not be found"
+    end
+
+    @testset "has access" begin
+        client = TestUtils.TestClient(roles = ["test-model-roles-availability"])
+        models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+        response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "TestModelRolesAvailability")
+
+        @test info.status == 200
+        @test response.details.name == "TestModelRolesAvailability"
     end
 end
 
-@testitem "401 on `get_available_models` operation without authorization" setup = [TestUtils] begin
-    client = TestUtils.TestClient(authorized = false)
-    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
-    response, info = TestUtils.RxInferClientOpenAPI.get_available_models(models_api)
+@testitem "It should not be possible to get a list of available models without authorization" setup = [TestUtils] begin
+    @testset "without roles specified" begin
+        client = TestUtils.TestClient(authorized = false)
+        models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+        response, info = TestUtils.RxInferClientOpenAPI.get_available_models(models_api)
 
-    @test info.status == 401
-    @test response.error == "Unauthorized"
-    @test occursin("The request requires authentication", response.message)
+        @test info.status == 401
+        @test response.error == "Unauthorized"
+        @test occursin("The request requires authentication", response.message)
+    end
+
+    @testset "with roles specified" begin
+        client = TestUtils.TestClient(roles = ["test-only", "user", "arbitrary"], authorized = false)
+        models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+        response, info = TestUtils.RxInferClientOpenAPI.get_available_models(models_api)
+
+        @test info.status == 401
+        @test response.error == "Unauthorized"
+    end
 end
 
-@testitem "`get_available_model` operation should return an information about a model" setup = [TestUtils] begin
+@testitem "It should be possible to get info for a model" setup = [TestUtils] begin
     client = TestUtils.TestClient()
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     # Get model info
-    response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "BetaBernoulli-v1")
+    response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "TestModelInformationEndpoint")
 
     # Check HTTP status code
     @test info.status == 200
@@ -65,53 +91,42 @@ end
     @test !isnothing(response.config)
 
     # Verify basic info
-    @test response.details.name == "BetaBernoulli-v1"
-    @test response.details.description == "A simple Beta-Bernoulli model"
+    @test response.details.name == "TestModelInformationEndpoint"
+    @test response.details.description == "This model is used to test the information endpoint."
 
     # Verify config content
     @test isa(response.config, Dict)
-    @test response.config["name"] == "BetaBernoulli-v1"
-    @test response.config["description"] == "A simple Beta-Bernoulli model"
+    @test response.config["name"] == "TestModelInformationEndpoint"
+    @test response.config["description"] == "This model is used to test the information endpoint."
     @test response.config["author"] == "Lazy Dynamics"
-    @test !isempty(response.config["arguments"])
 end
 
-@testitem "404 on `get_available_model` operation if user's role does not have access" setup = [TestUtils] begin
-    TestUtils.with_temporary_token(roles = ["arbitrary"]) do
-        client = TestUtils.TestClient()
+@testitem "It should be possible to get info for a model with mixed roles" setup = [TestUtils] begin
+    for roles in [["arbitrary", "test-only"], ["test-only", "arbitrary"]]
+        client = TestUtils.TestClient(roles = roles)
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
-        response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "BetaBernoulli-v1")
-
-        @test info.status == 404
-        @test response.error == "Not Found"
-        @test response.message == "The requested model name `BetaBernoulli-v1` could not be found"
+        response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "TestModelInformationEndpoint")
+        @test info.status == 200
+        @test response.details.name == "TestModelInformationEndpoint"
+        @test response.details.description == "This model is used to test the information endpoint."
+        @test response.config["name"] == "TestModelInformationEndpoint"
+        @test response.config["description"] == "This model is used to test the information endpoint."
+        @test response.config["author"] == "Lazy Dynamics"
     end
 end
 
-@testitem "200 on `get_available_model` operation with mixed roles" setup = [TestUtils] begin
-    for roles in [["arbitrary", "user"], ["user", "arbitrary"]]
-        TestUtils.with_temporary_token(roles = roles) do
-            client = TestUtils.TestClient()
-            models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
-            response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "BetaBernoulli-v1")
-            @test info.status == 200
-            @test response.details.name == "BetaBernoulli-v1"
-        end
-    end
-end
-
-@testitem "401 on `get_available_model` operation without authorization" setup = [TestUtils] begin
+@testitem "It should not be possible to get info for a model without authorization" setup = [TestUtils] begin
     client = TestUtils.TestClient(authorized = false)
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
-    response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "BetaBernoulli-v1")
+    response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "TestModelInformationEndpoint")
 
     @test info.status == 401
     @test response.error == "Unauthorized"
     @test occursin("The request requires authentication", response.message)
 end
 
-@testitem "404 on non-existent model `get_available_model` operation" setup = [TestUtils] begin
+@testitem "It should not be possible to get info for a non-existent model" setup = [TestUtils] begin
     client = TestUtils.TestClient()
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
@@ -126,16 +141,18 @@ end
     @test response.message == "The requested model name `NonExistentModel` could not be found"
 end
 
-@testitem "200 on create model instance, get instance details and delete model instance" setup = [TestUtils] begin
+@testitem "It should be possible to create a model instance, get instance details and delete model instance" setup = [
+    TestUtils
+] begin
     using Dates, TimeZones
 
     client = TestUtils.TestClient()
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1",
-        description = "Testing beta-bernoulli model",
-        arguments = Dict("prior_a" => 1, "prior_b" => 1)
+        model_name = "TestModelCreateEndpoint",
+        description = "Testing create endpoint",
+        arguments = Dict("a" => 2.0, "b" => 3.0)
     )
 
     response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -146,35 +163,29 @@ end
     # Get model instance details
     response, info = TestUtils.RxInferClientOpenAPI.get_model_instance(models_api, instance_id)
     @test info.status == 200
-    @test !isnothing(response)
     @test response.instance_id == instance_id
-    @test response.model_name == "BetaBernoulli-v1"
-    @test response.description == "Testing beta-bernoulli model"
-    @test response.arguments == Dict("prior_a" => 1, "prior_b" => 1)
+    @test response.model_name == "TestModelCreateEndpoint"
+    @test response.description == "Testing create endpoint"
+    @test response.arguments == Dict("a" => 2.0, "b" => 3.0)
     @test response.created_at < TimeZones.now(TimeZones.localzone())
     @test response.current_episode == "default"
 
-    # Another user should not have access to this model and should not be able to delete it
-    TestUtils.with_temporary_token() do
-        another_client = TestUtils.TestClient()
-        another_models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(another_client)
-        response, info = TestUtils.RxInferClientOpenAPI.get_model_instance(another_models_api, instance_id)
-        @test info.status == 404
+    response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, instance_id)
+    @test info.status == 200
+    @test response.state == Dict("a" => 2.0, "b" => 3.0)
 
-        response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(another_models_api, instance_id)
-        @test info.status == 404
-    end
+    response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(models_api, instance_id)
+    @test info.status == 200
+    @test response.parameters == Dict("a" => 2.0, "b" => 3.0)
 
     # Check that the model still exists, even though another user tried to delete it
     response, info = TestUtils.RxInferClientOpenAPI.get_model_instance(models_api, instance_id)
     @test info.status == 200
-    @test !isnothing(response)
-    @test response.model_name == "BetaBernoulli-v1"
+    @test response.model_name == "TestModelCreateEndpoint"
 
     # Check that the model is visible to the user from the list of all created models
     response, info = TestUtils.RxInferClientOpenAPI.get_model_instances(models_api)
     @test info.status == 200
-    @test !isempty(response)
     @test any(m -> m.instance_id == instance_id, response)
 
     # Try to delete the model
@@ -195,14 +206,56 @@ end
     @test !any(m -> m.instance_id == instance_id, response)
 end
 
-@testitem "401 on create model instance endpoint without authorization" setup = [TestUtils] begin
+@testitem "Other clients should not have access to the model instance" setup = [TestUtils] begin
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "TestModelCreateEndpoint",
+        description = "Testing create endpoint",
+        arguments = Dict("a" => 2.0, "b" => 3.0)
+    )
+
+    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
+    instance_id = response.instance_id
+
+    TestUtils.with_temporary_token() do token
+        another_client = TestUtils.TestClient(token = token)
+        another_models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(another_client)
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_instance(another_models_api, instance_id)
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model instance could not be found"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(another_models_api, instance_id)
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model instance could not be found"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(another_models_api, instance_id)
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model instance could not be found"
+
+        response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(another_models_api, instance_id)
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model instance could not be found"
+    end
+
+    response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
+    @test info.status == 200
+    @test response.message == "Model instance deleted successfully"
+end
+
+@testitem "It should not be possible to create a model instance without authorization" setup = [TestUtils] begin
     client = TestUtils.TestClient(authorized = false)
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1",
-        description = "Testing beta-bernoulli model",
-        arguments = Dict("prior_a" => 1, "prior_b" => 1)
+        model_name = "TestModelCreateEndpoint",
+        description = "Testing create endpoint",
+        arguments = Dict("a" => 2.0, "b" => 3.0)
     )
 
     response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -212,15 +265,13 @@ end
     @test occursin("The request requires authentication", response.message)
 end
 
-@testitem "404 on create model instance endpoint with no access to model" setup = [TestUtils] begin
+@testitem "It should not be possible to create a model instance with no access to model" setup = [TestUtils] begin
     client = TestUtils.TestClient()
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     # Create a request for a model that the token doesn't have access to
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "NonExistentModel",
-        description = "Attempting to create a non-existent model",
-        arguments = Dict("param" => "value")
+        model_name = "TestModelRolesAvailability", description = "Attempting to create a a model without access"
     )
 
     response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -230,42 +281,35 @@ end
 
     # Verify error response
     @test response.error == "Not Found"
-    @test response.message == "The requested model name `NonExistentModel` could not be found"
-end
+    @test response.message == "The requested model name `TestModelRolesAvailability` could not be found"
 
-@testitem "404 on create model endpoint with temporary token that has no access to model" setup = [TestUtils] begin
-    TestUtils.with_temporary_token(roles = ["arbitrary"]) do
-        client = TestUtils.TestClient()
+    @testset "Double check that the model actually exists for a user with access" begin
+        client = TestUtils.TestClient(roles = ["test-model-roles-availability"])
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
-
-        # Create a request for a model that the temporary token doesn't have access to
-        create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-            model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
-        )
-
-        response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
-
-        # Check HTTP status code
-        @test info.status == 404
-
-        # Verify error response
-        @test response.error == "Not Found"
-        @test response.message == "The requested model name `BetaBernoulli-v1` could not be found"
+        response, info = TestUtils.RxInferClientOpenAPI.get_available_model(models_api, "TestModelRolesAvailability")
+        @test info.status == 200
+        @test response.details.name == "TestModelRolesAvailability"
     end
 end
 
-@testitem "200 on get created models instances endpoint" setup = [TestUtils] begin
+@testitem "It should be possible to get a list of created models instances" setup = [TestUtils] begin
     client = TestUtils.TestClient()
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
-    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1",
-        description = "Testing beta-bernoulli model",
-        arguments = Dict("prior_a" => 1, "prior_b" => 1)
+    create_model_instance_request1 = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "TestModelCreateEndpoint",
+        description = "Testing creation of a model instance with arbitrary description that includes 42",
+        arguments = Dict("a" => 42, "b" => 123)
     )
 
-    response1, info1 = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
-    response2, info2 = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
+    create_model_instance_request2 = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "TestModelCreateEndpoint",
+        description = "Testing creation of a model instance with arbitrary description that includes 123",
+        arguments = Dict("a" => 123, "b" => 42)
+    )
+
+    response1, info1 = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request1)
+    response2, info2 = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request2)
     @test info1.status == 200
     @test info2.status == 200
 
@@ -274,10 +318,18 @@ end
     @test !isempty(response)
     @test any(m -> m.instance_id == response1.instance_id, response) # The first model should be visible
     @test any(m -> m.instance_id == response2.instance_id, response) # The second model should be visible
+    @test any(
+        m -> m.description == "Testing creation of a model instance with arbitrary description that includes 42",
+        response
+    )
+    @test any(
+        m -> m.description == "Testing creation of a model instance with arbitrary description that includes 123",
+        response
+    )
     @test length(response) >= 2 # Might be more than 2 if there are other tests that create models
 
-    TestUtils.with_temporary_token() do
-        another_client = TestUtils.TestClient()
+    TestUtils.with_temporary_token() do token
+        another_client = TestUtils.TestClient(token = token)
         another_models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(another_client)
         response, info = TestUtils.RxInferClientOpenAPI.get_model_instances(another_models_api)
         @test info.status == 200
@@ -313,7 +365,8 @@ end
 
     @testset "Absolutely no arguments" begin
         create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-            model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+            model_name = "TestModelCreateEndpoint",
+            description = "Testing creation of a model instance with no arguments"
         )
 
         response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -324,7 +377,7 @@ end
         response2, info2 = TestUtils.RxInferClientOpenAPI.get_model_instance(models_api, response.instance_id)
         @test info2.status == 200
         @test !isnothing(response2)
-        @test response2.arguments == Dict("prior_a" => 1, "prior_b" => 1)
+        @test response2.arguments == Dict("a" => 1, "b" => 1)
 
         # Delete the models at the end of the test
         dresponse, dinfo = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, response.instance_id)
@@ -334,9 +387,9 @@ end
 
     @testset "`a` is specified but `b` is not" begin
         create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-            model_name = "BetaBernoulli-v1",
-            description = "Testing beta-bernoulli model",
-            arguments = Dict("prior_a" => 3)
+            model_name = "TestModelCreateEndpoint",
+            description = "Testing creation of a model instance with `a` specified but `b` not",
+            arguments = Dict("a" => 3)
         )
 
         response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -347,7 +400,7 @@ end
         response2, info2 = TestUtils.RxInferClientOpenAPI.get_model_instance(models_api, response.instance_id)
         @test info2.status == 200
         @test !isnothing(response2)
-        @test response2.arguments == Dict("prior_a" => 3, "prior_b" => 1)
+        @test response2.arguments == Dict("a" => 3, "b" => 1)
 
         # Delete the models at the end of the test
         dresponse, dinfo = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, response.instance_id)
@@ -357,9 +410,9 @@ end
 
     @testset "`a` is not specified but `b` is" begin
         create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-            model_name = "BetaBernoulli-v1",
-            description = "Testing beta-bernoulli model",
-            arguments = Dict("prior_b" => 3)
+            model_name = "TestModelCreateEndpoint",
+            description = "Testing creation of a model instance with `b` specified but `a` not",
+            arguments = Dict("b" => 3)
         )
 
         response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -370,7 +423,7 @@ end
         response2, info2 = TestUtils.RxInferClientOpenAPI.get_model_instance(models_api, response.instance_id)
         @test info2.status == 200
         @test !isnothing(response2)
-        @test response2.arguments == Dict("prior_a" => 1, "prior_b" => 3)
+        @test response2.arguments == Dict("a" => 1, "b" => 3)
 
         # Delete the models at the end of the test
         dresponse, dinfo = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, response.instance_id)
@@ -386,7 +439,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelCreateEndpoint", description = "Testing creation of a model instance with no arguments"
     )
 
     response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -423,20 +476,36 @@ end
     @test any(e -> e.created_at == cat, response)
 
     # Other users should not have access to the episode
-    TestUtils.with_temporary_token() do
-        another_client = TestUtils.TestClient()
+    TestUtils.with_temporary_token() do token
+        another_client = TestUtils.TestClient(token = token)
         another_models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(another_client)
         response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(another_models_api, instance_id, "default")
         @test info.status == 404
 
         response, info = TestUtils.RxInferClientOpenAPI.get_episodes(another_models_api, instance_id)
         @test info.status == 404
+
+        response, info = TestUtils.RxInferClientOpenAPI.wipe_episode(another_models_api, instance_id, "default")
+        @test info.status == 404
+
+        response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+            another_models_api,
+            instance_id,
+            "default",
+            TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(
+                events = [Dict("data" => Dict("observation" => 1))]
+            )
+        )
+        @test info.status == 404
+
+        response, info = TestUtils.RxInferClientOpenAPI.delete_episode(another_models_api, instance_id, "default")
+        @test info.status == 404
     end
 
     # Delete model after the test
-    dresponse, dinfo = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
-    @test dinfo.status == 200
-    @test dresponse.message == "Model instance deleted successfully"
+    response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
+    @test info.status == 200
+    @test response.message == "Model instance deleted successfully"
 
     # List of episodes should not be available anymore 
     response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, instance_id)
@@ -448,7 +517,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelCreateEndpoint", description = "Testing creation of a model instance with no arguments"
     )
 
     response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -588,7 +657,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelCreateEndpoint", description = "Testing creation of a model instance with no arguments"
     )
 
     model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
@@ -723,7 +792,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelInferenceCall", description = "Testing inference call"
     )
 
     model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
@@ -736,7 +805,7 @@ end
         response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, model_instance.instance_id)
         @test info.status == 200
         @test !isnothing(response)
-        @test response.state["number_of_infer_calls"] == 0
+        @test response.state["number_of_inference_calls"] == 0
     end
 
     @testset "Run inference on the model" begin
@@ -746,13 +815,14 @@ end
         )
         @test info.status == 200
         @test !isnothing(inference)
+        @test inference.results["observation"] == 1
     end
 
     @testset "Check that the model's state has been updated" begin
         response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, model_instance.instance_id)
         @test info.status == 200
         @test !isnothing(response)
-        @test response.state["number_of_infer_calls"] == 1
+        @test response.state["number_of_inference_calls"] == 1
     end
 
     @testset "Delete the model and check that the model's state is not available anymore" begin
@@ -764,6 +834,17 @@ end
         @test info.status == 404
         @test response.error == "Not Found"
         @test response.message == "The requested model instance could not be found"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(models_api, model_instance.instance_id)
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model instance could not be found"
+
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "default")
+        @test info.status == 404
+        @test response.error == "Not Found"
+        @test response.message == "The requested model instance could not be found"
+
     end
 end
 
@@ -774,7 +855,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelInferenceCall", description = "Testing inference call"
     )
 
     model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
@@ -859,7 +940,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelInferenceCall", description = "Testing inference call"
     )
 
     model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
@@ -977,7 +1058,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelInferenceCall", description = "Testing inference call"
     )
 
     model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
@@ -1098,7 +1179,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelInferenceCall", description = "Testing inference call"
     )
 
     model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
@@ -1212,7 +1293,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelInferenceCall", description = "Testing inference call"
     )
 
     model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
@@ -1263,7 +1344,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BetaBernoulli-v1", description = "Testing beta-bernoulli model"
+        model_name = "TestModelLearningCall", description = "Testing learning call"
     )
 
     model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
@@ -1273,7 +1354,7 @@ end
     @test !isnothing(model_instance)
 
     for i in 1:10
-        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => 1))
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => i))
         iter_inference, iter_info = TestUtils.RxInferClientOpenAPI.run_inference(
             models_api, model_instance.instance_id, inference_request
         )
@@ -1288,8 +1369,7 @@ end
     @test info.status == 200
     @test !isnothing(learning_response)
 
-    @test learning_response.learned_parameters["posterior_a"] == 11
-    @test learning_response.learned_parameters["posterior_b"] == 1
+    @test learning_response.learned_parameters["parameter"] == 55
 
     # Check that the model parameters has been updated
     model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(
@@ -1297,8 +1377,15 @@ end
     )
     @test info.status == 200
     @test !isnothing(model_parameters)
-    @test model_parameters.parameters["posterior_a"] == 11
-    @test model_parameters.parameters["posterior_b"] == 1
+    @test model_parameters.parameters["parameter"] == 55
+
+    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(
+        models_api, model_instance.instance_id
+    )
+    @test info.status == 200
+    @test !isnothing(model_state)
+    @test model_state.state["number_of_learning_calls"] == 1
+    @test model_state.state["number_of_inference_calls"] == 10
 
     for i in 1:10
         inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => 0))
@@ -1316,6 +1403,18 @@ end
     @test info.status == 200
     @test !isnothing(learning_response)
 
-    @test learning_response.learned_parameters["posterior_a"] == 11
-    @test learning_response.learned_parameters["posterior_b"] == 11
+    @test learning_response.learned_parameters["parameter"] == 55
+
+    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(
+        models_api, model_instance.instance_id
+    )
+    @test info.status == 200
+    @test !isnothing(model_state)
+    @test model_state.state["number_of_learning_calls"] == 2
+    @test model_state.state["number_of_inference_calls"] == 20
+
+    # Check that the model can be deleted
+    response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, model_instance.instance_id)
+    @test info.status == 200
+    @test response.message == "Model instance deleted successfully"
 end

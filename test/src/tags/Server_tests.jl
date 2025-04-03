@@ -24,7 +24,7 @@ end
 @testitem "200 on /info endpoint with `Authorization`" setup = [TestUtils] begin
     using TOML
 
-    project_toml = TOML.parse(read(joinpath(@__DIR__, "..", "..", "Project.toml"), String))
+    project_toml = TOML.parse(read(TestUtils.projectdir("Project.toml"), String))
     server_version = VersionNumber(project_toml["version"])
     minimum_julia_version = VersionNumber(project_toml["compat"]["julia"])
     minimum_rxinfer_version = VersionNumber(project_toml["compat"]["RxInfer"])

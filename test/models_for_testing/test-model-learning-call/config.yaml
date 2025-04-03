@@ -1,0 +1,5 @@
+name: TestModelLearningCall
+description: This model is used to test the learning call.
+author: Lazy Dynamics
+roles:
+  - test-only

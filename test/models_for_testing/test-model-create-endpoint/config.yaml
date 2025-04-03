@@ -1,0 +1,15 @@
+name: TestModelCreateEndpoint
+description: This model is used to test the create endpoint.
+author: Lazy Dynamics
+roles:
+  - test-only
+
+arguments:
+  - name: a
+    type: float
+    description: The `a` argument
+    default: 1.0
+  - name: b
+    type: float
+    description: The `b` argument
+    default: 1.0

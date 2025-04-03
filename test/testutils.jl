@@ -8,34 +8,27 @@
     import RxInferClientOpenAPI: ServerApi, AuthenticationApi, ModelsApi
 
     const TEST_SERVER_URL = "http://localhost:8000$(RxInferServer.API_PATH_PREFIX)"
-    const TEST_TOKEN = ScopedValue{String}(RxInferServer.DEFAULT_DEV_TOKEN)
 
     projectdir(paths...) = joinpath(@__DIR__, "..", paths...)
 
-    current_test_token() = TEST_TOKEN[]
+    test_token(roles::Nothing) = RxInferServer.DEFAULT_DEV_TOKEN
+    test_token(roles::Vector{String}) = "$(RxInferServer.DEFAULT_DEV_TOKEN):$(join(roles, ","))"
 
-    function TestClient(; headers = [], authorized = true, token = current_test_token())
+    function TestClient(; headers = [], authorized = true, roles = [ "test-only" ], token = test_token(roles))
         _client = Client(TEST_SERVER_URL)
-        _token = @something token RxInferServer.DEFAULT_DEV_TOKEN
 
-        if authorized && !isnothing(_token)
-            set_header(_client, "Authorization", "Bearer $(_token)")
+        if authorized
+            set_header(_client, "Authorization", "Bearer $token")
         end
 
         for (key, value) in headers
             set_header(_client, key, value)
         end
 
-        if authorized && isnothing(_token)
-            error(
-                "Cannot be authorized if no token is provided. Use `RXINFER_SERVER_ENABLE_DEV_TOKEN` environment variable to enable a development token for testing purposes."
-            )
-        end
-
         return _client
     end
 
-    function with_temporary_token(f::Function; roles::Vector{String} = ["user"])
+    function with_temporary_token(f::Function; roles::Vector{String} = ["test-only"])
         _client = TestClient(authorized = false)
 
         auth = RxInferClientOpenAPI.AuthenticationApi(_client)
@@ -60,9 +53,7 @@
         end
 
         try
-            with(TEST_TOKEN => token) do
-                f()
-            end
+            f(token)
         finally
             # Delete the token from the database
             RxInferServer.Database.with_connection(verbose = false) do
@@ -83,37 +74,37 @@ end
     @test TestUtils.projectdir("models") == joinpath(@__DIR__, "..", "models")
 end
 
-@testitem "TestClient should be able to generate a token for a role" setup = [TestUtils] begin
+@testitem "TestClient should have the correct authorization header" setup = [TestUtils] begin
     client = TestUtils.TestClient()
-    @test client.headers["Authorization"] == "Bearer $(RxInferServer.RXINFER_SERVER_DEV_TOKEN())"
+    @test occursin("Bearer ", client.headers["Authorization"])
+    @test !isempty(replace(client.headers["Authorization"], "Bearer " => ""))
+end
+
+@testitem "TestClient should support arbitrary roles" setup = [TestUtils] begin
+    for roles in [["arbitrary", "arbitrary2"], ["arbitrary"], ["user", "admin"]]
+        client = TestUtils.TestClient(roles = roles)
+        api = TestUtils.AuthenticationApi(client)
+        response, info = TestUtils.RxInferClientOpenAPI.token_roles(api)
+        @test info.status == 200
+        @test response.roles == roles
+    end
+end
+
+@testitem "TestClient should be able to generate a temporary token" setup = [TestUtils] begin
+    TestUtils.with_temporary_token() do token
+        client = TestUtils.TestClient(token = token)
+        api = TestUtils.AuthenticationApi(client)
+        response, info = TestUtils.RxInferClientOpenAPI.token_roles(api)
+        @test info.status == 200
+    end
 end
 
 @testitem "TestClient should be able to generate a temporary token with an arbitrary role" setup = [TestUtils] begin
-    using Mongoc
-
-    created_token = Ref{String}("")
-    default_token = TestUtils.current_test_token()
-    TestUtils.with_temporary_token(roles = ["arbitrary", "arbitrary2"]) do
-        client = TestUtils.TestClient()
-        temporary_token = TestUtils.current_test_token()
-        @test temporary_token != default_token
-        @test client.headers["Authorization"] == "Bearer $(temporary_token)"
-        created_token[] = temporary_token
-
-        # Check the role of the token in the database 
-        RxInferServer.Database.with_connection() do
-            collection = RxInferServer.Database.collection("tokens")
-            query = Mongoc.BSON("token" => created_token[])
-            result = Mongoc.find_one(collection, query)
-            @test result["roles"] == ["arbitrary", "arbitrary2"]
-        end
-    end
-
-    # Check that the token was deleted from the database
-    RxInferServer.Database.with_connection() do
-        collection = RxInferServer.Database.collection("tokens")
-        query = Mongoc.BSON("token" => created_token[])
-        result = Mongoc.find_one(collection, query)
-        @test isnothing(result)
+    TestUtils.with_temporary_token(roles = ["arbitrary"]) do token
+        client = TestUtils.TestClient(token = token)
+        api = TestUtils.AuthenticationApi(client)
+        response, info = TestUtils.RxInferClientOpenAPI.token_roles(api)
+        @test info.status == 200
+        @test response.roles == ["arbitrary"]
     end
 end

@@ -1,0 +1,6 @@
+name: TestModelRolesAvailability
+description: |
+  This model is used to test role based access control.
+author: Lazy Dynamics
+roles:
+  - test-model-roles-availability

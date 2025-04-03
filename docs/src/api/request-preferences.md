@@ -30,38 +30,36 @@ function hidden_get_matrix()
 end
 ```
 
-This guide covers the `Prefer` header, which is used to indicate the client's preferences for how the server should handle the request.
+This guide explores how to customize server responses using the `Prefer` header, a powerful HTTP mechanism that lets you control how the server processes and formats your requests.
 
 ## Prefer header
 
-The `Prefer` header is a request header that allows clients to specify their preferences for how the server should handle the request. It is a comma-separated list of preference directives. Read more information about the `Prefer` header in the [HTTP specification](https://datatracker.ietf.org/doc/html/rfc7240) and [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Prefer).
+The `Prefer` header is a standardized HTTP header that enables clients to express their preferences for request handling. It follows a simple key-value format and can include multiple preferences separated by commas. For more details, refer to the [HTTP specification](https://datatracker.ietf.org/doc/html/rfc7240) and [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Prefer).
 
-A simple example of the `Prefer` header is:
-
+Basic syntax:
 ```
 Prefer: key=value
 ```
 
-You can use several preferences together by separating them with a comma. For example:
-
+Multiple preferences:
 ```
 Prefer: key1=value1,key2=value2
 ```
 
 !!! warning
-    Spaces in the `Prefer` header are not supported. By including a space in the `Prefer` header, the server will not be able to parse the preferences correctly.
+    Spaces in the `Prefer` header are not supported. Including spaces will prevent the server from correctly parsing your preferences.
     
-RxInferServer sets the [`PreferenceApplied`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Preference-Applied) headers for each properly parsed and identified preference to indicate that the preferences have been applied. Unknown preferences are ignored.
+RxInferServer acknowledges applied preferences by setting the [`PreferenceApplied`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Preference-Applied) headers. Any unrecognized preferences are safely ignored.
 
 ## Serialization Preferences 
 
-`RxInferServer` supports preferences for the JSON serialization format. Read more about the `Serialization` module in the [Serialization](@ref serialization) guide. This guide covers which serialization preferences are available through the `Prefer` header and how to set them.
+RxInferServer offers flexible JSON serialization options through the `Prefer` header. These options allow you to control how your data is formatted in responses. For a comprehensive overview of serialization capabilities, see the [Serialization](@ref serialization) guide.
 
 ### Multi-dimensional Array Representation Format
 
-Read about the different multi-dimensional array representation formats in the [Multi-dimensional Array Representation Format](@ref serialization-multi-dimensional-array-representation-format) section of the serialization guide.
+The `mdarray_repr` preference controls how multi-dimensional arrays are structured in the response. This is particularly useful when working with matrices and tensors. For detailed information about available formats, see the [Multi-dimensional Array Representation Format](@ref serialization-multi-dimensional-array-representation-format) section.
 
-The `key` for the multi-dimensional array representation format is `mdarray_repr`. The `value` can be one of the following:
+Available options for `mdarray_repr`:
 
 | Value | Corresponds to |
 | --- | --- |
@@ -120,9 +118,9 @@ A
 
 ### Multi-dimensional Array Data Encoding
 
-Read about the different multi-dimensional array data encodings in the [Multi-dimensional Array Data Encoding](@ref serialization-multi-dimensional-array-data-encoding) section of the serialization guide.
+The `mdarray_data` preference determines how array data is encoded in the response. This is crucial for optimizing data transfer and ensuring compatibility with different client implementations. For more details, see the [Multi-dimensional Array Data Encoding](@ref serialization-multi-dimensional-array-data-encoding) section.
 
-The `key` for the multi-dimensional array data encoding is `mdarray_data`. The `value` can be one of the following:
+Available options for `mdarray_data`:
 
 | Value | Description |
 |-------|-------------|

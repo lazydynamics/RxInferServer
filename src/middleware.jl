@@ -119,9 +119,6 @@ function postprocess_response(req, res)
     preference_mdarray_repr = Serialization.MultiDimensionalArrayRepr.Dict
     preference_mdarray_data = Serialization.MultiDimensionalArrayData.ArrayOfArrays
 
-    @show HTTP.headers(req, "Prefer")
-    @show collect(preferences)
-
     for preference in preferences
         splitpreference = split(preference, "=")
         length(splitpreference) == 2 || continue
@@ -134,8 +131,6 @@ function postprocess_response(req, res)
             HTTP.setheader(response_headers, HTTP.Header("Preference-Applied", preference))
         end
     end
-
-    @show response_headers
 
     s = Serialization.JSONSerialization(mdarray_repr = preference_mdarray_repr, mdarray_data = preference_mdarray_data)
     return HTTP.Response(200, response_headers; body = Serialization.to_json(s, res))

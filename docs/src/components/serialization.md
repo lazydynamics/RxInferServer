@@ -69,12 +69,19 @@ RxInferServer provides two key preferences to control how multi-dimensional arra
 
 These preferences can be configured when creating a [`RxInferServer.Serialization.JSONSerialization`](@ref) instance, allowing you to balance between explicit metadata and compact representation based on your specific needs.
 
+#### [Multi-dimensional Array Representation Format](@id serialization-multi-dimensional-array-representation-format)
+
 ```@docs
 RxInferServer.Serialization.MultiDimensionalArrayRepr
 RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict
 RxInferServer.Serialization.MultiDimensionalArrayRepr.DictTypeAndShape
 RxInferServer.Serialization.MultiDimensionalArrayRepr.DictShape
 RxInferServer.Serialization.MultiDimensionalArrayRepr.Data
+```
+
+#### [Multi-dimensional Array Data Encoding](@id serialization-multi-dimensional-array-data-encoding)
+
+```@docs 
 RxInferServer.Serialization.MultiDimensionalArrayData
 RxInferServer.Serialization.MultiDimensionalArrayData.ArrayOfArrays
 RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeColumnMajor

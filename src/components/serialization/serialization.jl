@@ -46,7 +46,7 @@ Base.@kwdef struct JSONSerialization <: JSON.Serializations.Serialization
     mdarray_data::UInt8 = MultiDimensionalArrayData.ArrayOfArrays
 
     distributions_repr::UInt8 = DistributionsRepr.Dict
-    distributions_data::UInt8 = DistributionsData.Params
+    distributions_data::UInt8 = DistributionsData.NamedParams
 end
 
 struct UnsupportedTypeSerializationError <: Exception

@@ -13,6 +13,31 @@
     end
 end
 
+@testitem "DistributionsData.NamedParams" setup = [SerializationTestUtils] begin
+    using RxInfer
+
+    import .SerializationTestUtils: to_from_json, @test_json_serialization
+    import RxInferServer.Serialization: DistributionsData, JSONSerialization
+
+    s = JSONSerialization(distributions_data = DistributionsData.NamedParams)
+
+    for mean in [-1.0, 0.0, 1.0], variance in [2.0, 4.0]
+        @test_json_serialization s NormalMeanVariance(mean, variance) => Dict(
+            "type" => "Distribution{Univariate, Continuous}",
+            "encoding" => "named_params",
+            "tag" => "NormalMeanVariance",
+            "data" => Dict("μ" => mean, "v" => variance)
+        )
+
+        @test_json_serialization s NormalMeanPrecision(mean, 1 / variance) => Dict(
+            "type" => "Distribution{Univariate, Continuous}",
+            "encoding" => "named_params",
+            "tag" => "NormalMeanPrecision",
+            "data" => Dict("μ" => mean, "w" => 1 / variance)
+        )
+    end
+end
+
 @testitem "DistributionsData.Params" setup = [SerializationTestUtils] begin
     using RxInfer
 

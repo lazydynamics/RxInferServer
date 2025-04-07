@@ -124,6 +124,8 @@ function parse_request_preferences(req::HTTP.Request)
 
     preference_mdarray_repr = Serialization.MultiDimensionalArrayRepr.Dict
     preference_mdarray_data = Serialization.MultiDimensionalArrayData.ArrayOfArrays
+    preference_distributions_repr = Serialization.DistributionsRepr.Dict
+    preference_distributions_data = Serialization.DistributionsData.NamedParams
 
     for preference in preferences
         splitpreference = split(preference, "=")
@@ -142,11 +144,26 @@ function parse_request_preferences(req::HTTP.Request)
                 preference_mdarray_data = mdarray_data_option
                 push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
             end
+        elseif isequal(key, Serialization.DistributionsRepr.OptionName)
+            distributions_repr_option = Serialization.DistributionsRepr.from_string(value)
+            if !isequal(distributions_repr_option, Serialization.DistributionsRepr.Unknown)
+                preference_distributions_repr = distributions_repr_option
+                push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+            end
+        elseif isequal(key, Serialization.DistributionsData.OptionName)
+            distributions_data_option = Serialization.DistributionsData.from_string(value)
+            if !isequal(distributions_data_option, Serialization.DistributionsData.Unknown)
+                preference_distributions_data = distributions_data_option
+                push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+            end
         end
     end
 
     json_serialization = Serialization.JSONSerialization(
-        mdarray_repr = preference_mdarray_repr, mdarray_data = preference_mdarray_data
+        mdarray_repr = preference_mdarray_repr,
+        mdarray_data = preference_mdarray_data,
+        distributions_repr = preference_distributions_repr,
+        distributions_data = preference_distributions_data
     )
 
     return RequestPreferences(json_serialization = json_serialization, applied_preferences = applied_preferences)

@@ -12,7 +12,7 @@ module MultiDimensionalArrayData
 """
 Unknown encoding format. Used to indicate that the encoding format is not known or cannot be parsed from the request.
 """
-const Unknown = 0x00
+const Unknown::UInt8 = 0x00
 
 """
 Encodes the data of multi-dimensional arrays as nested arrays of arrays with row-major ordering.
@@ -152,7 +152,7 @@ module MultiDimensionalArrayRepr
 """
 Unknown representation format. Used to indicate that the representation format is not known or cannot be parsed from the request.
 """
-const Unknown = 0x00
+const Unknown::UInt8 = 0x00
 
 """
 Represents the multi-dimensional array as a dictionary with the following keys:
@@ -258,7 +258,7 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
 
     if mdarray_repr == MultiDimensionalArrayRepr.Dict
         show_pair(io, JSON.StandardSerialization(), :type => :mdarray)
-        show_pair(io, JSON.StandardSerialization(), :encoding => __mdarray_data_encoding(mdarray_data))
+        show_pair(io, JSON.StandardSerialization(), :encoding => MultiDimensionalArrayData.to_string(mdarray_data))
         show_pair(io, JSON.StandardSerialization(), :shape => size(value))
         show_key(io, :data)
     elseif mdarray_repr == MultiDimensionalArrayRepr.DictTypeAndShape
@@ -290,22 +290,6 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
 
     if mdarray_repr != MultiDimensionalArrayRepr.Data
         end_object(io)
-    end
-end
-
-function __mdarray_data_encoding(mdarray_data::UInt8)
-    if mdarray_data == MultiDimensionalArrayData.ArrayOfArrays
-        return :array_of_arrays
-    elseif mdarray_data == MultiDimensionalArrayData.ReshapeColumnMajor
-        return :reshape_column_major
-    elseif mdarray_data == MultiDimensionalArrayData.ReshapeRowMajor
-        return :reshape_row_major
-    elseif mdarray_data == MultiDimensionalArrayData.Diagonal
-        return :diagonal
-    elseif mdarray_data == MultiDimensionalArrayData.None
-        return :none
-    else
-        throw(UnsupportedPreferenceError(mdarray_data, MultiDimensionalArrayData))
     end
 end
 

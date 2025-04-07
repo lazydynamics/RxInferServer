@@ -44,6 +44,9 @@ Type-safe JSON serializer for OpenAPI data types with configurable multi-dimensi
 Base.@kwdef struct JSONSerialization <: JSON.Serializations.Serialization
     mdarray_repr::UInt8 = MultiDimensionalArrayRepr.Dict
     mdarray_data::UInt8 = MultiDimensionalArrayData.ArrayOfArrays
+
+    distributions_repr::UInt8 = DistributionsRepr.Dict
+    distributions_data::UInt8 = DistributionsData.Params
 end
 
 struct UnsupportedTypeSerializationError <: Exception
@@ -63,6 +66,9 @@ include("serialization_default.jl")
 
 # Include the serialization functions for multi-dimensional arrays
 include("serialization_mdarrays.jl")
+
+# Include the serialization functions for distributions
+include("serialization_distributions.jl")
 
 """
     to_json([io::IO], [serialization::JSONSerialization], value)

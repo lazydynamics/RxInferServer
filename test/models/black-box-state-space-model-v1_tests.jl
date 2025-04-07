@@ -68,7 +68,12 @@ end
         x_future = x_generated[(n + 1):end]
         y_future = y_generated[(n + 1):end]
 
-        client = TestUtils.TestClient(roles = ["user"])
+        client = TestUtils.TestClient(
+            roles = ["user"],
+            headers = Dict(
+                "Prefer" => "distributions_repr=data,distributions_data=mean_cov,mdarray_data=array_of_arrays,mdarray_repr=data"
+            )
+        )
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
         create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
@@ -109,7 +114,7 @@ end
 
         @test info.status == 200
         @test !isnothing(learn_response)
-        @test isapprox(A, stack(learn_response.learned_parameters["A"]["data"]; dims = 1), rtol = 0.1)
+        @test isapprox(A, stack(learn_response.learned_parameters["A"]; dims = 1), rtol = 0.1)
 
         inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(
             data = Dict("observation" => y[end], "current_state" => x[end])
@@ -127,16 +132,23 @@ end
         # We expect some deviation due to the stochastic nature of the model
         # and the fact that we're using approximate inference
         for i in 1:horizon
-            # The states should be reasonably close to the true future states
+            # Get the mean and covariance from the distribution
+            mean = Float64.(predicted_states[i]["mean"])
+            cov = Float64.(stack(predicted_states[i]["cov"]; dims = 1))
+
+            # The means should be reasonably close to the true future states
             # given that the process noise has unit covariance
-            @test isapprox(predicted_states[i], x_future[i], rtol = 0.3)
+            @test isapprox(mean, x_future[i], rtol = 0.3)
 
-            # Calculate the error between predicted and actual
-            error_vector = predicted_states[i] - x_future[i]
+            # Calculate the Mahalanobis distance between predicted and actual
+            error_vector = mean - x_future[i]
+            mahalanobis_distance = sqrt(error_vector' * inv(cov) * error_vector)
 
-            # For a unit covariance MvNormal, we expect errors to be typically within 2-3 standard deviations
-            # This is a probabilistic test, so we use a relatively loose bound
-            @test norm(error_vector) < 3 * sqrt(length(error_vector))
+            # For a multivariate normal distribution, the Mahalanobis distance squared
+            # follows a chi-squared distribution with degrees of freedom equal to the dimension
+            # We use a 95% confidence interval, which corresponds to approximately 2.45 standard deviations
+            # for a 2D normal distribution
+            @test mahalanobis_distance < 2.45
         end
 
         # Delete model instance

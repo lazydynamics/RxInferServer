@@ -254,7 +254,17 @@ response, _ = get_model_instance_parameters(api, instance_id)
 response
 ```
 
-After the learning process is complete, we can use the model to make predictions on new data by calling the inference endpoint:
+After the learning process is complete, we can use the model to make predictions on new data by calling the inference endpoint.
+Here we also chose the desired output format for the inference response. Read more about preferences in the [Request Preferences](@ref request-preferences-api) section.
+
+```@example learning-api
+import RxInferClientOpenAPI.OpenAPI.Clients: set_header
+
+set_header(client, "Prefer", "distributions_repr=data,distributions_data=mean_cov,mdarray_data=diagonal,mdarray_repr=data")
+nothing #hide
+```
+
+That ensures that the inference response will be in the desired format suitable for plotting.
 
 ```@example learning-api
 import RxInferClientOpenAPI: InferRequest, run_inference
@@ -264,13 +274,27 @@ inference_request = InferRequest(
 )
 inference_response, _ = run_inference(api, instance_id, inference_request)
 @test !isnothing(inference_response) #hide
+nothing #hide
+```
+
+Here are for example the first 5 estimated states:
+
+```@example learning-api
 states = inference_response.results["states"] #hide
-pf1 = plot(getindex.(dataset.x_test, 1), label = "true states", lw = 2) #hide
+states_mean = map(state -> state["mean"], states) #hide
+states_cov = map(state -> state["cov"], states) #hide
+states[1:5]
+```
+
+Let's plot all the results:
+
+```@example learning-api
+pf1 = plot(getindex.(dataset.x_test, 1), label = "true states", lw = 2, legend = :bottomleft) #hide
 pf1 = scatter!(pf1, getindex.(dataset.y_test, 1), label = "observations", lw = 2) #hide
-pf1 = plot!(pf1, getindex.(states, 1), label = "predicted states", lw = 2) #hide
-pf2 = plot(getindex.(dataset.x_test, 2), label = "true states", lw = 2) #hide
+pf1 = plot!(pf1, getindex.(states_mean, 1), ribbon = getindex.(states_cov, 1), label = "predicted states", lw = 2) #hide
+pf2 = plot(getindex.(dataset.x_test, 2), label = "true states", lw = 2, legend = :bottomleft) #hide
 pf2 = scatter!(pf2, getindex.(dataset.y_test, 2), label = "observations", lw = 2) #hide
-pf2 = plot!(pf2, getindex.(states, 2), label = "predicted states", lw = 2) #hide
+pf2 = plot!(pf2, getindex.(states_mean, 2), ribbon = getindex.(states_cov, 2), label = "predicted states", lw = 2) #hide
 plot(pf1, pf2, layout = (2, 1)) #hide
 ```
 

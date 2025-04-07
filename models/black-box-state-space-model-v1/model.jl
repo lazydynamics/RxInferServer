@@ -60,7 +60,7 @@ function run_inference(state, parameters, data)
         options = (limit_stack_depth = 300,)
     )
 
-    result = Dict("states" => mean.(results.posteriors[:s]))
+    result = Dict("states" => results.posteriors[:s])
 
     return result, state
 end

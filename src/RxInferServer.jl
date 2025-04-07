@@ -7,13 +7,16 @@ using Dates, Pkg, Serialization
 
 include("macro.jl")
 include("dotenv.jl")
-include("database.jl")
-include("logging.jl")
-include("serialization.jl")
+include("components/database.jl")
+include("components/logging.jl")
+
+# RxInferServer uses its own serialization implementation, 
+# which is different from the default one provided by JSON.jl
+include("components/serialization/serialization.jl")
 
 # This is NOT a file with model definitions, but a file that functions to
 # load models from the `RXINFER_SERVER_MODELS_LOCATION` directory
-include("models/models.jl")
+include("components/models/models.jl")
 
 # API configuration, this is not configurable and baked into the current implementation
 const API_PATH_PREFIX = "/v1"

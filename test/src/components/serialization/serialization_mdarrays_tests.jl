@@ -71,6 +71,11 @@ end
         "data" => [[[[1, 5], [3, 7]], [[2, 6], [4, 8]]]]
     )
 
+    @test_json_serialization s [[1, 2], [1 0; 0 1]] => [
+        [1, 2],
+        Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 0], [0, 1]])
+    ]
+
     # Shouldn't affect the serialization of 1D arrays
     @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
 end
@@ -122,6 +127,11 @@ end
         "shape" => [1, 2, 2, 2],
         "data" => [1, 2, 3, 4, 5, 6, 7, 8]
     )
+
+    @test_json_serialization s [[1, 2], [1 0; 0 1]] => [
+        [1, 2],
+        Dict("type" => "mdarray", "encoding" => "reshape_column_major", "shape" => [2, 2], "data" => [1, 0, 0, 1])
+    ]
 
     # Shouldn't affect the serialization of 1D arrays
     @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
@@ -175,6 +185,11 @@ end
         "data" => [1, 5, 3, 7, 2, 6, 4, 8]
     )
 
+    @test_json_serialization s [[1, 2], [1 0; 0 1]] => [
+        [1, 2],
+        Dict("type" => "mdarray", "encoding" => "reshape_row_major", "shape" => [2, 2], "data" => [1, 0, 0, 1])
+    ]
+
     # Shouldn't affect the serialization of 1D arrays
     @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
 end
@@ -210,6 +225,9 @@ end
 
     @test_json_serialization s [[1 2;;; 3 4];;;; [5 6];;; [7 8]] =>
         Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [1, 2, 2, 2], "data" => [1])
+
+    @test_json_serialization s [[1, 2], [1 0; 0 1]] =>
+        [[1, 2], Dict("type" => "mdarray", "encoding" => "diagonal", "shape" => [2, 2], "data" => [1, 1])]
 
     # Shouldn't affect the serialization of 1D arrays
     @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
@@ -247,6 +265,9 @@ end
     @test_json_serialization s [[1 2;;; 3 4];;;; [5 6];;; [7 8]] =>
         Dict("type" => "mdarray", "encoding" => "none", "shape" => [1, 2, 2, 2], "data" => nothing)
 
+    @test_json_serialization s [[1, 2], [1 0; 0 1]] =>
+        [[1, 2], Dict("type" => "mdarray", "encoding" => "none", "shape" => [2, 2], "data" => nothing)]
+
     # Shouldn't affect the serialization of 1D arrays
     @test_json_serialization s [1, 2, 3, 4] => [1, 2, 3, 4]
 end
@@ -262,6 +283,11 @@ end
 
         @test_json_serialization s [1 2; 3 4] =>
             Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 2], [3, 4]])
+
+        @test_json_serialization s [[1, 2], [1 0; 0 1]] => [
+            [1, 2],
+            Dict("type" => "mdarray", "encoding" => "array_of_arrays", "shape" => [2, 2], "data" => [[1, 0], [0, 1]])
+        ]
     end
 
     @testset "TypeAndShape" begin
@@ -269,18 +295,25 @@ end
 
         @test_json_serialization s [1 2; 3 4] =>
             Dict("type" => "mdarray", "shape" => [2, 2], "data" => [[1, 2], [3, 4]])
+
+        @test_json_serialization s [[1, 2], [1 0; 0 1]] =>
+            [[1, 2], Dict("type" => "mdarray", "shape" => [2, 2], "data" => [[1, 0], [0, 1]])]
     end
 
     @testset "Shape" begin
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.DictShape)
 
         @test_json_serialization s [1 2; 3 4] => Dict("shape" => [2, 2], "data" => [[1, 2], [3, 4]])
+
+        @test_json_serialization s [[1, 2], [1 0; 0 1]] => [[1, 2], Dict("shape" => [2, 2], "data" => [[1, 0], [0, 1]])]
     end
 
     @testset "Data" begin
         s = JSONSerialization(mdarray_data = base_transform, mdarray_repr = MultiDimensionalArrayRepr.Data)
 
         @test_json_serialization s [1 2; 3 4] => [[1, 2], [3, 4]]
+
+        @test_json_serialization s [[1, 2], [1 0; 0 1]] => [[1, 2], [[1, 0], [0, 1]]]
     end
 end
 

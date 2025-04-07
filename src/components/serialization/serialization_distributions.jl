@@ -107,9 +107,13 @@ end
 function __show_distribution_data_named_params(
     io::StructuralContext, serialization::JSONSerialization, value::Distribution
 )
-    show_json(io, JSON.StandardSerialization(), value)
+    begin_object(io)
+    for fieldname in fieldnames(typeof(value))
+        show_pair(io, serialization, fieldname => getfield(value, fieldname))
+    end
+    end_object(io)
 end
 
 function __show_distribution_data_params(io::StructuralContext, serialization::JSONSerialization, value::Distribution)
-    show_json(io, JSON.StandardSerialization(), params(value))
+    show_json(io, serialization, params(value))
 end

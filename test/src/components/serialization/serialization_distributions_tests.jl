@@ -35,6 +35,36 @@ end
             "tag" => "NormalMeanPrecision",
             "data" => Dict("μ" => mean, "w" => 1 / variance)
         )
+
+        @test_json_serialization s MvNormalMeanCovariance([mean, mean], [variance 0; 0 variance]) => Dict(
+            "type" => "AbstractMvNormal",
+            "encoding" => "named_params",
+            "tag" => "MvNormalMeanCovariance",
+            "data" => Dict(
+                "μ" => [mean, mean],
+                "Σ" => Dict(
+                    "type" => "mdarray",
+                    "encoding" => "array_of_arrays",
+                    "shape" => [2, 2],
+                    "data" => [[variance, 0], [0, variance]]
+                )
+            )
+        )
+
+        @test_json_serialization s MvNormalMeanPrecision([mean, mean], [1 / variance, 1 / variance]) => Dict(
+            "type" => "AbstractMvNormal",
+            "encoding" => "named_params",
+            "tag" => "MvNormalMeanPrecision",
+            "data" => Dict(
+                "μ" => [mean, mean],
+                "Λ" => Dict(
+                    "type" => "mdarray",
+                    "encoding" => "array_of_arrays",
+                    "shape" => [2, 2],
+                    "data" => [[1 / variance, 0], [0, 1 / variance]]
+                )
+            )
+        )
     end
 end
 
@@ -59,6 +89,36 @@ end
             "encoding" => "params",
             "tag" => "NormalMeanPrecision",
             "data" => [mean, 1 / variance]
+        )
+
+        @test_json_serialization s MvNormalMeanCovariance([mean, mean], [variance 0; 0 variance]) => Dict(
+            "type" => "AbstractMvNormal",
+            "encoding" => "params",
+            "tag" => "MvNormalMeanCovariance",
+            "data" => [
+                [mean, mean],
+                Dict(
+                    "type" => "mdarray",
+                    "encoding" => "array_of_arrays",
+                    "shape" => [2, 2],
+                    "data" => [[variance, 0], [0, variance]]
+                )
+            ]
+        )
+
+        @test_json_serialization s MvNormalMeanPrecision([mean, mean], [1 / variance, 1 / variance]) => Dict(
+            "type" => "AbstractMvNormal",
+            "encoding" => "params",
+            "tag" => "MvNormalMeanPrecision",
+            "data" => [
+                [mean, mean],
+                Dict(
+                    "type" => "mdarray",
+                    "encoding" => "array_of_arrays",
+                    "shape" => [2, 2],
+                    "data" => [[1 / variance, 0], [0, 1 / variance]]
+                )
+            ]
         )
     end
 end

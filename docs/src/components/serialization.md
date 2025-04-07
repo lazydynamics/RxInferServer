@@ -77,6 +77,7 @@ RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict
 RxInferServer.Serialization.MultiDimensionalArrayRepr.DictTypeAndShape
 RxInferServer.Serialization.MultiDimensionalArrayRepr.DictShape
 RxInferServer.Serialization.MultiDimensionalArrayRepr.Data
+RxInferServer.Serialization.MultiDimensionalArrayRepr.Unknown
 ```
 
 #### [Multi-dimensional Array Data Encoding](@id serialization-multi-dimensional-array-data-encoding)
@@ -88,6 +89,7 @@ RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeColumnMajor
 RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeRowMajor
 RxInferServer.Serialization.MultiDimensionalArrayData.Diagonal
 RxInferServer.Serialization.MultiDimensionalArrayData.None
+RxInferServer.Serialization.MultiDimensionalArrayData.Unknown
 ```
 
 ## API Reference

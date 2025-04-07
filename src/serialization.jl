@@ -3,113 +3,131 @@ module Serialization
 # Preference based serialization of multidimensional arrays, such as matrices and tensors.
 # The major problem and potential solution is described here:
 # https://github.com/lazydynamics/RxInferServer/issues/59
-using EnumX
 
 """
-Specifies the encoding format for multi-dimensional array data.
+A module that specifies the encoding format for multi-dimensional array data.
+Is supposed to be used as a namespace for the `MultiDimensionalArrayData` enum.
 
 See also: [`RxInferServer.Serialization.MultiDimensionalArrayRepr`](@ref)
 """
-@enumx MultiDimensionalArrayData::UInt8 begin
-    """
-    Encodes the data of multi-dimensional arrays as nested arrays of arrays with row-major ordering.
+module MultiDimensionalArrayData
+"""
+Unknown encoding format. Used to indicate that the encoding format is not known or cannot be parsed from the request.
+"""
+const Unknown = 0x00
 
-    ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
+"""
+Encodes the data of multi-dimensional arrays as nested arrays of arrays with row-major ordering.
 
-    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
+```jldoctest
+julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
 
-    julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
+julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
-    julia> to_json(s, [1 3; 2 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
-    ```
+julia> to_json(s, [1 2; 3 4])
+"{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
 
-    !!! note
-        Julia uses column-major ordering for multi-dimensional arrays, but this setting explicitly uses row-major ordering.
-    """
-    ArrayOfArrays
+julia> to_json(s, [1 3; 2 4])
+"{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,3],[2,4]]}"
+```
 
-    """
-    Encodes the data of multi-dimensional arrays as a flattened array using column-major ordering.
+!!! note
+    Julia uses column-major ordering for multi-dimensional arrays, but this setting explicitly uses row-major ordering.
+"""
+const ArrayOfArrays::UInt8 = 0x01
 
-    ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
+"""
+Encodes the data of multi-dimensional arrays as a flattened array using column-major ordering.
 
-    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ReshapeColumnMajor);
+```jldoctest
+julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
 
-    julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_column_major\\",\\"shape\\":[2,2],\\"data\\":[1,3,2,4]}"
+julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ReshapeColumnMajor);
 
-    julia> to_json(s, [1 3; 2 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_column_major\\",\\"shape\\":[2,2],\\"data\\":[1,2,3,4]}"
-    ```
+julia> to_json(s, [1 2; 3 4])
+"{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_column_major\\",\\"shape\\":[2,2],\\"data\\":[1,3,2,4]}"
 
-    !!! note
-        Julia uses column-major ordering for multi-dimensional arrays, so this encoding preserves the natural ordering of elements in memory.
-    """
-    ReshapeColumnMajor
+julia> to_json(s, [1 3; 2 4])
+"{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_column_major\\",\\"shape\\":[2,2],\\"data\\":[1,2,3,4]}"
+```
 
-    """
-    Encodes the data of multi-dimensional arrays as a flattened array using row-major ordering.
+!!! note
+    Julia uses column-major ordering for multi-dimensional arrays, so this encoding preserves the natural ordering of elements in memory.
+"""
+const ReshapeColumnMajor::UInt8 = 0x02
 
-    ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
+"""
+Encodes the data of multi-dimensional arrays as a flattened array using row-major ordering.
 
-    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ReshapeRowMajor);
+```jldoctest
+julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
 
-    julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_row_major\\",\\"shape\\":[2,2],\\"data\\":[1,2,3,4]}"
+julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.ReshapeRowMajor);
 
-    julia> to_json(s, [1 3; 2 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_row_major\\",\\"shape\\":[2,2],\\"data\\":[1,3,2,4]}"
-    ```
+julia> to_json(s, [1 2; 3 4])
+"{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_row_major\\",\\"shape\\":[2,2],\\"data\\":[1,2,3,4]}"
 
-    !!! note
-        This encoding traverses the array in row-major order, which is different from Julia's native column-major storage,
-        but is compatible with `numpy.ndarray` memory layout.
-    """
-    ReshapeRowMajor
+julia> to_json(s, [1 3; 2 4])
+"{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"reshape_row_major\\",\\"shape\\":[2,2],\\"data\\":[1,3,2,4]}"
+```
 
-    """
-    Encodes the data of multi-dimensional arrays as a single array containing only the diagonal elements of the parent array.
+!!! note
+    This encoding traverses the array in row-major order, which is different from Julia's native column-major storage,
+    but is compatible with `numpy.ndarray` memory layout.
+"""
+const ReshapeRowMajor::UInt8 = 0x03
 
-    ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
+"""
+Encodes the data of multi-dimensional arrays as a single array containing only the diagonal elements of the parent array.
 
-    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.Diagonal);
+```jldoctest
+julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
 
-    julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"diagonal\\",\\"shape\\":[2,2],\\"data\\":[1,4]}"
-    ```
-    """
-    Diagonal
+julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.Diagonal);
 
-    """
-    Removes the multi-dimensional array data from the response entirely.
+julia> to_json(s, [1 2; 3 4])
+"{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"diagonal\\",\\"shape\\":[2,2],\\"data\\":[1,4]}"
+```
+"""
+const Diagonal::UInt8 = 0x04
 
-    ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
+"""
+Removes the multi-dimensional array data from the response entirely.
 
-    julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.None);
+```jldoctest
+julia> import RxInferServer.Serialization: MultiDimensionalArrayData, JSONSerialization, to_json
 
-    julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"none\\",\\"shape\\":[2,2],\\"data\\":null}"
-    ```
+julia> s = JSONSerialization(mdarray_data = MultiDimensionalArrayData.None);
 
-    !!! note
-        Use [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Data`](@ref) to remove everything.
-    """
-    None
+julia> to_json(s, [1 2; 3 4])
+"{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"none\\",\\"shape\\":[2,2],\\"data\\":null}"
+```
+
+!!! note
+    Use [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Data`](@ref) to remove everything.
+"""
+const None::UInt8 = 0x05
+
+const OptionName = "mdarray_data"
+const AvailableOptions = (ArrayOfArrays, ReshapeColumnMajor, ReshapeRowMajor, Diagonal, None)
+
+function to_string(preference::UInt8)
+    if preference == MultiDimensionalArrayData.ArrayOfArrays
+        return "array_of_arrays"
+    elseif preference == MultiDimensionalArrayData.ReshapeColumnMajor
+        return "reshape_column_major"
+    elseif preference == MultiDimensionalArrayData.ReshapeRowMajor
+        return "reshape_row_major"
+    elseif preference == MultiDimensionalArrayData.Diagonal
+        return "diagonal"
+    elseif preference == MultiDimensionalArrayData.None
+        return "none"
+    else
+        return "unknown"
+    end
 end
 
-# This is mostly for convenience to convert the preference to a UInt8.
-Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayData.T) = Integer(preference)::UInt8
-@inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayData.T) = a == Integer(b)
-@inline Base.:(==)(a::MultiDimensionalArrayData.T, b::UInt8) = Integer(a) == b
-
-function Base.convert(::Type{MultiDimensionalArrayData.T}, preference::AbstractString)
+function from_string(preference::AbstractString)
     if preference == "array_of_arrays"
         return MultiDimensionalArrayData.ArrayOfArrays
     elseif preference == "reshape_column_major"
@@ -121,83 +139,101 @@ function Base.convert(::Type{MultiDimensionalArrayData.T}, preference::AbstractS
     elseif preference == "none"
         return MultiDimensionalArrayData.None
     else
-        throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, preference))
+        return MultiDimensionalArrayData.Unknown
     end
+end
 end
 
 """
 Specifies the JSON representation format for multi-dimensional arrays.
+Is supposed to be used as a namespace for the `MultiDimensionalArrayRepr` enum.
 
 See also: [`RxInferServer.Serialization.MultiDimensionalArrayData`](@ref)
 """
-@enumx MultiDimensionalArrayRepr::UInt8 begin
-    """
-    Represents the multi-dimensional array as a dictionary with the following keys:
-    - `type` set to `"mdarray"`
-    - `encoding` set to to a selected transformation of the array, e.g. `"array_of_arrays"`
-    - `shape` set to the size of the array
-    - `data` set to the encoded array itself as defined by the transformation
+module MultiDimensionalArrayRepr
+"""
+Unknown representation format. Used to indicate that the representation format is not known or cannot be parsed from the request.
+"""
+const Unknown = 0x00
 
-    ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
+"""
+Represents the multi-dimensional array as a dictionary with the following keys:
+- `type` set to `"mdarray"`
+- `encoding` set to to a selected transformation of the array, e.g. `"array_of_arrays"`
+- `shape` set to the size of the array
+- `data` set to the encoded array itself as defined by the transformation
 
-    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.Dict, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
+```jldoctest
+julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
 
-    julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
-    ```
-    """
-    Dict
+julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.Dict, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
-    """
-    Same as [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict`](@ref), but excludes the `encoding` key, leaving only the `type`, `shape` and `data` keys.
+julia> to_json(s, [1 2; 3 4])
+"{\\"type\\":\\"mdarray\\",\\"encoding\\":\\"array_of_arrays\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
+```
+"""
+const Dict::UInt8 = 0x01
 
-    ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
+"""
+Same as [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict`](@ref), but excludes the `encoding` key, leaving only the `type`, `shape` and `data` keys.
 
-    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictTypeAndShape, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
+```jldoctest
+julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
 
-    julia> to_json(s, [1 2; 3 4])
-    "{\\"type\\":\\"mdarray\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
-    ```
-    """
-    DictTypeAndShape
+julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictTypeAndShape, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
-    """
-    Same as [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict`](@ref), but excludes the `encoding` and `type` keys, leaving only the `shape` and `data` keys.
+julia> to_json(s, [1 2; 3 4])
+"{\\"type\\":\\"mdarray\\",\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
+```
+"""
+const DictTypeAndShape::UInt8 = 0x02
 
-    ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
+"""
+Same as [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict`](@ref), but excludes the `encoding` and `type` keys, leaving only the `shape` and `data` keys.
 
-    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictShape, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
+```jldoctest
+julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
 
-    julia> to_json(s, [1 2; 3 4])
-    "{\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
-    ```
-    """
-    DictShape
+julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.DictShape, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
 
-    """
-    Compact representation of the multi-dimensional array as returned from the transformation.
+julia> to_json(s, [1 2; 3 4])
+"{\\"shape\\":[2,2],\\"data\\":[[1,2],[3,4]]}"
+```
+"""
+const DictShape::UInt8 = 0x03
 
-    ```jldoctest
-    julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
+"""
+Compact representation of the multi-dimensional array as returned from the transformation.
 
-    julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.Data, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
+```jldoctest
+julia> import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr, JSONSerialization, to_json
 
-    julia> to_json(s, [1 2; 3 4])
-    "[[1,2],[3,4]]"
-    ```
-    """
-    Data
+julia> s = JSONSerialization(mdarray_repr = MultiDimensionalArrayRepr.Data, mdarray_data = MultiDimensionalArrayData.ArrayOfArrays);
+
+julia> to_json(s, [1 2; 3 4])
+"[[1,2],[3,4]]"
+```
+"""
+const Data::UInt8 = 0x04
+
+const OptionName = "mdarray_repr"
+const AvailableOptions = (Dict, DictTypeAndShape, DictShape, Data)
+
+function to_string(preference::UInt8)
+    if preference == MultiDimensionalArrayRepr.Dict
+        return "dict"
+    elseif preference == MultiDimensionalArrayRepr.DictTypeAndShape
+        return "dict_type_and_shape"
+    elseif preference == MultiDimensionalArrayRepr.DictShape
+        return "dict_shape"
+    elseif preference == MultiDimensionalArrayRepr.Data
+        return "data"
+    else
+        return "unknown"
+    end
 end
 
-# This is mostly for convenience to convert the preference to a UInt8.
-Base.convert(::Type{UInt8}, preference::MultiDimensionalArrayRepr.T) = Integer(preference)::UInt8
-@inline Base.:(==)(a::UInt8, b::MultiDimensionalArrayRepr.T) = a == Integer(b)
-@inline Base.:(==)(a::MultiDimensionalArrayRepr.T, b::UInt8) = Integer(a) == b
-
-function Base.convert(::Type{MultiDimensionalArrayRepr.T}, preference::AbstractString)
+function from_string(preference::AbstractString)
     if preference == "dict"
         return MultiDimensionalArrayRepr.Dict
     elseif preference == "dict_type_and_shape"
@@ -207,26 +243,25 @@ function Base.convert(::Type{MultiDimensionalArrayRepr.T}, preference::AbstractS
     elseif preference == "data"
         return MultiDimensionalArrayRepr.Data
     else
-        throw(UnsupportedPreferenceError(:mdarray_repr, MultiDimensionalArrayRepr, preference))
+        return MultiDimensionalArrayRepr.Unknown
     end
+end
 end
 
 """
-    UnsupportedPreferenceError(option, available, preference)
+    UnsupportedPreferenceError(option, options)
 
-Error thrown when an unknown `preference` value is used for a given `option`.
+Error thrown when an unknown `options` value is used for a given set of `options`.
 """
-struct UnsupportedPreferenceError{A, P} <: Exception
-    option::Symbol
-    available::A
-    preference::P
+struct UnsupportedPreferenceError{T, P} <: Exception
+    option::T
+    options::P
 end
 
 function Base.showerror(io::IO, e::UnsupportedPreferenceError)
-    print(io, "unknown preference value `$(e.preference)` for `$(e.option)`. Available preferences are:")
-    for preference in instances(e.available.T)
-        print(io, " ", preference, "=", Integer(preference))
-    end
+    print(io, "unknown preference `$(e.option)` for `$(e.options.OptionName)`.")
+    print(io, "Available preferences are ")
+    join(io, map(s -> string('`', e.options.to_string(s), '`'), e.options.AvailableOptions), ", ", " and ")
 end
 
 # Using `JSON` instead for `to_json` of `JSON3` here is intentional.
@@ -353,7 +388,7 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
     elseif mdarray_repr == MultiDimensionalArrayRepr.Data
         # noop
     else
-        throw(UnsupportedPreferenceError(:mdarray_repr, MultiDimensionalArrayRepr, mdarray_repr))
+        throw(UnsupportedPreferenceError(mdarray_repr, MultiDimensionalArrayRepr))
     end
 
     if mdarray_data == MultiDimensionalArrayData.ArrayOfArrays
@@ -367,7 +402,7 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
     elseif mdarray_data == MultiDimensionalArrayData.None
         __show_mdarray_data_none(io, serialization, value)
     else
-        throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
+        throw(UnsupportedPreferenceError(mdarray_data, MultiDimensionalArrayData))
     end
 
     if mdarray_repr != MultiDimensionalArrayRepr.Data
@@ -387,7 +422,7 @@ function __mdarray_data_encoding(mdarray_data::UInt8)
     elseif mdarray_data == MultiDimensionalArrayData.None
         return :none
     else
-        throw(UnsupportedPreferenceError(:mdarray_data, MultiDimensionalArrayData, mdarray_data))
+        throw(UnsupportedPreferenceError(mdarray_data, MultiDimensionalArrayData))
     end
 end
 

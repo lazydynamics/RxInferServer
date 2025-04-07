@@ -133,18 +133,32 @@ end
 @testitem "Unknown preference should have a helpful message" begin
     import RxInferServer.Serialization: UnsupportedPreferenceError
 
-    using EnumX
+    module SomePreference
+    const Preference1 = 0
+    const Preference2 = 1
+    const Preference3 = 2
 
-    @enumx SomePreference begin
-        Preference1 = 0
-        Preference2 = 1
+    const OptionName = "some_preference"
+    const AvailableOptions = (Preference1, Preference2, Preference3)
+
+    function to_string(preference)
+        if preference == Preference1
+            return "preference_1"
+        elseif preference == Preference2
+            return "preference_2"
+        elseif preference == Preference3
+            return "preference_3"
+        else
+            return "unknown"
+        end
+    end
     end
 
-    for scope in (:mdarray_transform, :some_other_preference), preference in (3, 4, 124)
-        errmsg = sprint(showerror, UnsupportedPreferenceError(scope, SomePreference, preference))
+    for options in (SomePreference,), option in (3, 4, 124)
+        errmsg = sprint(showerror, UnsupportedPreferenceError(option, options))
 
-        @test occursin("unknown preference value `$(preference)` for `$(scope)`", errmsg)
-        @test occursin("Available preferences are: Preference1=0 Preference2=1", errmsg)
+        @test occursin("unknown preference `$(option)` for `some_preference`", errmsg)
+        @test occursin("Available preferences are `preference_1`, `preference_2` and `preference_3`", errmsg)
     end
 end
 
@@ -435,28 +449,58 @@ end
 end
 
 @testitem "It should be possible to convert a string preference of `mdarray_data` to an equivalent enum value" begin
-    import RxInferServer.Serialization: convert, MultiDimensionalArrayData, UnsupportedPreferenceError
+    import RxInferServer.Serialization: MultiDimensionalArrayData
 
-    @test convert(MultiDimensionalArrayData.T, "array_of_arrays") == MultiDimensionalArrayData.ArrayOfArrays
-    @test convert(MultiDimensionalArrayData.T, "reshape_column_major") == MultiDimensionalArrayData.ReshapeColumnMajor
-    @test convert(MultiDimensionalArrayData.T, "reshape_row_major") == MultiDimensionalArrayData.ReshapeRowMajor
+    @test MultiDimensionalArrayData.from_string("array_of_arrays") == MultiDimensionalArrayData.ArrayOfArrays
+    @test MultiDimensionalArrayData.from_string("reshape_column_major") == MultiDimensionalArrayData.ReshapeColumnMajor
+    @test MultiDimensionalArrayData.from_string("reshape_row_major") == MultiDimensionalArrayData.ReshapeRowMajor
+    @test MultiDimensionalArrayData.from_string("diagonal") == MultiDimensionalArrayData.Diagonal
+    @test MultiDimensionalArrayData.from_string("none") == MultiDimensionalArrayData.None
 
-    @test_throws UnsupportedPreferenceError convert(MultiDimensionalArrayData.T, "unknown")
+    @test MultiDimensionalArrayData.from_string("unknown") == MultiDimensionalArrayData.Unknown
+    @test MultiDimensionalArrayData.from_string("blahblah") == MultiDimensionalArrayData.Unknown
 end
 
 @testitem "It should be possible to convert a string preference of `mdarray_repr` to an equivalent enum value" begin
-    import RxInferServer.Serialization: convert, MultiDimensionalArrayRepr, UnsupportedPreferenceError
+    import RxInferServer.Serialization: MultiDimensionalArrayRepr
 
-    @test convert(MultiDimensionalArrayRepr.T, "dict") == MultiDimensionalArrayRepr.Dict
-    @test convert(MultiDimensionalArrayRepr.T, "dict_type_and_shape") == MultiDimensionalArrayRepr.DictTypeAndShape
-    @test convert(MultiDimensionalArrayRepr.T, "dict_shape") == MultiDimensionalArrayRepr.DictShape
-    @test convert(MultiDimensionalArrayRepr.T, "data") == MultiDimensionalArrayRepr.Data
+    @test MultiDimensionalArrayRepr.from_string("dict") == MultiDimensionalArrayRepr.Dict
+    @test MultiDimensionalArrayRepr.from_string("dict_type_and_shape") == MultiDimensionalArrayRepr.DictTypeAndShape
+    @test MultiDimensionalArrayRepr.from_string("dict_shape") == MultiDimensionalArrayRepr.DictShape
+    @test MultiDimensionalArrayRepr.from_string("data") == MultiDimensionalArrayRepr.Data
 
-    @test_throws UnsupportedPreferenceError convert(MultiDimensionalArrayRepr.T, "unknown")
+    @test MultiDimensionalArrayRepr.from_string("unknown") == MultiDimensionalArrayRepr.Unknown
+    @test MultiDimensionalArrayRepr.from_string("blahblah") == MultiDimensionalArrayRepr.Unknown
+end
+
+@testitem "to_string and from_string should be inverses of each other" begin
+    import RxInferServer.Serialization: MultiDimensionalArrayData, MultiDimensionalArrayRepr
+
+    for preference in MultiDimensionalArrayData.AvailableOptions
+        @test MultiDimensionalArrayData.from_string(MultiDimensionalArrayData.to_string(preference)) == preference
+    end
+
+    for preference in MultiDimensionalArrayRepr.AvailableOptions
+        @test MultiDimensionalArrayRepr.from_string(MultiDimensionalArrayRepr.to_string(preference)) == preference
+    end
+end
+
+@testitem "Serialization should not throw an error if an unknown preference is used" begin
+    using HTTP, JSON
+
+    import RxInferServer.Serialization: UnsupportedPreferenceError
+
+    req = HTTP.Request("POST", "test", HTTP.Headers(["Prefer" => "mdarray_data=blahblah"]))
+    response = RxInferServer.postprocess_response(req, Dict("matrix" => [1 2; 3 4]))
+    @test response.status == 200
 end
 
 @testitem "Serialization of matrices should change based on `Prefer` header" setup = [TestUtils] begin
-    using LinearAlgebra, HTTP
+    using LinearAlgebra, HTTP, JSON
+
+    model_path = TestUtils.projectdir("test/models_for_testing/test-model-matrix-argument/model.jl")
+
+    include(model_path)
 
     # Ask the server for a matrix and return it to the caller
     # The actual place of getting a matrix isn't really important here,
@@ -466,7 +510,16 @@ end
     # | 1 2 |
     # | 3 4 |
     # *depending on the size*
-    function get_sequential_matrix(f; size, preference)
+    function with_sequential_matrix(f; size, preference)
+        # first, create the matrix and call response serialization manually
+        state = initial_state(Dict("size" => size)) # this is defined in the `model_path`
+        req = HTTP.Request("POST", "test", HTTP.Headers(["Prefer" => preference]))
+        response = RxInferServer.postprocess_response(req, state["matrix"])
+        matrix = JSON.parse(String(response.body))
+
+        f(matrix)
+
+        # second try with a "real" model call and "real" client
         client = TestUtils.TestClient()
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
@@ -496,7 +549,7 @@ end
 
     @testset "test different sizes" for size in (2, 3, 4)
         @testset let preference = "mdarray_repr=dict"
-            get_sequential_matrix(; size, preference) do matrix
+            with_sequential_matrix(; size, preference) do matrix
                 @test matrix["type"] == "mdarray"
                 @test matrix["shape"] == [size, size]
                 @test haskey(matrix, "encoding")
@@ -505,7 +558,7 @@ end
         end
 
         @testset let preference = "mdarray_repr=dict_type_and_shape"
-            get_sequential_matrix(; size, preference) do matrix
+            with_sequential_matrix(; size, preference) do matrix
                 @test matrix["type"] == "mdarray"
                 @test matrix["shape"] == [size, size]
                 @test !haskey(matrix, "encoding")
@@ -514,7 +567,7 @@ end
         end
 
         @testset let preference = "mdarray_repr=dict_shape"
-            get_sequential_matrix(; size, preference) do matrix
+            with_sequential_matrix(; size, preference) do matrix
                 @test !haskey(matrix, "type")
                 @test matrix["shape"] == [size, size]
                 @test !haskey(matrix, "encoding")
@@ -527,12 +580,12 @@ end
             # but julia stores the matrix in column major order, so we use eachcol
             expected_matrix = collect.(eachcol(reshape(1:(size^2), size, size)))
 
-            get_sequential_matrix(; size, preference) do matrix
+            with_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "array_of_arrays"
                 @test matrix["data"] == expected_matrix
             end
 
-            get_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
+            with_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
                 @test matrix == expected_matrix
             end
         end
@@ -541,12 +594,12 @@ end
             # the expected matrix is flattened column by column
             expected_matrix = vcat(eachcol(permutedims(reshape(1:(size^2), size, size)))...)
 
-            get_sequential_matrix(; size, preference) do matrix
+            with_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "reshape_column_major"
                 @test matrix["data"] == expected_matrix
             end
 
-            get_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
+            with_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
                 @test matrix == expected_matrix
             end
         end
@@ -555,12 +608,12 @@ end
             # the expected matrix is flattened row by row
             expected_matrix = vcat(eachrow(permutedims(reshape(1:(size^2), size, size)))...)
 
-            get_sequential_matrix(; size, preference) do matrix
+            with_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "reshape_row_major"
                 @test matrix["data"] == expected_matrix
             end
 
-            get_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
+            with_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
                 @test matrix == expected_matrix
             end
         end
@@ -569,12 +622,12 @@ end
             # the expected matrix is flattened row by row
             expected_matrix = collect(diag(permutedims(reshape(1:(size^2), size, size))))
 
-            get_sequential_matrix(; size, preference) do matrix
+            with_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "diagonal"
                 @test matrix["data"] == expected_matrix
             end
 
-            get_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
+            with_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
                 @test matrix == expected_matrix
             end
         end
@@ -583,12 +636,12 @@ end
             # the expected matrix is flattened row by row
             expected_matrix = nothing
 
-            get_sequential_matrix(; size, preference) do matrix
+            with_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "none"
                 @test matrix["data"] == expected_matrix
             end
 
-            get_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
+            with_sequential_matrix(; size, preference = "mdarray_repr=data,$preference") do matrix
                 @test matrix == expected_matrix
             end
         end

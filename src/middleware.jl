@@ -116,7 +116,7 @@ Base.@kwdef struct RequestPreferences
     applied_preferences::HTTP.Headers
 end
 
-function RequestPreferences(req::HTTP.Request)
+function parse_request_preferences(req::HTTP.Request)
     applied_preferences = HTTP.Headers()
 
     preferences = HTTP.headers(req, "Prefer")
@@ -129,12 +129,19 @@ function RequestPreferences(req::HTTP.Request)
         splitpreference = split(preference, "=")
         length(splitpreference) == 2 || continue
         key, value = splitpreference
-        if key == "mdarray_repr"
-            preference_mdarray_repr = convert(Serialization.MultiDimensionalArrayRepr.T, value)
-            push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
-        elseif key == "mdarray_data"
-            preference_mdarray_data = convert(Serialization.MultiDimensionalArrayData.T, value)
-            push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+
+        if isequal(key, Serialization.MultiDimensionalArrayRepr.OptionName)
+            mdarray_repr_option = Serialization.MultiDimensionalArrayRepr.from_string(value)
+            if !isequal(mdarray_repr_option, Serialization.MultiDimensionalArrayRepr.Unknown)
+                preference_mdarray_repr = mdarray_repr_option
+                push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+            end
+        elseif isequal(key, Serialization.MultiDimensionalArrayData.OptionName)
+            mdarray_data_option = Serialization.MultiDimensionalArrayData.from_string(value)
+            if !isequal(mdarray_data_option, Serialization.MultiDimensionalArrayData.Unknown)
+                preference_mdarray_data = mdarray_data_option
+                push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+            end
         end
     end
 
@@ -149,7 +156,7 @@ function postprocess_response(req, res)
     response_headers = HTTP.Headers()
     HTTP.setheader(response_headers, HTTP.Header("Content-Type", "application/json"))
 
-    preferences = RequestPreferences(req)
+    preferences = parse_request_preferences(req)
 
     for header in preferences.applied_preferences
         push!(response_headers, header)

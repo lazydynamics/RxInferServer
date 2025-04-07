@@ -24,8 +24,9 @@ ENV["RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS"] = "GET, POST, PUT, DELET
 
 See also: [`RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS`](@ref)
 """
-RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS() =
-    get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS", "GET, POST, PUT, DELETE, OPTIONS")
+RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS() = get(
+    ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_METHODS", "GET, POST, PUT, DELETE, OPTIONS"
+)
 
 """
 The allowed headers for CORS requests.
@@ -39,8 +40,9 @@ ENV["RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS"] = "Content-Type, Authori
 
 See also: [`RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS`](@ref)
 """
-RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS() =
-    get(ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS", "Content-Type, Authorization")
+RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS() = get(
+    ENV, "RXINFER_SERVER_CORS_ACCESS_CONTROL_ALLOW_HEADERS", "Content-Type, Authorization"
+)
 
 function RXINFER_SERVER_CORS_RES_HEADERS()
     return [
@@ -116,7 +118,7 @@ Base.@kwdef struct RequestPreferences
     applied_preferences::HTTP.Headers
 end
 
-function RequestPreferences(req::HTTP.Request)
+function parse_request_preferences(req::HTTP.Request)
     applied_preferences = HTTP.Headers()
 
     preferences = HTTP.headers(req, "Prefer")
@@ -124,22 +126,46 @@ function RequestPreferences(req::HTTP.Request)
 
     preference_mdarray_repr = Serialization.MultiDimensionalArrayRepr.Dict
     preference_mdarray_data = Serialization.MultiDimensionalArrayData.ArrayOfArrays
+    preference_distributions_repr = Serialization.DistributionsRepr.Dict
+    preference_distributions_data = Serialization.DistributionsData.NamedParams
 
     for preference in preferences
         splitpreference = split(preference, "=")
         length(splitpreference) == 2 || continue
         key, value = splitpreference
-        if key == "mdarray_repr"
-            preference_mdarray_repr = convert(Serialization.MultiDimensionalArrayRepr.T, value)
-            push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
-        elseif key == "mdarray_data"
-            preference_mdarray_data = convert(Serialization.MultiDimensionalArrayData.T, value)
-            push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+
+        if isequal(key, Serialization.MultiDimensionalArrayRepr.OptionName)
+            mdarray_repr_option = Serialization.MultiDimensionalArrayRepr.from_string(value)
+            if !isequal(mdarray_repr_option, Serialization.MultiDimensionalArrayRepr.Unknown)
+                preference_mdarray_repr = mdarray_repr_option
+                push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+            end
+        elseif isequal(key, Serialization.MultiDimensionalArrayData.OptionName)
+            mdarray_data_option = Serialization.MultiDimensionalArrayData.from_string(value)
+            if !isequal(mdarray_data_option, Serialization.MultiDimensionalArrayData.Unknown)
+                preference_mdarray_data = mdarray_data_option
+                push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+            end
+        elseif isequal(key, Serialization.DistributionsRepr.OptionName)
+            distributions_repr_option = Serialization.DistributionsRepr.from_string(value)
+            if !isequal(distributions_repr_option, Serialization.DistributionsRepr.Unknown)
+                preference_distributions_repr = distributions_repr_option
+                push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+            end
+        elseif isequal(key, Serialization.DistributionsData.OptionName)
+            distributions_data_option = Serialization.DistributionsData.from_string(value)
+            if !isequal(distributions_data_option, Serialization.DistributionsData.Unknown)
+                preference_distributions_data = distributions_data_option
+                push!(applied_preferences, HTTP.Header("Preference-Applied", preference))
+            end
         end
     end
 
     json_serialization = Serialization.JSONSerialization(
-        mdarray_repr = preference_mdarray_repr, mdarray_data = preference_mdarray_data
+        mdarray_repr = preference_mdarray_repr,
+        mdarray_data = preference_mdarray_data,
+        distributions_repr = preference_distributions_repr,
+        distributions_data = preference_distributions_data
     )
 
     return RequestPreferences(json_serialization = json_serialization, applied_preferences = applied_preferences)
@@ -149,7 +175,7 @@ function postprocess_response(req, res)
     response_headers = HTTP.Headers()
     HTTP.setheader(response_headers, HTTP.Header("Content-Type", "application/json"))
 
-    preferences = RequestPreferences(req)
+    preferences = parse_request_preferences(req)
 
     for header in preferences.applied_preferences
         push!(response_headers, header)

@@ -1,6 +1,6 @@
 # [Serialization](@id serialization)
 
-The `Serialization` module provides type-safe JSON serialization for OpenAPI data types in RxInferServer.jl, with special focus on handling multi-dimensional arrays.
+The `Serialization` module provides type-safe JSON serialization for OpenAPI data types in RxInferServer.jl, with special focus on handling multi-dimensional arrays and probability distributions.
 
 ```@docs
 RxInferServer.Serialization.JSONSerialization
@@ -16,6 +16,7 @@ The serialization supports standard OpenAPI data types as defined in the [OpenAP
 - `boolean`
 - `array` (corresponds to `AbstractVector` for Julia)
 - `object` (corresponds to `AbstractDict` for Julia)
+- `distribution` (corresponds to `Distribution` from RxInfer.jl)
 
 ## Multi-dimensional Array Serialization
 
@@ -77,6 +78,7 @@ RxInferServer.Serialization.MultiDimensionalArrayRepr.Dict
 RxInferServer.Serialization.MultiDimensionalArrayRepr.DictTypeAndShape
 RxInferServer.Serialization.MultiDimensionalArrayRepr.DictShape
 RxInferServer.Serialization.MultiDimensionalArrayRepr.Data
+RxInferServer.Serialization.MultiDimensionalArrayRepr.Unknown
 ```
 
 #### [Multi-dimensional Array Data Encoding](@id serialization-multi-dimensional-array-data-encoding)
@@ -88,6 +90,43 @@ RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeColumnMajor
 RxInferServer.Serialization.MultiDimensionalArrayData.ReshapeRowMajor
 RxInferServer.Serialization.MultiDimensionalArrayData.Diagonal
 RxInferServer.Serialization.MultiDimensionalArrayData.None
+RxInferServer.Serialization.MultiDimensionalArrayData.Unknown
+```
+
+## Distribution Serialization
+
+RxInferServer provides robust serialization support for probability distributions from RxInfer.jl, enabling seamless communication between the server and clients in different programming languages. This functionality is particularly important when working with statistical models that rely on various distribution types. The serialization system offers flexible options to control how distributions are represented in JSON, allowing you to choose between detailed representations that include type information and compact formats that focus solely on the distribution parameters.
+
+### Serialization Preferences
+
+RxInferServer provides customizable serialization for probability distributions from RxInfer.jl. Similar to multi-dimensional arrays, the serialization strategy is controlled through two key preferences:
+
+1. **Distribution Data Encoding** ([`RxInferServer.Serialization.DistributionsData`](@ref)): Determines how the distribution parameters are encoded. For example, the `NamedParams` option encodes parameters with their semantic names (e.g., `μ` for mean), while the `Params` option uses a simple array of values.
+
+2. **Distribution Representation Format** ([`RxInferServer.Serialization.DistributionsRepr`](@ref)): Controls the structure of the serialized output, offering several options ranging from a fully-specified dictionary with type, encoding, tag, and data fields to a minimal representation with just the data itself.
+
+These preferences can be configured when creating a [`RxInferServer.Serialization.JSONSerialization`](@ref) instance, allowing you to balance between explicit metadata and compact representation based on your specific needs. Read the [Request Preferences](@ref request-preferences-api) section for more information on how to set these preferences in the request headers.
+
+#### [Distribution Representation Format](@id serialization-distribution-representation-format)
+
+```@docs
+RxInferServer.Serialization.DistributionsRepr
+RxInferServer.Serialization.DistributionsRepr.Dict
+RxInferServer.Serialization.DistributionsRepr.DictTypeAndTag
+RxInferServer.Serialization.DistributionsRepr.DictTag
+RxInferServer.Serialization.DistributionsRepr.Data
+RxInferServer.Serialization.DistributionsRepr.Unknown
+```
+
+#### [Distribution Data Encoding](@id serialization-distribution-data-encoding)
+
+```@docs
+RxInferServer.Serialization.DistributionsData
+RxInferServer.Serialization.DistributionsData.NamedParams
+RxInferServer.Serialization.DistributionsData.Params
+RxInferServer.Serialization.DistributionsData.MeanCov
+RxInferServer.Serialization.DistributionsData.None
+RxInferServer.Serialization.DistributionsData.Unknown
 ```
 
 ## API Reference

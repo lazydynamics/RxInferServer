@@ -124,6 +124,7 @@ RxInferServer.Serialization.DistributionsRepr.Unknown
 RxInferServer.Serialization.DistributionsData
 RxInferServer.Serialization.DistributionsData.NamedParams
 RxInferServer.Serialization.DistributionsData.Params
+RxInferServer.Serialization.DistributionsData.MeanCov
 RxInferServer.Serialization.DistributionsData.None
 RxInferServer.Serialization.DistributionsData.Unknown
 ```

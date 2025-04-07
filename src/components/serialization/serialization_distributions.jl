@@ -2,7 +2,7 @@
 # The major problem and potential solution is described here:
 # https://github.com/lazydynamics/RxInferServer/issues/59
 import RxInfer: Distribution
-import RxInfer.BayesBase: params
+import RxInfer.BayesBase: params, mean_cov
 
 """
 A module that specifies the encoding format for distribution data.
@@ -73,8 +73,32 @@ julia> to_json(s, NormalMeanVariance(1.0, 2.0))
 """
 const None::UInt8 = 0x03
 
+"""
+Always encodes distributions with mean and covariance parameters, converting from other parameterizations as needed.
+
+```jldoctest
+julia> import RxInferServer.Serialization: DistributionsData, JSONSerialization, to_json
+
+julia> using RxInfer
+
+julia> s = JSONSerialization(distributions_data = DistributionsData.MeanCov);
+
+julia> to_json(s, NormalMeanVariance(1.0, 2.0))
+"{\\"encoding\\":\\"mean_cov\\",\\"type\\":\\"Distribution{Univariate, Continuous}\\",\\"tag\\":\\"NormalMeanVariance\\",\\"data\\":{\\"mean\\":1.0,\\"cov\\":2.0}}"
+
+julia> to_json(s, NormalMeanPrecision(1.0, 0.5))
+"{\\"encoding\\":\\"mean_cov\\",\\"type\\":\\"Distribution{Univariate, Continuous}\\",\\"tag\\":\\"NormalMeanPrecision\\",\\"data\\":{\\"mean\\":1.0,\\"cov\\":2.0}}"
+```
+
+!!! note
+    This encoding ensures consistent parameterization across different distribution types, making it easier for clients to work with the data.
+"""
+const MeanCov::UInt8 = 0x04
+
 const OptionName = "distribution_data"
-const AvailableOptions = (DistributionsData.NamedParams, DistributionsData.Params, DistributionsData.None)
+const AvailableOptions = (
+    DistributionsData.NamedParams, DistributionsData.Params, DistributionsData.None, DistributionsData.MeanCov
+)
 
 function to_string(dist_data::UInt8)
     if dist_data == DistributionsData.NamedParams
@@ -83,6 +107,8 @@ function to_string(dist_data::UInt8)
         return "params"
     elseif dist_data == DistributionsData.None
         return "none"
+    elseif dist_data == DistributionsData.MeanCov
+        return "mean_cov"
     else
         return "unknown"
     end
@@ -95,6 +121,8 @@ function from_string(str::String)
         return DistributionsData.Params
     elseif str == "none"
         return DistributionsData.None
+    elseif str == "mean_cov"
+        return DistributionsData.MeanCov
     else
         return DistributionsData.Unknown
     end
@@ -248,6 +276,8 @@ function show_json(io::StructuralContext, serialization::JSONSerialization, valu
         __show_distribution_data_params(io, serialization, value)
     elseif dist_data == DistributionsData.None
         __show_distribution_data_none(io, serialization, value)
+    elseif dist_data == DistributionsData.MeanCov
+        __show_distribution_data_mean_cov(io, serialization, value)
     else
         throw(UnsupportedPreferenceError(dist_data, DistributionsData))
     end
@@ -285,6 +315,11 @@ end
 
 function __show_distribution_data_params(io::StructuralContext, serialization::JSONSerialization, value::Distribution)
     show_json(io, serialization, params(value))
+end
+
+function __show_distribution_data_mean_cov(io::StructuralContext, serialization::JSONSerialization, value::Distribution)
+    mean, cov = mean_cov(value)
+    show_json(io, serialization, (mean = mean, cov = cov))
 end
 
 function __show_distribution_data_none(io::StructuralContext, serialization::JSONSerialization, value::Distribution)

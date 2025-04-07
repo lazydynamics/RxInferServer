@@ -388,6 +388,8 @@ For example, we could request server to return a diagonal part of the covariance
 ```@example preferences
 set_header(client, "Prefer", "distributions_repr=data,distributions_data=mean_cov,mdarray_repr=data,mdarray_data=diagonal")
 multivariate_distribution = hidden_get_multivariate_distribution() #hide
+@test multivariate_distribution["mean"] isa Vector && multivariate_distribution["mean"] == [1.0, 2.0] #hide
+@test multivariate_distribution["cov"] isa Vector && multivariate_distribution["cov"] == [3.0, 4.0] #hide
 nothing #hide
 ```
 

@@ -95,7 +95,7 @@ julia> to_json(s, NormalMeanPrecision(1.0, 0.5))
 """
 const MeanCov::UInt8 = 0x04
 
-const OptionName = "distribution_data"
+const OptionName = "distributions_data"
 const AvailableOptions = (
     DistributionsData.NamedParams, DistributionsData.Params, DistributionsData.None, DistributionsData.MeanCov
 )
@@ -114,7 +114,7 @@ function to_string(dist_data::UInt8)
     end
 end
 
-function from_string(str::String)
+function from_string(str::AbstractString)
     if str == "named_params"
         return DistributionsData.NamedParams
     elseif str == "params"
@@ -209,7 +209,7 @@ julia> to_json(s, NormalMeanVariance(1.0, 2.0))
 """
 const Data::UInt8 = 0x04
 
-const OptionName = "distribution_repr"
+const OptionName = "distributions_repr"
 const AvailableOptions = (
     DistributionsRepr.Dict, DistributionsRepr.DictTypeAndTag, DistributionsRepr.DictTag, DistributionsRepr.Data
 )
@@ -228,7 +228,7 @@ function to_string(dist_repr::UInt8)
     end
 end
 
-function from_string(str::String)
+function from_string(str::AbstractString)
     if str == "dict"
         return DistributionsRepr.Dict
     elseif str == "dict_type_and_tag"

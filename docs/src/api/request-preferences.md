@@ -60,7 +60,7 @@ RxInferServer acknowledges applied preferences by setting the [`PreferenceApplie
 
 RxInferServer offers flexible JSON serialization options through the `Prefer` header. These options allow you to control how your data is formatted in responses. For a comprehensive overview of serialization capabilities, see the [Serialization](@ref serialization) guide.
 
-### Multi-dimensional Array Representation Format
+## Multi-dimensional Array Representation Format
 
 The `mdarray_repr` preference controls how multi-dimensional arrays are structured in the response. This is particularly useful when working with matrices and tensors. For detailed information about available formats, see the [Multi-dimensional Array Representation Format](@ref serialization-multi-dimensional-array-representation-format) section.
 
@@ -73,7 +73,7 @@ Available options for `mdarray_repr`:
 | `dict_shape` | [`RxInferServer.Serialization.MultiDimensionalArrayRepr.DictShape`](@ref) |
 | `data` | [`RxInferServer.Serialization.MultiDimensionalArrayRepr.Data`](@ref) |
 
-#### Examples 
+### Examples 
 
 Here, how, as an example, a simple 2x2 matrix would change its representation depending on different preferences:
 
@@ -121,7 +121,7 @@ nothing #hide
 A
 ```
 
-### Multi-dimensional Array Data Encoding
+## Multi-dimensional Array Data Encoding
 
 The `mdarray_data` preference determines how array data is encoded in the response. This is crucial for optimizing data transfer and ensuring compatibility with different client implementations. For more details, see the [Multi-dimensional Array Data Encoding](@ref serialization-multi-dimensional-array-data-encoding) section.
 
@@ -135,7 +135,7 @@ Available options for `mdarray_data`:
 | `diagonal` | Corresponds to [`RxInferServer.Serialization.MultiDimensionalArrayData.Diagonal`](@ref). |
 | `none` | Corresponds to [`RxInferServer.Serialization.MultiDimensionalArrayData.None`](@ref). |
 
-#### Examples 
+### Examples 
 
 Here, how, as an example, a simple 2x2 matrix would change its representation depending on different preferences:
 
@@ -201,7 +201,7 @@ nothing #hide
 A
 ```
 
-### Distribution Representation Format
+## Distribution Representation Format
 
 The `distributions_repr` preference controls how probability distributions are structured in the response. This is particularly useful when working with statistical models. For detailed information about available formats, see the [Distribution Representation Format](@ref serialization-distribution-representation-format) section.
 
@@ -214,7 +214,7 @@ Available options for `distributions_repr`:
 | `dict_tag` | [`RxInferServer.Serialization.DistributionsRepr.DictTag`](@ref) |
 | `data` | [`RxInferServer.Serialization.DistributionsRepr.Data`](@ref) |
 
-#### Examples 
+### Examples 
 
 Here's how a normal distribution would change its representation depending on different preferences. We will show both the univariate and multivariate cases.
 
@@ -286,7 +286,7 @@ univariate_distribution
 multivariate_distribution
 ```
 
-### Distribution Data Encoding
+## Distribution Data Encoding
 
 The `distributions_data` preference determines how distribution parameters are encoded in the response. This is crucial for ensuring compatibility with different client implementations and providing consistent parameterization. For more details, see the [Distribution Data Encoding](@ref serialization-distribution-data-encoding) section.
 
@@ -299,7 +299,7 @@ Available options for `distributions_data`:
 | `mean_cov` | Corresponds to [`RxInferServer.Serialization.DistributionsData.MeanCov`](@ref). |
 | `none` | Corresponds to [`RxInferServer.Serialization.DistributionsData.None`](@ref). |
 
-#### Examples 
+### Examples 
 
 Here's how different distributions would change their representation depending on different preferences:
 
@@ -374,6 +374,21 @@ nothing #hide
 
 ```@example preferences
 univariate_distribution
+```
+
+```@example preferences
+multivariate_distribution
+```
+
+## Combination of preferences
+
+It is possible to combine multiple preferences to achieve the desired output format. 
+For example, we could request server to return a diagonal part of the covariance matrix of a multivariate distribution without extra metadata in the following way:
+
+```@example preferences
+set_header(client, "Prefer", "distributions_repr=data,distributions_data=mean_cov,mdarray_repr=data,mdarray_data=diagonal")
+multivariate_distribution = hidden_get_multivariate_distribution() #hide
+nothing #hide
 ```
 
 ```@example preferences

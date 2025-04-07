@@ -343,3 +343,194 @@ end
     response = RxInferServer.postprocess_response(req, Dict("distribution" => NormalMeanVariance(1.0, 2.0)))
     @test response.status == 200
 end
+
+@testitem "Documentation examples for distribution serialization" setup = [TestUtils] begin
+    using HTTP, JSON
+    using RxInfer
+    using RxInferServer.Serialization: DistributionsData, DistributionsRepr, JSONSerialization
+
+    function get_univariate_distribution(preference)
+        d = Dict("distribution" => NormalMeanVariance(1.0, 2.0))
+        req = HTTP.Request("POST", "test", HTTP.Headers(["Prefer" => preference]))
+        response = RxInferServer.postprocess_response(req, d["distribution"])
+        return JSON.parse(String(response.body))
+    end
+
+    function get_multivariate_distribution(preference)
+        d = Dict("distribution" => MvNormalMeanCovariance([1.0, 2.0], [3.0 0.0; 0.0 4.0]))
+        req = HTTP.Request("POST", "test", HTTP.Headers(["Prefer" => preference]))
+        response = RxInferServer.postprocess_response(req, d["distribution"])
+        return JSON.parse(String(response.body))
+    end
+
+    @testset "Distribution representation format examples" begin
+        @testset "dict representation" begin
+            result = get_univariate_distribution("distributions_repr=dict")
+            @test result["type"] == "Distribution{Univariate, Continuous}"
+            @test result["encoding"] == "named_params"
+            @test result["tag"] == "NormalMeanVariance"
+            @test result["data"]["μ"] == 1.0
+            @test result["data"]["v"] == 2.0
+
+            result = get_multivariate_distribution("distributions_repr=dict")
+            @test result["type"] == "AbstractMvNormal"
+            @test result["encoding"] == "named_params"
+            @test result["tag"] == "MvNormalMeanCovariance"
+            @test result["data"]["μ"] == [1.0, 2.0]
+            @test result["data"]["Σ"]["type"] == "mdarray"
+            @test result["data"]["Σ"]["shape"] == [2, 2]
+            @test result["data"]["Σ"]["data"] == [[3.0, 0.0], [0.0, 4.0]]
+        end
+
+        @testset "dict_type_and_tag representation" begin
+            result = get_univariate_distribution("distributions_repr=dict_type_and_tag")
+            @test result["type"] == "Distribution{Univariate, Continuous}"
+            @test !haskey(result, "encoding")
+            @test result["tag"] == "NormalMeanVariance"
+            @test result["data"]["μ"] == 1.0
+            @test result["data"]["v"] == 2.0
+
+            result = get_multivariate_distribution("distributions_repr=dict_type_and_tag")
+            @test result["type"] == "AbstractMvNormal"
+            @test !haskey(result, "encoding")
+            @test result["tag"] == "MvNormalMeanCovariance"
+            @test result["data"]["μ"] == [1.0, 2.0]
+            @test result["data"]["Σ"]["type"] == "mdarray"
+            @test result["data"]["Σ"]["shape"] == [2, 2]
+            @test result["data"]["Σ"]["data"] == [[3.0, 0.0], [0.0, 4.0]]
+        end
+
+        @testset "dict_tag representation" begin
+            result = get_univariate_distribution("distributions_repr=dict_tag")
+            @test !haskey(result, "type")
+            @test !haskey(result, "encoding")
+            @test result["tag"] == "NormalMeanVariance"
+            @test result["data"]["μ"] == 1.0
+            @test result["data"]["v"] == 2.0
+
+            result = get_multivariate_distribution("distributions_repr=dict_tag")
+            @test !haskey(result, "type")
+            @test !haskey(result, "encoding")
+            @test result["tag"] == "MvNormalMeanCovariance"
+            @test result["data"]["μ"] == [1.0, 2.0]
+            @test result["data"]["Σ"]["type"] == "mdarray"
+            @test result["data"]["Σ"]["shape"] == [2, 2]
+            @test result["data"]["Σ"]["data"] == [[3.0, 0.0], [0.0, 4.0]]
+        end
+
+        @testset "data representation" begin
+            result = get_univariate_distribution("distributions_repr=data")
+            @test !haskey(result, "type")
+            @test !haskey(result, "encoding")
+            @test !haskey(result, "tag")
+            @test result["μ"] == 1.0
+            @test result["v"] == 2.0
+
+            result = get_multivariate_distribution("distributions_repr=data")
+            @test !haskey(result, "type")
+            @test !haskey(result, "encoding")
+            @test !haskey(result, "tag")
+            @test result["μ"] == [1.0, 2.0]
+            @test result["Σ"]["type"] == "mdarray"
+            @test result["Σ"]["shape"] == [2, 2]
+            @test result["Σ"]["data"] == [[3.0, 0.0], [0.0, 4.0]]
+        end
+    end
+
+    @testset "Distribution data encoding examples" begin
+        @testset "named_params encoding" begin
+            result = get_univariate_distribution("distributions_data=named_params")
+            @test result["type"] == "Distribution{Univariate, Continuous}"
+            @test result["encoding"] == "named_params"
+            @test result["tag"] == "NormalMeanVariance"
+            @test result["data"]["μ"] == 1.0
+            @test result["data"]["v"] == 2.0
+
+            result = get_multivariate_distribution("distributions_data=named_params")
+            @test result["type"] == "AbstractMvNormal"
+            @test result["encoding"] == "named_params"
+            @test result["tag"] == "MvNormalMeanCovariance"
+            @test result["data"]["μ"] == [1.0, 2.0]
+            @test result["data"]["Σ"]["type"] == "mdarray"
+            @test result["data"]["Σ"]["shape"] == [2, 2]
+            @test result["data"]["Σ"]["data"] == [[3.0, 0.0], [0.0, 4.0]]
+        end
+
+        @testset "params encoding" begin
+            result = get_univariate_distribution("distributions_data=params")
+            @test result["type"] == "Distribution{Univariate, Continuous}"
+            @test result["encoding"] == "params"
+            @test result["tag"] == "NormalMeanVariance"
+            @test result["data"] == [1.0, 2.0]
+
+            result = get_multivariate_distribution("distributions_data=params")
+            @test result["type"] == "AbstractMvNormal"
+            @test result["encoding"] == "params"
+            @test result["tag"] == "MvNormalMeanCovariance"
+            @test result["data"][1] == [1.0, 2.0]
+            @test result["data"][2]["type"] == "mdarray"
+            @test result["data"][2]["shape"] == [2, 2]
+            @test result["data"][2]["data"] == [[3.0, 0.0], [0.0, 4.0]]
+        end
+
+        @testset "mean_cov encoding" begin
+            result = get_univariate_distribution("distributions_data=mean_cov")
+            @test result["type"] == "Distribution{Univariate, Continuous}"
+            @test result["encoding"] == "mean_cov"
+            @test result["tag"] == "NormalMeanVariance"
+            @test result["data"]["mean"] == 1.0
+            @test result["data"]["cov"] == 2.0
+
+            result = get_multivariate_distribution("distributions_data=mean_cov")
+            @test result["type"] == "AbstractMvNormal"
+            @test result["encoding"] == "mean_cov"
+            @test result["tag"] == "MvNormalMeanCovariance"
+            @test result["data"]["mean"] == [1.0, 2.0]
+            @test result["data"]["cov"]["type"] == "mdarray"
+            @test result["data"]["cov"]["shape"] == [2, 2]
+            @test result["data"]["cov"]["data"] == [[3.0, 0.0], [0.0, 4.0]]
+        end
+
+        @testset "none encoding" begin
+            result = get_univariate_distribution("distributions_data=none")
+            @test result["type"] == "Distribution{Univariate, Continuous}"
+            @test result["encoding"] == "none"
+            @test result["tag"] == "NormalMeanVariance"
+            @test isnothing(result["data"])
+
+            result = get_multivariate_distribution("distributions_data=none")
+            @test result["type"] == "AbstractMvNormal"
+            @test result["encoding"] == "none"
+            @test result["tag"] == "MvNormalMeanCovariance"
+            @test isnothing(result["data"])
+        end
+    end
+
+    @testset "Combined preferences examples" begin
+        @testset "mean_cov with data representation" begin
+            result = get_univariate_distribution("distributions_repr=data,distributions_data=mean_cov")
+            @test !haskey(result, "type")
+            @test !haskey(result, "encoding")
+            @test !haskey(result, "tag")
+            @test result["mean"] == 1.0
+            @test result["cov"] == 2.0
+
+            result = get_multivariate_distribution("distributions_repr=data,distributions_data=mean_cov")
+            @test !haskey(result, "type")
+            @test !haskey(result, "encoding")
+            @test !haskey(result, "tag")
+            @test result["mean"] == [1.0, 2.0]
+            @test result["cov"]["type"] == "mdarray"
+            @test result["cov"]["shape"] == [2, 2]
+            @test result["cov"]["data"] == [[3.0, 0.0], [0.0, 4.0]]
+        end
+
+        @testset "mean_cov with diagonal covariance" begin
+            result = get_multivariate_distribution(
+                "distributions_repr=data,distributions_data=mean_cov,mdarray_repr=data,mdarray_data=diagonal"
+            )
+            @test result["mean"] == [1.0, 2.0]
+            @test result["cov"] == [3.0, 4.0]
+        end
+    end
+end

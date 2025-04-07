@@ -122,3 +122,135 @@ end
         )
     end
 end
+
+@testitem "DistributionsRepr" setup = [SerializationTestUtils] begin
+    using RxInfer
+
+    import .SerializationTestUtils: to_from_json, @test_json_serialization
+    import RxInferServer.Serialization: DistributionsData, DistributionsRepr, JSONSerialization
+
+    base_transform = DistributionsData.NamedParams
+
+    @testset "All" begin
+        s = JSONSerialization(distributions_data = base_transform, distributions_repr = DistributionsRepr.Dict)
+
+        @test_json_serialization s NormalMeanVariance(1.0, 2.0) => Dict(
+            "type" => "Distribution{Univariate, Continuous}",
+            "encoding" => "named_params",
+            "tag" => "NormalMeanVariance",
+            "data" => Dict("μ" => 1.0, "v" => 2.0)
+        )
+
+        @test_json_serialization s MvNormalMeanCovariance([1.0, 2.0], [3.0 0.0; 0.0 4.0]) => Dict(
+            "type" => "AbstractMvNormal",
+            "encoding" => "named_params",
+            "tag" => "MvNormalMeanCovariance",
+            "data" => Dict(
+                "μ" => [1.0, 2.0],
+                "Σ" => Dict(
+                    "type" => "mdarray",
+                    "encoding" => "array_of_arrays",
+                    "shape" => [2, 2],
+                    "data" => [[3.0, 0.0], [0.0, 4.0]]
+                )
+            )
+        )
+    end
+
+    @testset "TypeAndTag" begin
+        s = JSONSerialization(distributions_data = base_transform, distributions_repr = DistributionsRepr.DictTypeAndTag)
+
+        @test_json_serialization s NormalMeanVariance(1.0, 2.0) => Dict(
+            "type" => "Distribution{Univariate, Continuous}",
+            "tag" => "NormalMeanVariance",
+            "data" => Dict("μ" => 1.0, "v" => 2.0)
+        )
+
+        @test_json_serialization s MvNormalMeanCovariance([1.0, 2.0], [3.0 0.0; 0.0 4.0]) => Dict(
+            "type" => "AbstractMvNormal",
+            "tag" => "MvNormalMeanCovariance",
+            "data" => Dict(
+                "μ" => [1.0, 2.0],
+                "Σ" => Dict(
+                    "type" => "mdarray",
+                    "encoding" => "array_of_arrays",
+                    "shape" => [2, 2],
+                    "data" => [[3.0, 0.0], [0.0, 4.0]]
+                )
+            )
+        )
+    end
+
+    @testset "Tag" begin
+        s = JSONSerialization(distributions_data = base_transform, distributions_repr = DistributionsRepr.DictTag)
+
+        @test_json_serialization s NormalMeanVariance(1.0, 2.0) => Dict(
+            "tag" => "NormalMeanVariance",
+            "data" => Dict("μ" => 1.0, "v" => 2.0)
+        )
+
+        @test_json_serialization s MvNormalMeanCovariance([1.0, 2.0], [3.0 0.0; 0.0 4.0]) => Dict(
+            "tag" => "MvNormalMeanCovariance",
+            "data" => Dict(
+                "μ" => [1.0, 2.0],
+                "Σ" => Dict(
+                    "type" => "mdarray",
+                    "encoding" => "array_of_arrays",
+                    "shape" => [2, 2],
+                    "data" => [[3.0, 0.0], [0.0, 4.0]]
+                )
+            )
+        )
+    end
+
+    @testset "Data" begin
+        s = JSONSerialization(distributions_data = base_transform, distributions_repr = DistributionsRepr.Data)
+
+        @test_json_serialization s NormalMeanVariance(1.0, 2.0) => Dict("μ" => 1.0, "v" => 2.0)
+
+        @test_json_serialization s MvNormalMeanCovariance([1.0, 2.0], [3.0 0.0; 0.0 4.0]) => Dict(
+            "μ" => [1.0, 2.0],
+            "Σ" => Dict(
+                "type" => "mdarray",
+                "encoding" => "array_of_arrays",
+                "shape" => [2, 2],
+                "data" => [[3.0, 0.0], [0.0, 4.0]]
+            )
+        )
+    end
+end
+
+@testitem "It should be possible to convert a string preference of `distributions_repr` to an equivalent enum value" begin
+    import RxInferServer.Serialization: DistributionsRepr
+
+    @test DistributionsRepr.from_string("dict") == DistributionsRepr.Dict
+    @test DistributionsRepr.from_string("dict_type_and_tag") == DistributionsRepr.DictTypeAndTag
+    @test DistributionsRepr.from_string("dict_tag") == DistributionsRepr.DictTag
+    @test DistributionsRepr.from_string("data") == DistributionsRepr.Data
+
+    @test DistributionsRepr.from_string("unknown") == DistributionsRepr.Unknown
+    @test DistributionsRepr.from_string("blahblah") == DistributionsRepr.Unknown
+end
+
+@testitem "to_string and from_string should be inverses of each other" begin
+    import RxInferServer.Serialization: DistributionsData, DistributionsRepr
+
+    for preference in DistributionsData.AvailableOptions
+        @test DistributionsData.from_string(DistributionsData.to_string(preference)) == preference
+    end
+
+    for preference in DistributionsRepr.AvailableOptions
+        @test DistributionsRepr.from_string(DistributionsRepr.to_string(preference)) == preference
+    end
+end
+
+@testitem "Serialization should not throw an error if an unknown preference is used" begin
+    using HTTP, JSON
+    using RxInfer
+
+    import RxInferServer.Serialization: UnsupportedPreferenceError
+
+    req = HTTP.Request("POST", "test", HTTP.Headers(["Prefer" => "distributions_repr=blahblah"]))
+    response = RxInferServer.postprocess_response(req, Dict("distribution" => NormalMeanVariance(1.0, 2.0)))
+    @test response.status == 200
+end

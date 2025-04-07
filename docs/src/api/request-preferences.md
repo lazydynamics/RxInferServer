@@ -1,7 +1,7 @@
 # [Request preferences](@id request-preferences-api)
 
 ```@setup preferences
-using Test
+using Test, HTTP, JSON
 
 import RxInferServer
 import RxInferClientOpenAPI.OpenAPI.Clients: Client, set_header
@@ -11,22 +11,11 @@ client = Client(basepath(ModelsApi); headers = Dict(
     "Authorization" => "Bearer $(RxInferServer.DEFAULT_DEV_TOKEN):test-only"
 ))
 
-api = ModelsApi(client)
-
-create_model_instance_request = CreateModelInstanceRequest(
-    model_name = "TestModelComplexState",
-    description = "Testing complex state",
-    arguments = Dict("size" => 2)
-)
-
-created, info = create_model_instance(api, create_model_instance_request)
-@test info.status == 200
-instance_id = created.instance_id
-
 function hidden_get_matrix()
-    local r, info = get_model_instance_state(api, instance_id)
-    @test info.status == 200
-    return r.state["matrix"], info
+    m = Dict("matrix" => [1 2; 3 4])
+    req = HTTP.Request("POST", "test", HTTP.Headers(["Prefer" => client.headers["Prefer"]]))
+    response = RxInferServer.postprocess_response(req, m["matrix"])
+    return JSON.parse(String(response.body))
 end
 ```
 
@@ -78,7 +67,7 @@ A = [1 2; 3 4]
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_repr=dict")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 
@@ -88,7 +77,7 @@ A
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_repr=dict_type_and_shape")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 
@@ -98,7 +87,7 @@ A
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_repr=dict_shape")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 
@@ -108,7 +97,7 @@ A
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_repr=data")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 
@@ -140,7 +129,7 @@ A = [1 2; 3 4]
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_data=array_of_arrays")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 
@@ -150,7 +139,7 @@ A
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_data=reshape_column_major")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 
@@ -160,7 +149,7 @@ A
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_data=reshape_row_major")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 
@@ -170,7 +159,7 @@ A
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_data=diagonal")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 
@@ -180,7 +169,7 @@ A
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_data=none")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 
@@ -188,7 +177,7 @@ It is possible to remove the matrices from the request entirely by setting the `
 
 ```@example preferences
 set_header(client, "Prefer", "mdarray_repr=data,mdarray_data=none")
-A, info = hidden_get_matrix() #hide
+A = hidden_get_matrix() #hide
 nothing #hide
 ```
 

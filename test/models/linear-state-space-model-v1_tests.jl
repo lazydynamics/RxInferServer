@@ -3,7 +3,7 @@
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BlackBoxStateSpaceModel-v1", description = "Testing black-box state space model"
+        model_name = "LinearStateSpaceModel-v1", description = "Testing linear state space model"
     )
 
     response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -19,8 +19,8 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "BlackBoxStateSpaceModel-v1",
-        description = "Testing black-box state space model",
+        model_name = "LinearStateSpaceModel-v1",
+        description = "Testing linear state space model",
         arguments = Dict("state_dimension" => 2)
     )
 
@@ -77,8 +77,8 @@ end
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
         create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-            model_name = "BlackBoxStateSpaceModel-v1",
-            description = "Testing black-box state space model",
+            model_name = "LinearStateSpaceModel-v1",
+            description = "Testing linear state space model",
             arguments = Dict("state_dimension" => 2, "horizon" => horizon)
         )
 

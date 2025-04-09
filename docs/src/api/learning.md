@@ -95,13 +95,14 @@ plot_dataset(dataset) #hide
 
 ## Creating a Model Instance 
 
-To analyze this dataset, we'll use the `BlackBoxStateSpaceModel-v1`, which is designed to learn and predict the dynamics of state-space systems. This model is particularly suitable for our rotating signal as it can capture the underlying circular motion pattern.
+To analyze this dataset, we'll use the `LinearStateSpaceModel-v1`, which is designed to learn and predict the dynamics of linear state-space systems. 
+This model is particularly suitable for our rotating signal as it can capture the underlying circular motion pattern.
 
 ```@example learning-api
 import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
 
 request = CreateModelInstanceRequest(
-    model_name = "BlackBoxStateSpaceModel-v1",
+    model_name = "LinearStateSpaceModel-v1",
     description = "Example model for demonstration",
     arguments = Dict("state_dimension" => 2, "horizon" => length(dataset.x_test))
 )

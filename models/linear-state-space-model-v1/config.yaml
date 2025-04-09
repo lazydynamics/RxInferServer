@@ -1,5 +1,5 @@
 
-name: BlackBoxStateSpaceModel-v1
+name: LinearStateSpaceModel-v1
 description: |
   This model represents a linear Guassian dynamical system with unknown dynamics.
   The state transition is modeled as a matrix with Gaussian prior on the elements.

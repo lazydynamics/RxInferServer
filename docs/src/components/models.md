@@ -1,20 +1,17 @@
 # [Models](@id models)
 
-RxInferServer provides a flexible system for loading, managing, and exposing RxInfer probabilistic models through the API. This section explains how models work in the server, how to create them, and how the model discovery and loading process works.
+RxInferServer provides a flexible system for loading, managing, and exposing RxInfer probabilistic models through the API. This section explains the technical implementation details of how models work in the server, including the model dispatcher, loading process, and API integration.
 
-## Configuration
+For information about how to create and add new models, please refer to the [How to Add a Model](@ref manual-how-to-add-a-model) manual.
 
-Read more about the configuration of the models in the [Models Configuration](@ref models-configuration) section.
+## Model System Overview
 
-## Model Overview
+The model system in RxInferServer consists of several key components:
 
-Models in RxInferServer are self-contained probabilistic models built with RxInfer.jl that can be loaded by the server and exposed through the API. Each model:
-
-- Is contained in its own directory
-- Has a configuration file defining metadata
-- Contains Julia code that implements the model's logic
-- Can be dynamically discovered and loaded by the server
-- Supports hot-reloading for rapid development
+- [`RxInferServer.Models.ModelsDispatcher`](@ref): Manages model discovery, loading, and access
+- [`RxInferServer.Models.LoadedModel`](@ref): Represents a loaded model with its configuration and implementation
+- Model registry: Maintains a collection of available models
+- Hot-reloading system: Enables dynamic model updates during development
 
 ## Model Discovery and Loading
 
@@ -28,9 +25,9 @@ The server discovers and loads models at startup using this process:
 
 Models are accessed through a [`RxInferServer.Models.ModelsDispatcher`](@ref) which provides methods to retrieve models by name or list all available (non-private) models.
 
-## Hot-Reloading Models
+## Hot-Reloading System
 
-RxInferServer supports hot-reloading of models during development, which means you can modify model files and see the changes without restarting the server. When model files are modified:
+RxInferServer supports hot-reloading of models during development. When model files are modified:
 
 1. The server detects the changes automatically
 2. It reloads all models from their directories
@@ -38,40 +35,11 @@ RxInferServer supports hot-reloading of models during development, which means y
 
 This feature is enabled by default during development and can be disabled through the server's configuration. See [Hot-Reloading](@ref hot-reloading-configuration) for more details.
 
-## Model Directory Structure
+## API Integration
 
-Each model must follow this directory structure:
+Models are exposed through the API endpoints defined in the OpenAPI specification. When a client requests model information or executes a model, the server:
 
-```
-models/
-└── ModelName/
-    ├── model.jl       # Model implementation
-    └── config.yaml    # Model configuration
-```
-
-The server will automatically scan the directories specified in [`RXINFER_SERVER_MODELS_LOCATIONS`](@ref models-configuration) for models. By default, it looks in the `models` and `custom_models` directories relative to the current working directory. Note that the `custom_models` directory is git-ignored by default, it might be useful to experiment with custom models without committing them to the repository.
-
-### Configuration File of a Model (config.yaml)
-
-The configuration file defines the model's metadata and must contain at least the following fields:
-
-```yaml
-name: ModelName-v1             # Model name with version identifier
-description: Model description # A brief description of the model
-author: Author Name            # Name of the model's author
-roles:                         # The roles that can use the model
-  - user                       # Can contain arbitrary roles
-```
-
-### Model Implementation (model.jl)
-
-The `model.jl` file contains the Julia code implementing the model's logic. Each model is loaded into its own module to isolate its namespace, so it can define its own types and functions without conflicts.
-
-## Exposing Models via API
-
-Models are exposed through the API endpoints defined in the OpenAPI specification. Read the [Model management](@ref model-management-api) section to know more about how to create models with client API. When a client requests model information or executes a model, the server:
-
-1. Looks up the requested model by name
+1. Looks up the requested model by name using the dispatcher
 2. If found, returns the model's metadata
 3. Returns appropriate error responses if the model is not found or other issues occur
 

@@ -16,8 +16,16 @@ CurrentModule = RxInferServer
 
 - See the [Getting started](@ref getting-started) section to learn how to use the server.
 - See the [Configuration](@ref configuration) section to learn how to configure the server.
+- See the [How to Add a Model](@ref manual-how-to-add-a-model) manual to learn how to create and add your own models.
 - See the [Developers guide](@ref developers-guide) section for more details on the development process and implementation details.
 - See the [OpenAPI documentation](@ref openapi) section for more details on the OpenAPI specification and the generated server and client code.
+
+## Available SDKs
+
+RxInferServer provides official SDKs for different programming languages:
+
+- **Julia SDK**: Included in this repository under the `openapi/client` folder. This SDK is automatically generated from the OpenAPI specification and is the most up-to-date implementation.
+- **Python SDK**: Available as a separate package at [RxInferClient.py](https://github.com/lazydynamics/RxInferClient.py). This client provides a Python interface to interact with RxInferServer.
 
 ## [License](@id license)
 

@@ -43,19 +43,13 @@ The `docker-compose.yaml` currently has the following services:
 
 ## Starting the RxInferServer
 
-Unlike the Docker services, RxInferServer now needs to be started manually. To start the server, run:
+Unlike the Docker services, RxInferServer now needs to be started manually. To start the server in the development mode, run:
 
 ```bash
-make serve
+make dev
 ```
 
-This command is a wrapper around:
-
-```bash
-julia --project -e 'using RxInferServer; serve()'
-```
-
-This will start the server on `localhost:8000` with hot-reloading enabled by default. Use the `LocalPreferences.toml` file to configure the server settings.
+This command will start the server on `localhost:8000` with hot-reloading enabled and debug logging enabled by default. 
 
 !!! note
     The very first startup will be slower as all Julia packages are being installed and precompiled. Subsequent startups will be faster as the system image is already built unless there is a significant change to the dependencies of the project or its source code in which case Julia will recompile the project again.
@@ -67,9 +61,7 @@ curl -f localhost:8000/v1/ping
 ```
 
 If the server is running correctly, this should return a successful response.
-
-!!! note
-    Server supports hot-reloading, which automatically updates endpoints when code changes are detected. This feature is enabled by default but can be disabled using preferences. See [Hot Reloading](@ref hot-reloading-configuration) for more details.
+See the `.env.development` file for more details on the options used to start the server in the development mode.
 
 ## Hot-Reloading
 

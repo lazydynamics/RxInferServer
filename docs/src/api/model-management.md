@@ -2,6 +2,8 @@
 
 This guide covers the Models management API, which provides endpoints for managing RxInfer models in RxInferServer. You'll learn how to create, manage, and interact with models and their episodes.
 
+For information about how to create and add new models to the server, please refer to the [How to Add a Model](@ref manual-how-to-add-a-model) manual.
+
 ## Prerequisites
 
 Before using the Models API, you need a valid authentication token. If you haven't obtained one yet, please refer to the [Authentication](@ref authentication-api) guide. The examples below assume you have already set up authentication:
@@ -92,7 +94,7 @@ some_model.details
 some_model.config
 ```
 
-## Creating a Model Instance
+## [Creating a Model Instance](@id model-management-api-create-model-instance)
 
 Once you have selected the model you want to use, you can create a new instance of it with the [**create\_model\_instance**](@ref) operation together with the [`CreateModelInstanceRequest`](@ref) type:
 
@@ -155,7 +157,7 @@ response, _ = get_model_instance(api, instance_id)
 response
 ```
 
-## Checking the State of a Specific Model Instance
+## [Checking the State of a Specific Model Instance](@id model-management-api-get-model-instance-state)
 
 Monitor the current state of your model with the **get\_model\_instance\_state** operation:
 
@@ -166,6 +168,21 @@ response, _ = get_model_instance_state(api, instance_id)
 @test !isnothing(response) #hide
 response
 ```
+
+## [Checking the Parameters of a Specific Model Instance](@id model-management-api-get-model-instance-parameters)
+
+Monitor the current parameters of your model with the **get\_model\_instance\_parameters** operation:
+
+```@example models-api
+import RxInferClientOpenAPI: get_model_instance_parameters
+
+response, _ = get_model_instance_parameters(api, instance_id)
+@test !isnothing(response) #hide
+response
+```
+
+!!! note "State of a Model Instance vs Parameters of a Model Instance"
+    Note that the state of a model instance is not the same as the parameters of the model. You can consider the state as an internal implementation detail of the model and is not exposed to the user. The parameters are, however, directly exposed through the [Learning API](@ref learning-api) and can be updated and learned from data using different episodes.
 
 ## Deleting a Model Instance
 

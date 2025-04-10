@@ -80,6 +80,7 @@ RxInferServer.serve
 
 ## Where to go next?
 
-Read more about the different configuration options in the [Configuration](@ref configuration) section or create your first model with the [Model management](@ref model-management-api) section.
-
-If you want to contribute to the project, read more about the [Development](@ref developers-guide) section.
+- Read more about the different configuration options in the [Configuration](@ref configuration) section
+- Create your first model with the [Model management](@ref model-management-api) section
+- For detailed information about how to create and add your own models to the server, check out the [How to Add a Model](@ref manual-how-to-add-a-model) manual
+- If you want to contribute to the project, read more about the [Development](@ref developers-guide) section

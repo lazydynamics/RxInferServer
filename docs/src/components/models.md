@@ -8,8 +8,8 @@ For information about how to create and add new models, please refer to the [How
 
 The model system in RxInferServer consists of several key components:
 
-- [`ModelsDispatcher`](@ref): Manages model discovery, loading, and access
-- [`LoadedModel`](@ref): Represents a loaded model with its configuration and implementation
+- [`RxInferServer.Models.ModelsDispatcher`](@ref): Manages model discovery, loading, and access
+- [`RxInferServer.Models.LoadedModel`](@ref): Represents a loaded model with its configuration and implementation
 - Model registry: Maintains a collection of available models
 - Hot-reloading system: Enables dynamic model updates during development
 

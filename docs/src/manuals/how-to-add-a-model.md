@@ -93,61 +93,94 @@ When the server starts, it only loads model configurations. The actual model cod
 
 ### Required Functions
 
-Your model implementation must define these four essential functions:
+Your model implementation must define these four essential functions. Each function plays a specific role in the model's lifecycle and has a distinct semantic meaning in the context of probabilistic inference.
 
-1. **`initial_state(arguments)`**
-   - Called during model instance creation
-   - Returns the initial state based on provided arguments
-   - Example:
-   ```julia
-   function initial_state(arguments)
-       return Dict(
-           "state_dimension" => arguments["state_dimension"],
-           "horizon" => arguments["horizon"],
-           "learning_rate" => arguments["horizon"] > 10 ? 0.01 : 0.001
-       )
-   end
-   ```
+#### `initial_state(arguments)`
 
-2. **`initial_parameters(arguments)`**
-   - Called during model instance creation
-   - Returns initial model parameters
-   - Example:
-   ```julia
-   function initial_parameters(arguments)
-       return Dict(
-           "A" => randn(arguments["state_dimension"], arguments["state_dimension"]),
-           "B" => randn(arguments["state_dimension"], arguments["state_dimension"])
-       )
-   end
-   ```
+This function represents the initial conditions of your model and is called when a new model instance is created. The state is a persistent memory that evolves over time as the model processes data. It can store any information that needs to be maintained between inference calls, such as running statistics, cached computations, or model-specific metadata.
 
-3. **`run_inference(state, parameters, event)`**
-   - Executes model inference
-   - Returns: (result, new_state)
-   - Example:
-   ```julia
-   function run_inference(state, parameters, event)
-       # Inference logic here
-       result = ...
-       new_state = ...
-       return result, new_state
-   end
-   ```
+The function takes a single argument:
+- `arguments`: A dictionary containing the model arguments specified in `config.yaml`
 
-4. **`run_learning(state, parameters, events)`**
-   - Executes model learning
-   - Returns: (result, new_state, new_parameters)
-   - Example:
-   ```julia
-   function run_learning(state, parameters, events)
-       # Learning logic here
-       result = ...
-       new_state = ...
-       new_parameters = ...
-       return result, new_state, new_parameters
-   end
-   ```
+It should return a dictionary representing the initial state of the model.
+
+Here's an example implementation:
+```julia
+function initial_state(arguments)
+    return Dict(
+        "state_dimension" => arguments["state_dimension"],
+        "horizon" => arguments["horizon"],
+        "learning_rate" => arguments["horizon"] > 10 ? 0.01 : 0.001
+    )
+end
+```
+
+#### `initial_parameters(arguments)`
+
+This function initializes the model's learnable parameters when a new model instance is created. Parameters represent the core components of your probabilistic model that can be learned from data. These are the variables that define your model's behavior and are updated during the learning process. In Bayesian terms, these often correspond to the parameters of your prior distributions or the structure of your probabilistic model.
+
+The function takes a single argument:
+- `arguments`: A dictionary containing the model arguments specified in `config.yaml`
+
+It should return a dictionary containing the initial values of all learnable parameters.
+
+Here's an example implementation:
+```julia
+function initial_parameters(arguments)
+    return Dict(
+        "A" => randn(arguments["state_dimension"], arguments["state_dimension"]),
+        "B" => randn(arguments["state_dimension"], arguments["state_dimension"])
+    )
+end
+```
+
+#### `run_inference(state, parameters, event)`
+
+This function implements the core inference algorithm of your model and is called to perform inference on a single data point. It takes a single observation (event) and computes the posterior distribution or point estimates based on the current state and parameters. The function should return both the inference results and an updated state that reflects any changes from processing the new data point.
+
+The function takes three arguments:
+- `state`: A dictionary containing the current model state
+- `parameters`: A dictionary containing the current model parameters
+- `event`: A dictionary containing the input data for inference
+
+It should return a tuple containing:
+- A dictionary with the inference results
+- A dictionary with the updated model state
+
+Here's an example implementation:
+```julia
+function run_inference(state, parameters, event)
+    # Inference logic here
+    result = ...
+    new_state = ...
+    return result, new_state
+end
+```
+
+#### `run_learning(state, parameters, events)`
+
+This function implements the learning algorithm for your model and is called to update model parameters based on a batch of data. It processes a batch of observations to update the model parameters, typically using some form of gradient-based optimization or Bayesian updating. The function should return updated parameters, an updated state, and any relevant learning metrics or diagnostics.
+
+The function takes three arguments:
+- `state`: A dictionary containing the current model state
+- `parameters`: A dictionary containing the current model parameters
+- `events`: An array of dictionaries containing the batch of input data for learning
+
+It should return a tuple containing:
+- A dictionary with the learning results (e.g., metrics, diagnostics)
+- A dictionary with the updated model state
+- A dictionary with the updated model parameters
+
+Here's an example implementation:
+```julia
+function run_learning(state, parameters, events)
+    # Learning logic here
+    result = ...
+    new_state = ...
+    new_parameters = ...
+    return result, new_state, new_parameters
+end
+```
 
 ## Important Considerations
 

@@ -5,6 +5,13 @@
 
 A Julia package that provides RESTful HTTP server functionality for deploying [RxInfer.jl](https://github.com/biaslab/RxInfer.jl) probabilistic models as web services.
 
+## Available SDKs
+
+RxInferServer provides official SDKs for different programming languages:
+
+- **Julia SDK**: Included in this repository under the `openapi/client` folder. This SDK is automatically generated from the OpenAPI specification and is the most up-to-date implementation.
+- **Python SDK**: Available as a separate package at [RxInferClient.py](https://github.com/lazydynamics/RxInferClient.py). This client provides a Python interface to interact with RxInferServer.
+
 ## Documentation
 
 The documentation for the server API and usage is available at [server.rxinfer.com](https://server.rxinfer.com).

@@ -31,6 +31,8 @@ RxInferServer.Models.RXINFER_SERVER_MODELS_LOCATIONS
 RxInferServer.Models.RXINFER_SERVER_LOAD_TEST_MODELS
 ```
 
+For detailed information about model configuration and implementation, including the structure of `config.yaml` files and model implementation requirements, please refer to the [How to Add a Model](@ref manual-how-to-add-a-model) manual.
+
 # [Logging Configuration](@id logging-configuration)
 
 The server implements a comprehensive logging system that writes logs both to the terminal and to files. Logs are organized by functional groups (e.g., Server, Authentication) and stored in separate files. The configurable options include:

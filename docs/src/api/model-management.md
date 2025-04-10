@@ -2,6 +2,8 @@
 
 This guide covers the Models management API, which provides endpoints for managing RxInfer models in RxInferServer. You'll learn how to create, manage, and interact with models and their episodes.
 
+For information about how to create and add new models to the server, please refer to the [How to Add a Model](@ref manual-how-to-add-a-model) manual.
+
 ## Prerequisites
 
 Before using the Models API, you need a valid authentication token. If you haven't obtained one yet, please refer to the [Authentication](@ref authentication-api) guide. The examples below assume you have already set up authentication:

@@ -221,8 +221,8 @@ makedocs(;
             "Proposal (outdated)" => "api/design-proposal.md"
         ],
         "Configuration" => "configuration.md",
-        "Models structure" => [
-            "Models configuration" => "models/models-configuration.md",
+        "Manuals" => [
+            "How to add a model" => "manuals/how-to-add-a-model.md",
         ],
         "Server components" => [
             "Models" => "components/models.md", 

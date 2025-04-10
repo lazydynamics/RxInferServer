@@ -112,7 +112,7 @@ response, _ = create_model_instance(api, request)
 instance_id = response.instance_id
 ```
 
-## Working with Episodes
+## [Working with Episodes](@id learning-api-episodes)
 
 Episodes serve as containers for organizing training data and metadata in your model. They provide a structured way to:
 

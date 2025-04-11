@@ -205,6 +205,7 @@ makedocs(;
         canonical = "https://server.rxinfer.com",
         edit_link = "main",
         assets = [],
+        analytics = "G-TCF3D8BVYF",
         description = "A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models.",
         footer = "Created and sponsored by [LazyDynamics](https://lazydynamics.com/), powered by [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl) and the [Julia Programming Language](https://julialang.org/). Licensed under [AGPL-3.0](http://github.com/lazydynamics/RxInferServer?tab=readme-ov-file#license)."
     ),

@@ -447,7 +447,7 @@ end
         @testset let preference = "mdarray_data=array_of_arrays"
             # the expected matrix is the row by row from 1 to size^2
             # but julia stores the matrix in column major order, so we use eachcol
-            expected_matrix = collect.(eachcol(reshape(1:(size ^ 2), size, size)))
+            expected_matrix = collect.(eachcol(reshape(1:(size^2), size, size)))
 
             with_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "array_of_arrays"
@@ -461,7 +461,7 @@ end
 
         @testset let preference = "mdarray_data=reshape_column_major"
             # the expected matrix is flattened column by column
-            expected_matrix = vcat(eachcol(permutedims(reshape(1:(size ^ 2), size, size)))...)
+            expected_matrix = vcat(eachcol(permutedims(reshape(1:(size^2), size, size)))...)
 
             with_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "reshape_column_major"
@@ -475,7 +475,7 @@ end
 
         @testset let preference = "mdarray_data=reshape_row_major"
             # the expected matrix is flattened row by row
-            expected_matrix = vcat(eachrow(permutedims(reshape(1:(size ^ 2), size, size)))...)
+            expected_matrix = vcat(eachrow(permutedims(reshape(1:(size^2), size, size)))...)
 
             with_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "reshape_row_major"
@@ -489,7 +489,7 @@ end
 
         @testset let preference = "mdarray_data=diagonal"
             # the expected matrix is flattened row by row
-            expected_matrix = collect(diag(permutedims(reshape(1:(size ^ 2), size, size))))
+            expected_matrix = collect(diag(permutedims(reshape(1:(size^2), size, size))))
 
             with_sequential_matrix(; size, preference) do matrix
                 @test matrix["encoding"] == "diagonal"

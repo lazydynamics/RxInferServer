@@ -113,9 +113,8 @@ struct DatabaseFailedConnectionError <: Exception
     cause::Union{Exception, Nothing}
 end
 
-DatabaseFailedConnectionError(url::String, cause::Union{Exception, Nothing} = nothing) = DatabaseFailedConnectionError(
-    RedactedURL(url), cause
-)
+DatabaseFailedConnectionError(url::String, cause::Union{Exception, Nothing} = nothing) =
+    DatabaseFailedConnectionError(RedactedURL(url), cause)
 
 function Base.showerror(io::IO, e::DatabaseFailedConnectionError)
     message = lazy"""

@@ -1365,7 +1365,7 @@ end
         @test !isnothing(iter_inference)
     end
 
-    learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest()
+    learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
     learning_response, info = TestUtils.RxInferClientOpenAPI.run_learning(
         models_api, model_instance.instance_id, learning_request
     )
@@ -1397,7 +1397,7 @@ end
         @test !isnothing(iter_inference)
     end
 
-    learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest()
+    learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
     learning_response, info = TestUtils.RxInferClientOpenAPI.run_learning(
         models_api, model_instance.instance_id, learning_request
     )

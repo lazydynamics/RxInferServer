@@ -17,19 +17,24 @@ Base.@kwdef mutable struct AvailableModel <: OpenAPI.APIModel
     config::Union{Nothing, Dict{String, Any}} = nothing
 
     function AvailableModel(details, config, )
-        OpenAPI.validate_property(AvailableModel, Symbol("details"), details)
-        OpenAPI.validate_property(AvailableModel, Symbol("config"), config)
-        return new(details, config, )
+        o = new(details, config, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type AvailableModel
 
 const _property_types_AvailableModel = Dict{Symbol,String}(Symbol("details")=>"AvailableModelDetails", Symbol("config")=>"Dict{String, Any}", )
 OpenAPI.property_type(::Type{ AvailableModel }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_AvailableModel[name]))}
 
-function check_required(o::AvailableModel)
+function OpenAPI.check_required(o::AvailableModel)
     o.details === nothing && (return false)
     o.config === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::AvailableModel)
+    OpenAPI.validate_property(AvailableModel, Symbol("details"), o.details)
+    OpenAPI.validate_property(AvailableModel, Symbol("config"), o.config)
 end
 
 function OpenAPI.validate_property(::Type{ AvailableModel }, name::Symbol, val)

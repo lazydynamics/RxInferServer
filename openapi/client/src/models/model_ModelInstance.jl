@@ -29,20 +29,16 @@ Base.@kwdef mutable struct ModelInstance <: OpenAPI.APIModel
     current_episode::Union{Nothing, String} = nothing
 
     function ModelInstance(instance_id, model_name, created_at, description, arguments, current_episode, )
-        OpenAPI.validate_property(ModelInstance, Symbol("instance_id"), instance_id)
-        OpenAPI.validate_property(ModelInstance, Symbol("model_name"), model_name)
-        OpenAPI.validate_property(ModelInstance, Symbol("created_at"), created_at)
-        OpenAPI.validate_property(ModelInstance, Symbol("description"), description)
-        OpenAPI.validate_property(ModelInstance, Symbol("arguments"), arguments)
-        OpenAPI.validate_property(ModelInstance, Symbol("current_episode"), current_episode)
-        return new(instance_id, model_name, created_at, description, arguments, current_episode, )
+        o = new(instance_id, model_name, created_at, description, arguments, current_episode, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type ModelInstance
 
 const _property_types_ModelInstance = Dict{Symbol,String}(Symbol("instance_id")=>"String", Symbol("model_name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("description")=>"String", Symbol("arguments")=>"Dict{String, Any}", Symbol("current_episode")=>"String", )
 OpenAPI.property_type(::Type{ ModelInstance }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_ModelInstance[name]))}
 
-function check_required(o::ModelInstance)
+function OpenAPI.check_required(o::ModelInstance)
     o.instance_id === nothing && (return false)
     o.model_name === nothing && (return false)
     o.created_at === nothing && (return false)
@@ -50,6 +46,15 @@ function check_required(o::ModelInstance)
     o.arguments === nothing && (return false)
     o.current_episode === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::ModelInstance)
+    OpenAPI.validate_property(ModelInstance, Symbol("instance_id"), o.instance_id)
+    OpenAPI.validate_property(ModelInstance, Symbol("model_name"), o.model_name)
+    OpenAPI.validate_property(ModelInstance, Symbol("created_at"), o.created_at)
+    OpenAPI.validate_property(ModelInstance, Symbol("description"), o.description)
+    OpenAPI.validate_property(ModelInstance, Symbol("arguments"), o.arguments)
+    OpenAPI.validate_property(ModelInstance, Symbol("current_episode"), o.current_episode)
 end
 
 function OpenAPI.validate_property(::Type{ ModelInstance }, name::Symbol, val)

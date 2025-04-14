@@ -20,18 +20,23 @@ Base.@kwdef mutable struct AttachEventsToEpisodeRequestEventsInner <: OpenAPI.AP
     metadata::Union{Nothing, Dict{String, Any}} = nothing
 
     function AttachEventsToEpisodeRequestEventsInner(timestamp, data, metadata, )
-        OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("timestamp"), timestamp)
-        OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("data"), data)
-        OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("metadata"), metadata)
-        return new(timestamp, data, metadata, )
+        o = new(timestamp, data, metadata, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type AttachEventsToEpisodeRequestEventsInner
 
 const _property_types_AttachEventsToEpisodeRequestEventsInner = Dict{Symbol,String}(Symbol("timestamp")=>"ZonedDateTime", Symbol("data")=>"Dict{String, Any}", Symbol("metadata")=>"Dict{String, Any}", )
 OpenAPI.property_type(::Type{ AttachEventsToEpisodeRequestEventsInner }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_AttachEventsToEpisodeRequestEventsInner[name]))}
 
-function check_required(o::AttachEventsToEpisodeRequestEventsInner)
+function OpenAPI.check_required(o::AttachEventsToEpisodeRequestEventsInner)
     true
+end
+
+function OpenAPI.validate_properties(o::AttachEventsToEpisodeRequestEventsInner)
+    OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("timestamp"), o.timestamp)
+    OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("data"), o.data)
+    OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("metadata"), o.metadata)
 end
 
 function OpenAPI.validate_property(::Type{ AttachEventsToEpisodeRequestEventsInner }, name::Symbol, val)

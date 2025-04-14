@@ -17,19 +17,24 @@ Base.@kwdef mutable struct NotFoundResponse <: OpenAPI.APIModel
     message::Union{Nothing, String} = nothing
 
     function NotFoundResponse(error, message, )
-        OpenAPI.validate_property(NotFoundResponse, Symbol("error"), error)
-        OpenAPI.validate_property(NotFoundResponse, Symbol("message"), message)
-        return new(error, message, )
+        o = new(error, message, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type NotFoundResponse
 
 const _property_types_NotFoundResponse = Dict{Symbol,String}(Symbol("error")=>"String", Symbol("message")=>"String", )
 OpenAPI.property_type(::Type{ NotFoundResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_NotFoundResponse[name]))}
 
-function check_required(o::NotFoundResponse)
+function OpenAPI.check_required(o::NotFoundResponse)
     o.error === nothing && (return false)
     o.message === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::NotFoundResponse)
+    OpenAPI.validate_property(NotFoundResponse, Symbol("error"), o.error)
+    OpenAPI.validate_property(NotFoundResponse, Symbol("message"), o.message)
 end
 
 function OpenAPI.validate_property(::Type{ NotFoundResponse }, name::Symbol, val)

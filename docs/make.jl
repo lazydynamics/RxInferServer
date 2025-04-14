@@ -218,8 +218,7 @@ makedocs(;
             "Learning parameters of a model" => "api/learning.md",
             "Status codes and error handling" => "api/status-codes.md",
             "Server details and version" => "api/server-info.md",
-            "Request preferences" => "api/request-preferences.md",
-            "Proposal (outdated)" => "api/design-proposal.md"
+            "Request preferences" => "api/request-preferences.md"
         ],
         "Configuration" => "configuration.md",
         "Manuals" => [

@@ -14,17 +14,22 @@ Base.@kwdef mutable struct DeleteModelInstanceRequest <: OpenAPI.APIModel
     instance_id::Union{Nothing, String} = nothing
 
     function DeleteModelInstanceRequest(instance_id, )
-        OpenAPI.validate_property(DeleteModelInstanceRequest, Symbol("instance_id"), instance_id)
-        return new(instance_id, )
+        o = new(instance_id, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type DeleteModelInstanceRequest
 
 const _property_types_DeleteModelInstanceRequest = Dict{Symbol,String}(Symbol("instance_id")=>"String", )
 OpenAPI.property_type(::Type{ DeleteModelInstanceRequest }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_DeleteModelInstanceRequest[name]))}
 
-function check_required(o::DeleteModelInstanceRequest)
+function OpenAPI.check_required(o::DeleteModelInstanceRequest)
     o.instance_id === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::DeleteModelInstanceRequest)
+    OpenAPI.validate_property(DeleteModelInstanceRequest, Symbol("instance_id"), o.instance_id)
 end
 
 function OpenAPI.validate_property(::Type{ DeleteModelInstanceRequest }, name::Symbol, val)

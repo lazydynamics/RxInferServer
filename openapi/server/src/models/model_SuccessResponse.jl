@@ -14,17 +14,22 @@ Base.@kwdef mutable struct SuccessResponse <: OpenAPI.APIModel
     message::Union{Nothing, String} = nothing
 
     function SuccessResponse(message, )
-        OpenAPI.validate_property(SuccessResponse, Symbol("message"), message)
-        return new(message, )
+        o = new(message, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type SuccessResponse
 
 const _property_types_SuccessResponse = Dict{Symbol,String}(Symbol("message")=>"String", )
 OpenAPI.property_type(::Type{ SuccessResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_SuccessResponse[name]))}
 
-function check_required(o::SuccessResponse)
+function OpenAPI.check_required(o::SuccessResponse)
     o.message === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::SuccessResponse)
+    OpenAPI.validate_property(SuccessResponse, Symbol("message"), o.message)
 end
 
 function OpenAPI.validate_property(::Type{ SuccessResponse }, name::Symbol, val)

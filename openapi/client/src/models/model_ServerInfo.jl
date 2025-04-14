@@ -26,25 +26,30 @@ Base.@kwdef mutable struct ServerInfo <: OpenAPI.APIModel
     api_version::Union{Nothing, String} = "v1"
 
     function ServerInfo(rxinfer_version, server_version, server_edition, julia_version, api_version, )
-        OpenAPI.validate_property(ServerInfo, Symbol("rxinfer_version"), rxinfer_version)
-        OpenAPI.validate_property(ServerInfo, Symbol("server_version"), server_version)
-        OpenAPI.validate_property(ServerInfo, Symbol("server_edition"), server_edition)
-        OpenAPI.validate_property(ServerInfo, Symbol("julia_version"), julia_version)
-        OpenAPI.validate_property(ServerInfo, Symbol("api_version"), api_version)
-        return new(rxinfer_version, server_version, server_edition, julia_version, api_version, )
+        o = new(rxinfer_version, server_version, server_edition, julia_version, api_version, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type ServerInfo
 
 const _property_types_ServerInfo = Dict{Symbol,String}(Symbol("rxinfer_version")=>"String", Symbol("server_version")=>"String", Symbol("server_edition")=>"String", Symbol("julia_version")=>"String", Symbol("api_version")=>"String", )
 OpenAPI.property_type(::Type{ ServerInfo }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_ServerInfo[name]))}
 
-function check_required(o::ServerInfo)
+function OpenAPI.check_required(o::ServerInfo)
     o.rxinfer_version === nothing && (return false)
     o.server_version === nothing && (return false)
     o.server_edition === nothing && (return false)
     o.julia_version === nothing && (return false)
     o.api_version === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::ServerInfo)
+    OpenAPI.validate_property(ServerInfo, Symbol("rxinfer_version"), o.rxinfer_version)
+    OpenAPI.validate_property(ServerInfo, Symbol("server_version"), o.server_version)
+    OpenAPI.validate_property(ServerInfo, Symbol("server_edition"), o.server_edition)
+    OpenAPI.validate_property(ServerInfo, Symbol("julia_version"), o.julia_version)
+    OpenAPI.validate_property(ServerInfo, Symbol("api_version"), o.api_version)
 end
 
 function OpenAPI.validate_property(::Type{ ServerInfo }, name::Symbol, val)

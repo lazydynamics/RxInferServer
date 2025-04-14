@@ -1,0 +1,45 @@
+
+name: Drone3D-v1
+description: A 3D drone model
+author: Lazy Dynamics
+roles:
+  - user
+
+arguments:
+  - name: dt
+    description: The time step of the drone
+    type: float
+    required: true
+    default: 0.05
+  - name: horizon
+    description: The horizon of the drone
+    type: int
+    required: true
+    default: 40
+  - name: gravity
+    description: The gravity of the environment
+    type: float
+    required: true
+    default: 9.81
+  - name: mass
+    description: The mass of the drone
+    type: float
+    required: true
+    default: 1.0
+  - name: inertia
+    description: The inertia of the drone
+    type: float
+    required: true
+    default: 1.0
+  - name: radius
+    description: The radius of the drone
+    type: float
+    required: true
+    default: 0.2
+  - name: force_limit
+    description: The maximum force that can be applied to the drone
+    type: float
+    required: true
+    default: 15.0
+    
+parameters:

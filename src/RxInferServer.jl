@@ -389,9 +389,4 @@ function serve()
     end
 end
 
-module OldImplementation
-include("old_impl/model.jl")
-include("old_impl/serve.jl")
-end
-
 end

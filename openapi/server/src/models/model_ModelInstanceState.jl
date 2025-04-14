@@ -14,17 +14,22 @@ Base.@kwdef mutable struct ModelInstanceState <: OpenAPI.APIModel
     state::Union{Nothing, Dict{String, Any}} = nothing
 
     function ModelInstanceState(state, )
-        OpenAPI.validate_property(ModelInstanceState, Symbol("state"), state)
-        return new(state, )
+        o = new(state, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type ModelInstanceState
 
 const _property_types_ModelInstanceState = Dict{Symbol,String}(Symbol("state")=>"Dict{String, Any}", )
 OpenAPI.property_type(::Type{ ModelInstanceState }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_ModelInstanceState[name]))}
 
-function check_required(o::ModelInstanceState)
+function OpenAPI.check_required(o::ModelInstanceState)
     o.state === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::ModelInstanceState)
+    OpenAPI.validate_property(ModelInstanceState, Symbol("state"), o.state)
 end
 
 function OpenAPI.validate_property(::Type{ ModelInstanceState }, name::Symbol, val)

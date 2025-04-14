@@ -1,7 +1,7 @@
 name = "RxInferServer"
 uuid = "e92bdd6b-15d6-410c-ab97-e133e2594943"
 authors = ["Lazy Dynamics <info@lazydynamics.com> and contributors"]
-version = "0.1.3"
+version = "0.1.4"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"

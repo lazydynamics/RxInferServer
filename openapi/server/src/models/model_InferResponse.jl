@@ -20,21 +20,26 @@ Base.@kwdef mutable struct InferResponse <: OpenAPI.APIModel
     errors::Union{Nothing, Vector} = nothing # spec type: Union{ Nothing, Vector{ErrorResponse} }
 
     function InferResponse(event_id, results, errors, )
-        OpenAPI.validate_property(InferResponse, Symbol("event_id"), event_id)
-        OpenAPI.validate_property(InferResponse, Symbol("results"), results)
-        OpenAPI.validate_property(InferResponse, Symbol("errors"), errors)
-        return new(event_id, results, errors, )
+        o = new(event_id, results, errors, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type InferResponse
 
 const _property_types_InferResponse = Dict{Symbol,String}(Symbol("event_id")=>"Int64", Symbol("results")=>"Dict{String, Any}", Symbol("errors")=>"Vector{ErrorResponse}", )
 OpenAPI.property_type(::Type{ InferResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_InferResponse[name]))}
 
-function check_required(o::InferResponse)
+function OpenAPI.check_required(o::InferResponse)
     o.event_id === nothing && (return false)
     o.results === nothing && (return false)
     o.errors === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::InferResponse)
+    OpenAPI.validate_property(InferResponse, Symbol("event_id"), o.event_id)
+    OpenAPI.validate_property(InferResponse, Symbol("results"), o.results)
+    OpenAPI.validate_property(InferResponse, Symbol("errors"), o.errors)
 end
 
 function OpenAPI.validate_property(::Type{ InferResponse }, name::Symbol, val)

@@ -17,19 +17,24 @@ Base.@kwdef mutable struct UnauthorizedResponse <: OpenAPI.APIModel
     message::Union{Nothing, String} = nothing
 
     function UnauthorizedResponse(error, message, )
-        OpenAPI.validate_property(UnauthorizedResponse, Symbol("error"), error)
-        OpenAPI.validate_property(UnauthorizedResponse, Symbol("message"), message)
-        return new(error, message, )
+        o = new(error, message, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type UnauthorizedResponse
 
 const _property_types_UnauthorizedResponse = Dict{Symbol,String}(Symbol("error")=>"String", Symbol("message")=>"String", )
 OpenAPI.property_type(::Type{ UnauthorizedResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_UnauthorizedResponse[name]))}
 
-function check_required(o::UnauthorizedResponse)
+function OpenAPI.check_required(o::UnauthorizedResponse)
     o.error === nothing && (return false)
     o.message === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::UnauthorizedResponse)
+    OpenAPI.validate_property(UnauthorizedResponse, Symbol("error"), o.error)
+    OpenAPI.validate_property(UnauthorizedResponse, Symbol("message"), o.message)
 end
 
 function OpenAPI.validate_property(::Type{ UnauthorizedResponse }, name::Symbol, val)

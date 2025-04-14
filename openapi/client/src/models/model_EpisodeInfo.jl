@@ -23,23 +23,28 @@ Base.@kwdef mutable struct EpisodeInfo <: OpenAPI.APIModel
     events::Union{Nothing, Vector{Dict{String, Any}}} = nothing
 
     function EpisodeInfo(instance_id, episode_name, created_at, events, )
-        OpenAPI.validate_property(EpisodeInfo, Symbol("instance_id"), instance_id)
-        OpenAPI.validate_property(EpisodeInfo, Symbol("episode_name"), episode_name)
-        OpenAPI.validate_property(EpisodeInfo, Symbol("created_at"), created_at)
-        OpenAPI.validate_property(EpisodeInfo, Symbol("events"), events)
-        return new(instance_id, episode_name, created_at, events, )
+        o = new(instance_id, episode_name, created_at, events, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type EpisodeInfo
 
 const _property_types_EpisodeInfo = Dict{Symbol,String}(Symbol("instance_id")=>"String", Symbol("episode_name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("events")=>"Vector{Dict{String, Any}}", )
 OpenAPI.property_type(::Type{ EpisodeInfo }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_EpisodeInfo[name]))}
 
-function check_required(o::EpisodeInfo)
+function OpenAPI.check_required(o::EpisodeInfo)
     o.instance_id === nothing && (return false)
     o.episode_name === nothing && (return false)
     o.created_at === nothing && (return false)
     o.events === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::EpisodeInfo)
+    OpenAPI.validate_property(EpisodeInfo, Symbol("instance_id"), o.instance_id)
+    OpenAPI.validate_property(EpisodeInfo, Symbol("episode_name"), o.episode_name)
+    OpenAPI.validate_property(EpisodeInfo, Symbol("created_at"), o.created_at)
+    OpenAPI.validate_property(EpisodeInfo, Symbol("events"), o.events)
 end
 
 function OpenAPI.validate_property(::Type{ EpisodeInfo }, name::Symbol, val)

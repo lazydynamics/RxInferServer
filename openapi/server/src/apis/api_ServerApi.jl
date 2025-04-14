@@ -14,7 +14,8 @@ end
 function get_server_info_validate(handler)
     function get_server_info_validate_handler(req::HTTP.Request)
         openapi_params = req.context[:openapi_params]
-        
+        op = "get_server_info"
+
         return handler(req)
     end
 end
@@ -40,7 +41,8 @@ end
 function ping_server_validate(handler)
     function ping_server_validate_handler(req::HTTP.Request)
         openapi_params = req.context[:openapi_params]
-        
+        op = "ping_server"
+
         return handler(req)
     end
 end

@@ -20,19 +20,24 @@ Base.@kwdef mutable struct CreateModelInstanceRequest <: OpenAPI.APIModel
     description::Union{Nothing, String} = nothing
 
     function CreateModelInstanceRequest(model_name, arguments, description, )
-        OpenAPI.validate_property(CreateModelInstanceRequest, Symbol("model_name"), model_name)
-        OpenAPI.validate_property(CreateModelInstanceRequest, Symbol("arguments"), arguments)
-        OpenAPI.validate_property(CreateModelInstanceRequest, Symbol("description"), description)
-        return new(model_name, arguments, description, )
+        o = new(model_name, arguments, description, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type CreateModelInstanceRequest
 
 const _property_types_CreateModelInstanceRequest = Dict{Symbol,String}(Symbol("model_name")=>"String", Symbol("arguments")=>"Dict{String, Any}", Symbol("description")=>"String", )
 OpenAPI.property_type(::Type{ CreateModelInstanceRequest }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_CreateModelInstanceRequest[name]))}
 
-function check_required(o::CreateModelInstanceRequest)
+function OpenAPI.check_required(o::CreateModelInstanceRequest)
     o.model_name === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::CreateModelInstanceRequest)
+    OpenAPI.validate_property(CreateModelInstanceRequest, Symbol("model_name"), o.model_name)
+    OpenAPI.validate_property(CreateModelInstanceRequest, Symbol("arguments"), o.arguments)
+    OpenAPI.validate_property(CreateModelInstanceRequest, Symbol("description"), o.description)
 end
 
 function OpenAPI.validate_property(::Type{ CreateModelInstanceRequest }, name::Symbol, val)

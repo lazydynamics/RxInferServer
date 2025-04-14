@@ -14,17 +14,22 @@ Base.@kwdef mutable struct TokenRolesResponse <: OpenAPI.APIModel
     roles::Union{Nothing, Vector{String}} = nothing
 
     function TokenRolesResponse(roles, )
-        OpenAPI.validate_property(TokenRolesResponse, Symbol("roles"), roles)
-        return new(roles, )
+        o = new(roles, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type TokenRolesResponse
 
 const _property_types_TokenRolesResponse = Dict{Symbol,String}(Symbol("roles")=>"Vector{String}", )
 OpenAPI.property_type(::Type{ TokenRolesResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_TokenRolesResponse[name]))}
 
-function check_required(o::TokenRolesResponse)
+function OpenAPI.check_required(o::TokenRolesResponse)
     o.roles === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::TokenRolesResponse)
+    OpenAPI.validate_property(TokenRolesResponse, Symbol("roles"), o.roles)
 end
 
 function OpenAPI.validate_property(::Type{ TokenRolesResponse }, name::Symbol, val)

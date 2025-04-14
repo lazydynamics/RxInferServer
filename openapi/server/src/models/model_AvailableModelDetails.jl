@@ -24,19 +24,24 @@ Base.@kwdef mutable struct AvailableModelDetails <: OpenAPI.APIModel
     roles::Union{Nothing, Vector{String}} = nothing
 
     function AvailableModelDetails(name, description, author, roles, )
-        OpenAPI.validate_property(AvailableModelDetails, Symbol("name"), name)
-        OpenAPI.validate_property(AvailableModelDetails, Symbol("description"), description)
-        OpenAPI.validate_property(AvailableModelDetails, Symbol("author"), author)
-        OpenAPI.validate_property(AvailableModelDetails, Symbol("roles"), roles)
-        return new(name, description, author, roles, )
+        o = new(name, description, author, roles, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type AvailableModelDetails
 
 const _property_types_AvailableModelDetails = Dict{Symbol,String}(Symbol("name")=>"String", Symbol("description")=>"String", Symbol("author")=>"String", Symbol("roles")=>"Vector{String}", )
 OpenAPI.property_type(::Type{ AvailableModelDetails }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_AvailableModelDetails[name]))}
 
-function check_required(o::AvailableModelDetails)
+function OpenAPI.check_required(o::AvailableModelDetails)
     true
+end
+
+function OpenAPI.validate_properties(o::AvailableModelDetails)
+    OpenAPI.validate_property(AvailableModelDetails, Symbol("name"), o.name)
+    OpenAPI.validate_property(AvailableModelDetails, Symbol("description"), o.description)
+    OpenAPI.validate_property(AvailableModelDetails, Symbol("author"), o.author)
+    OpenAPI.validate_property(AvailableModelDetails, Symbol("roles"), o.roles)
 end
 
 function OpenAPI.validate_property(::Type{ AvailableModelDetails }, name::Symbol, val)

@@ -14,17 +14,22 @@ Base.@kwdef mutable struct PingResponse <: OpenAPI.APIModel
     status::Union{Nothing, String} = "ok"
 
     function PingResponse(status, )
-        OpenAPI.validate_property(PingResponse, Symbol("status"), status)
-        return new(status, )
+        o = new(status, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type PingResponse
 
 const _property_types_PingResponse = Dict{Symbol,String}(Symbol("status")=>"String", )
 OpenAPI.property_type(::Type{ PingResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_PingResponse[name]))}
 
-function check_required(o::PingResponse)
+function OpenAPI.check_required(o::PingResponse)
     o.status === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::PingResponse)
+    OpenAPI.validate_property(PingResponse, Symbol("status"), o.status)
 end
 
 function OpenAPI.validate_property(::Type{ PingResponse }, name::Symbol, val)

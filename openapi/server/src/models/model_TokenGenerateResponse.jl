@@ -14,17 +14,22 @@ Base.@kwdef mutable struct TokenGenerateResponse <: OpenAPI.APIModel
     token::Union{Nothing, String} = nothing
 
     function TokenGenerateResponse(token, )
-        OpenAPI.validate_property(TokenGenerateResponse, Symbol("token"), token)
-        return new(token, )
+        o = new(token, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type TokenGenerateResponse
 
 const _property_types_TokenGenerateResponse = Dict{Symbol,String}(Symbol("token")=>"String", )
 OpenAPI.property_type(::Type{ TokenGenerateResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_TokenGenerateResponse[name]))}
 
-function check_required(o::TokenGenerateResponse)
+function OpenAPI.check_required(o::TokenGenerateResponse)
     o.token === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::TokenGenerateResponse)
+    OpenAPI.validate_property(TokenGenerateResponse, Symbol("token"), o.token)
 end
 
 function OpenAPI.validate_property(::Type{ TokenGenerateResponse }, name::Symbol, val)

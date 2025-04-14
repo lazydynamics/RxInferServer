@@ -17,18 +17,23 @@ Base.@kwdef mutable struct ErrorResponse <: OpenAPI.APIModel
     message::Union{Nothing, String} = nothing
 
     function ErrorResponse(error, message, )
-        OpenAPI.validate_property(ErrorResponse, Symbol("error"), error)
-        OpenAPI.validate_property(ErrorResponse, Symbol("message"), message)
-        return new(error, message, )
+        o = new(error, message, )
+        OpenAPI.validate_properties(o)
+        return o
     end
 end # type ErrorResponse
 
 const _property_types_ErrorResponse = Dict{Symbol,String}(Symbol("error")=>"String", Symbol("message")=>"String", )
 OpenAPI.property_type(::Type{ ErrorResponse }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_ErrorResponse[name]))}
 
-function check_required(o::ErrorResponse)
+function OpenAPI.check_required(o::ErrorResponse)
     o.error === nothing && (return false)
     true
+end
+
+function OpenAPI.validate_properties(o::ErrorResponse)
+    OpenAPI.validate_property(ErrorResponse, Symbol("error"), o.error)
+    OpenAPI.validate_property(ErrorResponse, Symbol("message"), o.message)
 end
 
 function OpenAPI.validate_property(::Type{ ErrorResponse }, name::Symbol, val)

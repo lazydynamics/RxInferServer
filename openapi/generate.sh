@@ -13,6 +13,10 @@ check_docker() {
   fi
 }
 
+pull_latest_docker_image() {
+  docker pull openapitools/openapi-generator-cli:latest
+}
+
 # Function to capitalize first letter of a string
 capitalize() {
   local input="$1"
@@ -36,6 +40,7 @@ generate_openapi_code() {
   mkdir -p "${output_dir}/src"
   mkdir -p "${temp_docs_dir}"
   
+
   # Run the OpenAPI Generator for Julia
   docker run --rm \
     -v "$(pwd):/openapi" \
@@ -66,6 +71,7 @@ generate_openapi_code() {
 # Main function
 main() {
   check_docker
+  pull_latest_docker_image
   
   # Process command line arguments
   local target="all"

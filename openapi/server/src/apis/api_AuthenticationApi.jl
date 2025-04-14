@@ -14,7 +14,8 @@ end
 function token_generate_validate(handler)
     function token_generate_validate_handler(req::HTTP.Request)
         openapi_params = req.context[:openapi_params]
-        
+        op = "token_generate"
+
         return handler(req)
     end
 end
@@ -40,7 +41,8 @@ end
 function token_roles_validate(handler)
     function token_roles_validate_handler(req::HTTP.Request)
         openapi_params = req.context[:openapi_params]
-        
+        op = "token_roles"
+
         return handler(req)
     end
 end

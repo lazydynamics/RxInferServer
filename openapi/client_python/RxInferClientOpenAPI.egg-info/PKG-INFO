@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: RxInferClientOpenAPI
+Version: 1.0.0
+Summary: RxInferServer OpenAPI specification
+Home-page: 
+Author: RxInferServer Team
+Author-email: team@openapitools.org
+Keywords: OpenAPI,OpenAPI-Generator,RxInferServer OpenAPI specification
+Description-Content-Type: text/markdown
+Requires-Dist: urllib3<3.0.0,>=1.25.3
+Requires-Dist: python-dateutil>=2.8.2
+Requires-Dist: pydantic>=2
+Requires-Dist: typing-extensions>=4.7.1
+
+    API for RxInferServer.jl - A Julia server for RxInfer probabilistic programming framework
+    

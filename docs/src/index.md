@@ -26,7 +26,8 @@ RxInferServer provides official SDKs for different programming languages:
 
 - **Julia SDK**: Included in this repository under the `openapi/client` folder. This SDK is automatically generated from the OpenAPI specification and is the most up-to-date implementation.
 - **Python SDK**: Available as a separate package at [RxInferClient.py](https://github.com/lazydynamics/RxInferClient.py). This client provides a Python interface to interact with RxInferServer.
-
+- **JavaScript/TypeScript SDK**: Available as a separate package at [RxInferClient.js](https://github.com/lazydynamics/RxInferClient.js). This client provides a JavaScript/TypeScript interface to interact with RxInferServer.
+  
 ## [License](@id license)
 
 This project is licensed under the GNU Affero General Public License v3.0 - see the LICENSE in the repository for details. For companies and organizations that require different licensing terms, alternative licensing options are available from [Lazy Dynamics](https://www.lazydynamics.com). Please [contact](mailto:info@lazydynamics.com) Lazy Dynamics for more information about licensing options that may better suit your specific needs and use cases.

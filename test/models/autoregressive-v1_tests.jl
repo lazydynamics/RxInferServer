@@ -3,7 +3,7 @@
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "LatentAutoregressive-v1", description = "Testing latent autoregressive model"
+        model_name = "Autoregressive-v1", description = "Testing autoregressive model"
     )
 
     response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
@@ -19,8 +19,8 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "LatentAutoregressive-v1",
-        description = "Testing latent autoregressive model",
+        model_name = "Autoregressive-v1",
+        description = "Testing autoregressive model",
         arguments = Dict(
             "order" => 2, 
             "horizon" => 5
@@ -100,8 +100,8 @@ end
         models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
         create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-            model_name = "LatentAutoregressive-v1",
-            description = "Testing latent autoregressive model",
+            model_name = "Autoregressive-v1",
+            description = "Testing autoregressive model",
             arguments = Dict("order" => order, "horizon" => horizon)
         )
 

@@ -1,13 +1,13 @@
 
-name: LatentAutoregressive-v1
-description: A latent vector autoregressive model
+name: Autoregressive-v1
+description: An autoregressive model
 author: Lazy Dynamics
 roles:
   - user
 
 arguments:
   - name: order
-    description: The order of the latent vector autoregressive model
+    description: The order of the autoregressive model
     type: int
     required: true
   - name: horizon

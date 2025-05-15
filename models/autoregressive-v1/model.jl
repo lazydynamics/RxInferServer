@@ -18,7 +18,7 @@ function initial_parameters(arguments)
     )
 end
 
-@model function LAR_model(y, order, parameters, state)
+@model function AR_model(y, order, parameters, state)
     # `c` is a unit vector of size `order` with first element equal to 1
     c = ReactiveMP.ar_unit(Multivariate, order)
     
@@ -37,15 +37,15 @@ end
     end
 end
 
-@constraints function LAR_constraints() 
+@constraints function AR_constraints() 
     q(x0, x, θ, τ, y) = q(x0, x)q(y)q(θ)q(τ)
 end
 
-@meta function LAR_meta(order)
+@meta function AR_meta(order)
     AR() -> ARMeta(Multivariate, order, ARsafe())
 end
 
-@initialization function LAR_init(parameters)
+@initialization function AR_init(parameters)
     q(τ) = GammaShapeRate(parameters["τ_α"], parameters["τ_β"])
     q(θ) = MvNormalMeanPrecision(parameters["θ_μ"], parameters["θ_Λ"])
 end
@@ -62,15 +62,15 @@ function run_inference(state, parameters, data)
     )
 
     inference_results = infer(
-        model = LAR_model(
+        model = AR_model(
             order = state["order"],
             parameters = parameters,
             state = state
         ),
         data = (y = UnfactorizedData(observations), ),
-        meta = LAR_meta(state["order"]),
-        constraints = LAR_constraints(),
-        initialization = LAR_init(parameters),
+        meta = AR_meta(state["order"]),
+        constraints = AR_constraints(),
+        initialization = AR_init(parameters),
         options = (limit_stack_depth = 300,)
     )
 
@@ -87,15 +87,15 @@ function run_learning(state, parameters, events)
     observations = [convert(Float64, event["data"]["observation"]) for event in events]
 
     inference_results = infer(
-        model = LAR_model(
+        model = AR_model(
             order = state["order"],
             parameters = parameters,
             state = state
         ),
         data = (y = observations, ),
-        meta = LAR_meta(state["order"]),
-        constraints = LAR_constraints(),
-        initialization = LAR_init(parameters),
+        meta = AR_meta(state["order"]),
+        constraints = AR_constraints(),
+        initialization = AR_init(parameters),
         options = (limit_stack_depth = 300,),
         returnvars = KeepLast(),
         iterations = 100

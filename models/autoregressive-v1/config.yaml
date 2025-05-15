@@ -1,0 +1,34 @@
+
+name: Autoregressive-v1
+description: An autoregressive model
+author: Lazy Dynamics
+roles:
+  - user
+
+arguments:
+  - name: order
+    description: The order of the autoregressive model
+    type: int
+    required: true
+  - name: horizon
+    description: The horizon of the model for prediction
+    type: int
+    default: 0
+  - name: x_μ
+    description: The mean of the initial state
+    type: vector
+    required: false
+  - name: x_Λ
+    description: The precision of the initial state
+    type: matrix
+    required: false
+
+parameters:
+  - name: τ_α
+    description: The shape parameter of the precision of the coefficients
+  - name: τ_β
+    description: The rate parameter of the precision of the coefficients
+  - name: θ_μ
+    description: The mean of the coefficients
+  - name: θ_Λ
+    description: The precision of the coefficients

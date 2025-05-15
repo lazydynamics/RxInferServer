@@ -11,33 +11,29 @@ end
 
 function initial_parameters(arguments)
     return Dict(
-        "τ_α" => 1.0,
-        "τ_β" => 1.0,
-        "θ_μ" => zeros(arguments["order"]),
-        "θ_Λ" => 1e-10*diageye(arguments["order"])
+        "τ_α" => 1.0, "τ_β" => 1.0, "θ_μ" => zeros(arguments["order"]), "θ_Λ" => 1e-10*diageye(arguments["order"])
     )
 end
 
 @model function AR_model(y, order, parameters, state)
     # `c` is a unit vector of size `order` with first element equal to 1
     c = ReactiveMP.ar_unit(Multivariate, order)
-    
-    τ  ~ Gamma(α = parameters["τ_α"], β = parameters["τ_β"])
-    θ  ~ MvNormal(mean = parameters["θ_μ"], precision = parameters["θ_Λ"])
+
+    τ ~ Gamma(α = parameters["τ_α"], β = parameters["τ_β"])
+    θ ~ MvNormal(mean = parameters["θ_μ"], precision = parameters["θ_Λ"])
     x0 ~ MvNormal(mean = state["x_μ"], precision = state["x_Λ"])
-    
+
     x_prev = x0
-    
+
     for i in eachindex(y)
- 
-        x[i] ~ AR(x_prev, θ, τ) 
+        x[i] ~ AR(x_prev, θ, τ)
         y[i] ~ Normal(mean = dot(c, x[i]), precision = 1e10)
-        
+
         x_prev = x[i]
     end
 end
 
-@constraints function AR_constraints() 
+@constraints function AR_constraints()
     q(x0, x, θ, τ, y) = q(x0, x)q(y)q(θ)q(τ)
 end
 
@@ -56,18 +52,11 @@ end
 function run_inference(state, parameters, data)
 
     # Add missing values to the observations to match the horizon
-    observations = vcat(
-        convert.(Float64, data["observation"]),
-        [ missing for _ in 1:state["horizon"] ]
-    )
+    observations = vcat(convert.(Float64, data["observation"]), [missing for _ in 1:state["horizon"]])
 
     inference_results = infer(
-        model = AR_model(
-            order = state["order"],
-            parameters = parameters,
-            state = state
-        ),
-        data = (y = UnfactorizedData(observations), ),
+        model = AR_model(order = state["order"], parameters = parameters, state = state),
+        data = (y = UnfactorizedData(observations),),
         meta = AR_meta(state["order"]),
         constraints = AR_constraints(),
         initialization = AR_init(parameters),
@@ -81,18 +70,12 @@ function run_inference(state, parameters, data)
     return result, state
 end
 
-
 function run_learning(state, parameters, events)
-
     observations = [convert(Float64, event["data"]["observation"]) for event in events]
 
     inference_results = infer(
-        model = AR_model(
-            order = state["order"],
-            parameters = parameters,
-            state = state
-        ),
-        data = (y = observations, ),
+        model = AR_model(order = state["order"], parameters = parameters, state = state),
+        data = (y = observations,),
         meta = AR_meta(state["order"]),
         constraints = AR_constraints(),
         initialization = AR_init(parameters),
@@ -100,7 +83,7 @@ function run_learning(state, parameters, events)
         returnvars = KeepLast(),
         iterations = 100
     )
-    
+
     # update parameters
     parameters["τ_α"] = shape(inference_results.posteriors[:τ])
     parameters["τ_β"] = rate(inference_results.posteriors[:τ])
@@ -110,10 +93,7 @@ function run_learning(state, parameters, events)
     state["x_μ"] = mean(last(inference_results.posteriors[:x]))
     state["x_Λ"] = precision(last(inference_results.posteriors[:x]))
 
-    result = Dict(
-        "states" => state,
-        "parameters" => parameters
-    )
+    result = Dict("states" => state, "parameters" => parameters)
 
     return result, state, parameters
 end

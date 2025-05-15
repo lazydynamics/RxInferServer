@@ -92,9 +92,6 @@ function run_learning(state, parameters, events)
     parameters["θ_μ"] = mean(inference_results.posteriors[:θ])
     parameters["θ_Λ"] = precision(inference_results.posteriors[:θ])
 
-    state["x_μ"] = mean(last(inference_results.posteriors[:x]))
-    state["x_Λ"] = precision(last(inference_results.posteriors[:x]))
-
     result = Dict("states" => state, "parameters" => parameters)
 
     return result, state, parameters

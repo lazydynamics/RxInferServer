@@ -60,7 +60,9 @@ function run_inference(state, parameters, data)
         meta = AR_meta(state["order"]),
         constraints = AR_constraints(),
         initialization = AR_init(parameters),
-        options = (limit_stack_depth = 300,)
+        options = (limit_stack_depth = 300,),
+        iterations = 20,
+        returnvars = KeepLast()
     )
 
     result = Dict("states" => inference_results.posteriors[:x])
@@ -81,7 +83,7 @@ function run_learning(state, parameters, events)
         initialization = AR_init(parameters),
         options = (limit_stack_depth = 300,),
         returnvars = KeepLast(),
-        iterations = 100
+        iterations = 20
     )
 
     # update parameters

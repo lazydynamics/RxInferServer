@@ -52,7 +52,8 @@ end
 function run_inference(state, parameters, data)
 
     # Add missing values to the observations to match the horizon
-    observations = vcat(convert.(Float64, data["observation"]), [missing for _ in 1:state["horizon"]])
+    converted_observations = convert.(Float64, data["observation"])
+    observations = vcat(converted_observations, [missing for _ in 1:state["horizon"]])
 
     inference_results = infer(
         model = AR_model(order = state["order"], parameters = parameters, state = state),
@@ -66,8 +67,8 @@ function run_inference(state, parameters, data)
     )
 
     result = Dict("states" => inference_results.posteriors[:x])
-    state["x_μ"] = mean(last(inference_results.posteriors[:x]))
-    state["x_Λ"] = precision(last(inference_results.posteriors[:x]))
+    state["x_μ"] = mean(inference_results.posteriors[:x][length(converted_observations)])
+    state["x_Λ"] = precision(inference_results.posteriors[:x][length(converted_observations)])
 
     return result, state
 end

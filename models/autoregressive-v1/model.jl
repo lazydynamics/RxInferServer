@@ -4,8 +4,8 @@ function initial_state(arguments)
     return Dict(
         "order" => arguments["order"],
         "horizon" => arguments["horizon"],
-        "x_μ" => zeros(arguments["order"]),
-        "x_Λ" => diageye(arguments["order"])
+        "x_μ" => get(arguments, "x_μ", zeros(arguments["order"])),
+        "x_Λ" => get(arguments, "x_Λ", diageye(arguments["order"]))
     )
 end
 

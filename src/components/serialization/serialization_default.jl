@@ -6,6 +6,9 @@
 # - boolean
 # - array 
 # - object
+show_json(io::StructuralContext, ::JSONSerialization, value::Symbol) = show_json(
+    io, JSON.StandardSerialization(), string(value)
+)
 show_json(io::StructuralContext, ::JSONSerialization, value::String) = show_json(
     io, JSON.StandardSerialization(), value
 )
@@ -20,6 +23,7 @@ show_json(io::StructuralContext, ::JSONSerialization, value::Union{Missing, Noth
 # String - date-time including timezones
 using Dates, TimeZones
 
+show_json(io::StructuralContext, ::JSONSerialization, value::Date) = show_json(io, JSON.StandardSerialization(), value)
 show_json(io::StructuralContext, ::JSONSerialization, value::DateTime) = show_json(
     io, JSON.StandardSerialization(), value
 )

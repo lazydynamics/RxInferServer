@@ -57,8 +57,8 @@ end
         # Initial states
         for i in 1:order
             x[i, :] = zeros(order)
-            x[i, 1] = rand(rng, Normal(0, 1/sqrt(τ_true)))
-            y[i] = x[i, 1] + rand(rng, Normal(0, 1/sqrt(γ_true)))
+            x[i, 1] = rand(rng, Normal(0, 1 / sqrt(τ_true)))
+            y[i] = x[i, 1] + rand(rng, Normal(0, 1 / sqrt(γ_true)))
         end
 
         # Generate remaining data
@@ -68,7 +68,7 @@ end
             x_new[1] = sum(θ_true .* x[i - 1, 1:order])
 
             # Add process noise
-            x_new[1] += rand(rng, Normal(0, 1/sqrt(τ_true)))
+            x_new[1] += rand(rng, Normal(0, 1 / sqrt(τ_true)))
 
             # Shift states
             x_new[2:end] = x[i - 1, 1:(order - 1)]
@@ -167,7 +167,7 @@ end
 
             # The error should be within a reasonable range
             # This is a bit lenient due to the stochastic nature of the process
-            @test prediction_error < 3.0 * sqrt(1/τ_true)
+            @test prediction_error < 3.0 * sqrt(1 / τ_true)
         end
 
         # Delete model instance

@@ -11,7 +11,7 @@ end
 
 function initial_parameters(arguments)
     return Dict(
-        "τ_α" => 1.0, "τ_β" => 1.0, "θ_μ" => zeros(arguments["order"]), "θ_Λ" => 1e-10*diageye(arguments["order"])
+        "τ_α" => 1.0, "τ_β" => 1.0, "θ_μ" => zeros(arguments["order"]), "θ_Λ" => 1e-10 * diageye(arguments["order"])
     )
 end
 

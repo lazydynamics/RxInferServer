@@ -7,7 +7,13 @@
         @test_json_serialization "test2"
     end
 
+    @testset "symbol" begin
+        @test_json_serialization :test => "test"
+        @test_json_serialization :test2 => "test2"
+    end
+
     @testset "string / datetime" begin
+        @test_json_serialization Date("2016-04-13") => "2016-04-13"
         @test_json_serialization DateTime("2016-04-13T00:00:00") => "2016-04-13T00:00:00"
         @test_json_serialization ZonedDateTime(DateTime("2016-04-13T00:00:00"), tz"UTC") => "2016-04-13T00:00:00+00:00"
         @test_json_serialization ZonedDateTime(2021, 1, 1, 0, 0, 0, 0, tz"UTC") => "2021-01-01T00:00:00+00:00"

@@ -209,7 +209,7 @@ Returns the current database client. Throws an error if called outside of a `wit
 See also [`RxInferServer.Database.with_connection`](@ref), [`RxInferServer.Database.database`](@ref), [`RxInferServer.Database.collection`](@ref).
 """
 function client()::Mongoc.Client
-    client = @inline Base.ScopedValues.get(MONGODB_CLIENT)
+    client = @inline ScopedValues.get(MONGODB_CLIENT)
     return @something client error(
         "Database connection not established. Use `with_connection` to establish a connection."
     )
@@ -223,7 +223,7 @@ Returns the current database. Throws an error if called outside of a `with_conne
 See also [`RxInferServer.Database.client`](@ref), [`RxInferServer.Database.with_connection`](@ref), [`RxInferServer.Database.collection`](@ref).
 """
 function database()::Mongoc.Database
-    database = @inline Base.ScopedValues.get(MONGODB_DATABASE)
+    database = @inline ScopedValues.get(MONGODB_DATABASE)
     return @something database error("Database not established. Use `with_connection` to establish a connection.")
 end
 

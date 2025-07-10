@@ -5,6 +5,7 @@
 *.jl.mem
 .env.*.local
 /Manifest.toml
+/Manifest-v1.11.toml
 /docs/Manifest.toml
 /docs/build/
 /docs/src/openapi/

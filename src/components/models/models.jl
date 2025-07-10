@@ -75,7 +75,7 @@ Get the current active models dispatcher. Must be called within a `with_models` 
 - `ErrorException`: If called outside of a `with_models` context
 """
 function get_models_dispatcher()::ModelsDispatcher
-    dispatcher = @inline Base.ScopedValues.get(models_dispatcher)
+    dispatcher = @inline ScopedValues.get(models_dispatcher)
     return @something dispatcher error("Models dispatcher is not initialized. Use `with_models` to initialize it.")
 end
 

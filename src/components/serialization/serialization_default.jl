@@ -54,14 +54,3 @@ function __json_serialization_dict_like(io::StructuralContext, s::JSONSerializat
     foreach(pair -> show_pair(io, s, pair), pairs(dictlike))
     end_object(io)
 end
-
-# We also support serialization of OpenAPI defined types, which are subtypes of `APIModel`
-using RxInferServerOpenAPI
-
-function show_json(io::StructuralContext, s::JSONSerialization, value::RxInferServerOpenAPI.OpenAPI.APIModel)
-    begin_object(io)
-    for field in propertynames(value)
-        show_pair(io, s, field => getproperty(value, field))
-    end
-    end_object(io)
-end

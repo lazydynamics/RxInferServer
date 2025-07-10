@@ -73,7 +73,7 @@ function copy_openapi_docs(; subdirectory = "server")
     mkpath(openapi_docs_dir)
 
     # Path to the OpenAPI generated docs
-    openapi_source_dir = joinpath(@__DIR__, "..", "openapi", subdirectory, "docs")
+    openapi_source_dir = joinpath(@__DIR__, "..", "src", "openapi", subdirectory, "docs")
 
     # Banner to add at the top of each file
     autogen_banner = """
@@ -99,7 +99,7 @@ function copy_openapi_docs(; subdirectory = "server")
     openapi_files = find_markdown_files(openapi_source_dir)
 
     # Copy README.md file as well
-    readme_source = joinpath(@__DIR__, "..", "openapi", subdirectory, "README.md")
+    readme_source = joinpath(@__DIR__, "..", "src", "openapi", subdirectory, "README.md")
     readme_dest = joinpath(openapi_docs_dir, "README.md")
     if isfile(readme_source)
         readme_content = read(readme_source, String)
@@ -197,7 +197,21 @@ openapi_spec = copy_openapi_spec()
 
 makedocs(;
     modules = [RxInferServer],
-    warnonly = false,
+    warnonly = Documenter.except(
+        :autodocs_block,
+        :cross_references,
+        :docs_block,
+        :doctest,
+        :eval_block,
+        :example_block,
+        :footnote,
+        :linkcheck_remotes,
+        :linkcheck,
+        :meta_block,
+        # :missing_docs, # allow missing docs from OpenAPI submodules
+        :parse_error,
+        :setup_block
+    ),
     authors = "Lazy Dynamics <info@lazydynamics.com>",
     sitename = "RxInferServer",
     format = Documenter.HTML(;
@@ -221,12 +235,10 @@ makedocs(;
             "Request preferences" => "api/request-preferences.md"
         ],
         "Configuration" => "configuration.md",
-        "Manuals" => [
-            "How to add a model" => "manuals/how-to-add-a-model.md",
-        ],
+        "Manuals" => ["How to add a model" => "manuals/how-to-add-a-model.md"],
         "Server components" => [
-            "Models" => "components/models.md", 
-            "Database" => "components/database.md", 
+            "Models" => "components/models.md",
+            "Database" => "components/database.md",
             "Logging" => "components/logging.md",
             "Serialization" => "components/serialization.md"
         ],

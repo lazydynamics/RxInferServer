@@ -9,9 +9,9 @@ For information about how to create and add new models to the server, please ref
 Before using the Models API, you need a valid authentication token. If you haven't obtained one yet, please refer to the [Authentication](@ref authentication-api) guide. The examples below assume you have already set up authentication:
 
 ```@setup models-api
-import RxInferClientOpenAPI
-import RxInferClientOpenAPI.OpenAPI.Clients: Client
-import RxInferClientOpenAPI: AuthenticationApi, token_generate, basepath
+import RxInferServer.RxInferClientOpenAPI
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: Client
+import RxInferServer.RxInferClientOpenAPI: AuthenticationApi, token_generate, basepath
 using Test
 
 api          = AuthenticationApi(Client(basepath(AuthenticationApi)))
@@ -21,8 +21,8 @@ token = response.token
 ```
 
 ```@example models-api
-import RxInferClientOpenAPI.OpenAPI.Clients: Client
-import RxInferClientOpenAPI: ModelsApi
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: Client
+import RxInferServer.RxInferClientOpenAPI: ModelsApi
 
 client = Client(basepath(ModelsApi); headers = Dict(
     "Authorization" => "Bearer $token"
@@ -44,7 +44,7 @@ In RxInferServer, a **model** is a type of probabilistic program that you can cr
 Before creating a new model instance, you can explore which model types are available on the server with the [**get\_available\_models**](@ref) operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_available_models
+import RxInferServer.RxInferClientOpenAPI: get_available_models
 
 available_models, _ = get_available_models(api)
 @test !isnothing(available_models) #hide
@@ -71,7 +71,7 @@ available_models[1].config
 Alternatively, you can inspect these using the [**get\_available\_model**](@ref) operation with the specific model name:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_available_model
+import RxInferServer.RxInferClientOpenAPI: get_available_model
 
 some_model, _ = get_available_model(api, available_models[1].details.name)
 @test some_model.details.name == available_models[1].details.name #hide
@@ -99,7 +99,7 @@ some_model.config
 Once you have selected the model you want to use, you can create a new instance of it with the [**create\_model\_instance**](@ref) operation together with the [`CreateModelInstanceRequest`](@ref) type:
 
 ```@example models-api
-import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
+import RxInferServer.RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
 
 request = CreateModelInstanceRequest(
     model_name = available_models[1].details.name,
@@ -131,7 +131,7 @@ response
 View all instances of models you've created with the [**get\_model\_instances**](@ref) operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_model_instances
+import RxInferServer.RxInferClientOpenAPI: get_model_instances
 
 created_models, _ = get_model_instances(api)
 @test !isnothing(created_models) #hide
@@ -150,7 +150,7 @@ created_models[1].instance_id == instance_id
 Previously we retrieved a list of all model instances. Now we can retrieve details about a specific model instance with the [**get\_model\_instance**](@ref) operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_model_instance
+import RxInferServer.RxInferClientOpenAPI: get_model_instance
 
 response, _ = get_model_instance(api, instance_id)
 @test !isnothing(response) #hide
@@ -162,7 +162,7 @@ response
 Monitor the current state of your model with the **get\_model\_instance\_state** operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_model_instance_state    
+import RxInferServer.RxInferClientOpenAPI: get_model_instance_state    
 
 response, _ = get_model_instance_state(api, instance_id)
 @test !isnothing(response) #hide
@@ -174,7 +174,7 @@ response
 Monitor the current parameters of your model with the **get\_model\_instance\_parameters** operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: get_model_instance_parameters
+import RxInferServer.RxInferClientOpenAPI: get_model_instance_parameters
 
 response, _ = get_model_instance_parameters(api, instance_id)
 @test !isnothing(response) #hide
@@ -189,7 +189,7 @@ response
 When you're done with a model instance, you can remove it completely with the [**delete\_model\_instance**](@ref) operation:
 
 ```@example models-api
-import RxInferClientOpenAPI: delete_model_instance
+import RxInferServer.RxInferClientOpenAPI: delete_model_instance
 
 response, _ = delete_model_instance(api, instance_id)
 @test !isnothing(response) #hide

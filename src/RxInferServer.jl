@@ -1,9 +1,16 @@
 module RxInferServer
 
-# Core dependencies for API server, hot reloading, and preferences
+# Core dependencies for API server
+
+include("openapi/server/src/RxInferServerOpenAPI.jl")
+include("openapi/client/src/RxInferClientOpenAPI.jl")
+
+using .RxInferServerOpenAPI
+using .RxInferClientOpenAPI
+
 using RxInfer
-using HTTP, Sockets, JSON, RxInferServerOpenAPI
-using Dates, Pkg, Serialization
+using HTTP, Sockets, JSON
+using Dates, Pkg, Serialization, ScopedValues
 
 include("macro.jl")
 include("dotenv.jl")
@@ -13,6 +20,19 @@ include("components/logging.jl")
 # RxInferServer uses its own serialization implementation, 
 # which is different from the default one provided by JSON.jl
 include("components/serialization/serialization.jl")
+
+# We also support serialization of OpenAPI defined types, which are subtypes of `APIModel`
+function Serialization.show_json(
+    io::Serialization.StructuralContext,
+    s::Serialization.JSONSerialization,
+    value::RxInferServerOpenAPI.OpenAPI.APIModel
+)
+    Serialization.begin_object(io)
+    for field in propertynames(value)
+        Serialization.show_pair(io, s, field => getproperty(value, field))
+    end
+    Serialization.end_object(io)
+end
 
 # This is NOT a file with model definitions, but a file that functions to
 # load models from the `RXINFER_SERVER_MODELS_LOCATION` directory

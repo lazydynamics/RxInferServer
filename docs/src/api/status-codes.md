@@ -7,8 +7,8 @@ RxInferServer uses standard HTTP status codes to indicate the success or failure
 The 200 OK status code indicates that the request was successful.
 
 ```@example status-codes-success
-import RxInferClientOpenAPI.OpenAPI.Clients: Client
-import RxInferClientOpenAPI: ServerApi, ping_server, basepath
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: Client
+import RxInferServer.RxInferClientOpenAPI: ServerApi, ping_server, basepath
 using Test #hide
 
 client = Client(basepath(ServerApi))
@@ -28,8 +28,8 @@ response
 If you try to access a resource that requires authentication, the server will return a 401 Unauthorized error. This typically happens when you try to access a resource that requires a token, but you haven't provided a valid token.
 
 ```@example error-handling
-import RxInferClientOpenAPI.OpenAPI.Clients: Client
-import RxInferClientOpenAPI: ServerApi, get_server_info, basepath
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: Client
+import RxInferServer.RxInferClientOpenAPI: ServerApi, get_server_info, basepath
 using Test #hide
 
 client = Client(basepath(ServerApi))
@@ -62,7 +62,7 @@ nothing #hide
 The 404 Not Found error indicates that the resource you're trying to access does not exist.
 
 ```@example error-handling
-import RxInferClientOpenAPI: ModelsApi, get_model_instance
+import RxInferServer.RxInferClientOpenAPI: ModelsApi, get_model_instance
 
 response, info = get_model_instance(ModelsApi(client), "non-existent-model")
 @test !isnothing(response) #hide
@@ -81,7 +81,7 @@ response
 The 400 Bad Request error indicates that the request is invalid. This can happen for various reasons, such as invalid JSON payloads, missing required fields, or incorrect parameter values.
 
 ```@example error-handling
-import RxInferClientOpenAPI: ModelsApi, CreateModelInstanceRequest, create_model_instance, delete_episode
+import RxInferServer.RxInferClientOpenAPI: ModelsApi, CreateModelInstanceRequest, create_model_instance, delete_episode
 
 response, info = create_model_instance(ModelsApi(client), CreateModelInstanceRequest(
     model_name = "BetaBernoulli-v1",

@@ -344,7 +344,7 @@ function middleware_extract_token(
     return !isnothing(result) ? (token, roles) : nothing
 end
 
-using Base.ScopedValues
+using ScopedValues
 
 const _current_token = ScopedValue{String}()
 const _current_roles = ScopedValue{Vector{String}}()
@@ -358,7 +358,7 @@ Returns `true` if a token is available in the current scope, `false` otherwise.
 See also: [`current_token`](@ref), [`current_roles`](@ref)
 """
 function is_authorized()::Bool
-    token = Base.ScopedValues.get(_current_token)
+    token = ScopedValues.get(_current_token)
     return !isnothing(token)
 end
 
@@ -371,7 +371,7 @@ This function should only be called within endpoints that require authentication
 See also: [`is_authorized`](@ref), [`current_roles`](@ref)
 """
 function current_token()
-    token = Base.ScopedValues.get(_current_token)
+    token = ScopedValues.get(_current_token)
     return @something token error(
         "Current token is not set. Call `is_authorized()` to check if the request is authorized."
     )
@@ -386,7 +386,7 @@ This function should only be called within endpoints that require authentication
 See also: [`is_authorized`](@ref), [`current_token`](@ref)
 """
 function current_roles()
-    roles = Base.ScopedValues.get(_current_roles)
+    roles = ScopedValues.get(_current_roles)
     return @something roles error(
         "Current roles are not set. Call `is_authorized()` to check if the request is authorized."
     )

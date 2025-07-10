@@ -1,11 +1,11 @@
 @testmodule TestUtils begin
     using Test, RxInferServer
-    using Base.ScopedValues
+    using ScopedValues
 
     import Mongoc
-    import RxInferClientOpenAPI
-    import RxInferClientOpenAPI.OpenAPI.Clients: Client, set_header
-    import RxInferClientOpenAPI: ServerApi, AuthenticationApi, ModelsApi
+    import RxInferServer.RxInferClientOpenAPI
+    import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: Client, set_header
+    import RxInferServer.RxInferClientOpenAPI: ServerApi, AuthenticationApi, ModelsApi
 
     const TEST_SERVER_URL = "http://localhost:8000$(RxInferServer.API_PATH_PREFIX)"
 

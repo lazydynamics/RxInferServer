@@ -1,9 +1,16 @@
 module RxInferServer
 
-# Core dependencies for API server, hot reloading, and preferences
+# Core dependencies for API server
+
+include("openapi/server/src/RxInferServerOpenAPI.jl")
+include("openapi/client/src/RxInferClientOpenAPI.jl")
+
+using .RxInferServerOpenAPI
+using .RxInferClientOpenAPI
+
 using RxInfer
-using HTTP, Sockets, JSON, RxInferServerOpenAPI
-using Dates, Pkg, Serialization
+using HTTP, Sockets, JSON
+using Dates, Pkg, Serialization, ScopedValues
 
 include("macro.jl")
 include("dotenv.jl")

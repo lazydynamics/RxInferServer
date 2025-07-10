@@ -6,7 +6,7 @@ Handles model discovery, loading, and provides access to models through a dispat
 """
 module Models
 
-using YAML, Base.ScopedValues, Serialization
+using YAML, ScopedValues, Serialization
 
 """
     RXINFER_SERVER_MODELS_LOCATIONS

@@ -1,7 +1,7 @@
 module Database
 
 using Mongoc
-using Base.ScopedValues
+using ScopedValues
 
 """
 The MongoDB connection URL for the server.

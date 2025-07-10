@@ -344,7 +344,7 @@ function middleware_extract_token(
     return !isnothing(result) ? (token, roles) : nothing
 end
 
-using Base.ScopedValues
+using ScopedValues
 
 const _current_token = ScopedValue{String}()
 const _current_roles = ScopedValue{Vector{String}}()

@@ -43,7 +43,7 @@ jobs:
       - name: Run tests
         env:
           RXINFER_SERVER_ENABLE_DEBUG_LOGGING: ${{ github.event_name == 'workflow_dispatch' }}
-          TRACE_COMPILE_PATH: ${{ github.workspace }}/server-compilation-trace.jl
+          TRACE_COMPILE_PATH: ${{ github.workspace }}/server-compilation-trace-julia-${{ matrix.version }}.jl
         run: |
           # Start the docker compose environment
           make docker-start
@@ -68,8 +68,8 @@ jobs:
       - name: Upload trace compilation artifact
         uses: actions/upload-artifact@v4
         with:
-          name: server-compilation-trace
-          path: server-compilation-trace.jl
+          name: server-compilation-trace-julia-${{ matrix.version }}
+          path: server-compilation-trace-julia-${{ matrix.version }}.jl
           retention-days: 30
           if-no-files-found: warn
 

@@ -197,7 +197,21 @@ openapi_spec = copy_openapi_spec()
 
 makedocs(;
     modules = [RxInferServer],
-    warnonly = Documenter.except(:missing_docs),
+    warnonly = Documenter.except(
+        :autodocs_block,
+        :cross_references,
+        :docs_block,
+        :doctest,
+        :eval_block,
+        :example_block,
+        :footnote,
+        :linkcheck_remotes,
+        :linkcheck,
+        :meta_block,
+        # :missing_docs, # allow missing docs from OpenAPI submodules
+        :parse_error,
+        :setup_block
+    ),
     authors = "Lazy Dynamics <info@lazydynamics.com>",
     sitename = "RxInferServer",
     format = Documenter.HTML(;

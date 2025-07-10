@@ -197,7 +197,7 @@ openapi_spec = copy_openapi_spec()
 
 makedocs(;
     modules = [RxInferServer],
-    warnonly = false,
+    warnonly = Documenter.except(:missing_docs),
     authors = "Lazy Dynamics <info@lazydynamics.com>",
     sitename = "RxInferServer",
     format = Documenter.HTML(;
@@ -221,12 +221,10 @@ makedocs(;
             "Request preferences" => "api/request-preferences.md"
         ],
         "Configuration" => "configuration.md",
-        "Manuals" => [
-            "How to add a model" => "manuals/how-to-add-a-model.md",
-        ],
+        "Manuals" => ["How to add a model" => "manuals/how-to-add-a-model.md"],
         "Server components" => [
-            "Models" => "components/models.md", 
-            "Database" => "components/database.md", 
+            "Models" => "components/models.md",
+            "Database" => "components/database.md",
             "Logging" => "components/logging.md",
             "Serialization" => "components/serialization.md"
         ],

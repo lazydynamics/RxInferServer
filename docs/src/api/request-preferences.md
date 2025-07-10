@@ -5,8 +5,8 @@ using Test, HTTP, JSON
 using RxInfer
 
 import RxInferServer
-import RxInferClientOpenAPI.OpenAPI.Clients: Client, set_header
-import RxInferClientOpenAPI: ModelsApi, basepath, CreateModelInstanceRequest, create_model_instance, get_model_instance_state
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: Client, set_header
+import RxInferServer.RxInferClientOpenAPI: ModelsApi, basepath, CreateModelInstanceRequest, create_model_instance, get_model_instance_state
 
 client = Client(basepath(ModelsApi); headers = Dict(
     "Authorization" => "Bearer $(RxInferServer.DEFAULT_DEV_TOKEN):test-only"

@@ -13,9 +13,9 @@ Most endpoints in RxInferServer require authentication, with a few exceptions. T
 To authenticate with the server, you first need to obtain a token using the `token_generate` operation. This endpoint supports both user authentication and API key authentication.
 
 ```@example auth-generate-token
-import RxInferClientOpenAPI
-import RxInferClientOpenAPI.OpenAPI.Clients: Client
-import RxInferClientOpenAPI: AuthenticationApi, token_generate, basepath
+import RxInferServer.RxInferClientOpenAPI
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: Client
+import RxInferServer.RxInferClientOpenAPI: AuthenticationApi, token_generate, basepath
 using Test #hide
 
 url          = basepath(AuthenticationApi)
@@ -35,7 +35,7 @@ response.token
 Once you have obtained a token, you need to include it in the `Authorization` header of your requests. The token should be prefixed with `Bearer` as shown below:
 
 ```@example auth-generate-token
-import RxInferClientOpenAPI.OpenAPI.Clients: set_header
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: set_header
 
 set_header(client, "Authorization", "Bearer $(response.token)")
 ```
@@ -54,7 +54,7 @@ set_header(client, "Authorization", "Bearer $(response.token)")
 Each token comes with a set of assigned roles that determine its access permissions. You can retrieve the roles associated with your token using the `token_roles` operation:
 
 ```@example auth-generate-token
-import RxInferClientOpenAPI: token_roles
+import RxInferServer.RxInferClientOpenAPI: token_roles
 
 response, _ = token_roles(api)
 @test !isnothing(response) #hide
@@ -67,7 +67,7 @@ response.roles
 Roles control which models a token can access. Here's how to list accessible models:
 
 ```@example auth-generate-token
-import RxInferClientOpenAPI: ModelsApi, get_available_models
+import RxInferServer.RxInferClientOpenAPI: ModelsApi, get_available_models
 
 models_api = ModelsApi(client)
 available_models, _ = get_available_models(models_api)
@@ -86,7 +86,7 @@ available_models[1].details
 or alternatively use the `get_available_model` operation:
 
 ```@example auth-generate-token
-import RxInferClientOpenAPI: ModelsApi, get_available_model
+import RxInferServer.RxInferClientOpenAPI: ModelsApi, get_available_model
 
 models_api = ModelsApi(client)
 response, _ = get_available_model(models_api, available_models[1].details.name)

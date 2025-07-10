@@ -7,9 +7,9 @@ This guide covers the Learning API, which provides endpoints for training and in
 Before using the Models API, you need a valid authentication token. If you haven't obtained one yet, please refer to the [Authentication](@ref authentication-api) guide. The examples below assume you have already set up authentication:
 
 ```@setup learning-api
-import RxInferClientOpenAPI
-import RxInferClientOpenAPI.OpenAPI.Clients: Client
-import RxInferClientOpenAPI: AuthenticationApi, token_generate, basepath
+import RxInferServer.RxInferClientOpenAPI
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: Client
+import RxInferServer.RxInferClientOpenAPI: AuthenticationApi, token_generate, basepath
 using Test
 
 api          = AuthenticationApi(Client(basepath(AuthenticationApi)))
@@ -67,8 +67,8 @@ end
 ```
 
 ```@example learning-api
-import RxInferClientOpenAPI.OpenAPI.Clients: Client
-import RxInferClientOpenAPI: ModelsApi
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: Client
+import RxInferServer.RxInferClientOpenAPI: ModelsApi
 
 client = Client(basepath(ModelsApi); headers = Dict(
     "Authorization" => "Bearer $token"
@@ -99,7 +99,7 @@ To analyze this dataset, we'll use the `LinearStateSpaceModel-v1`, which is desi
 This model is particularly suitable for our rotating signal as it can capture the underlying circular motion pattern.
 
 ```@example learning-api
-import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
+import RxInferServer.RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
 
 request = CreateModelInstanceRequest(
     model_name = "LinearStateSpaceModel-v1",
@@ -129,7 +129,7 @@ To view all episodes associated with a model instance, use the `get_episodes` en
     Each model automatically creates a `default` episode when it is created.
 
 ```@example learning-api
-import RxInferClientOpenAPI: get_episodes
+import RxInferServer.RxInferClientOpenAPI: get_episodes
 
 response, _ = get_episodes(api, instance_id)
 @test !isnothing(response) #hide
@@ -141,7 +141,7 @@ response
 For detailed information about a specific episode, including its events and metadata, use the `get_episode_info` endpoint. This is particularly useful when analyzing training history or debugging model behavior.
 
 ```@example learning-api
-import RxInferClientOpenAPI: get_episode_info
+import RxInferServer.RxInferClientOpenAPI: get_episode_info
 
 response, _ = get_episode_info(api, instance_id, "default")
 @test !isnothing(response) #hide
@@ -155,7 +155,7 @@ As we can see, the `default` episode has no events since we haven't loaded any d
 When you want to start a new training session or experiment, create a new episode using the `create_episode` endpoint. 
 
 ```@example learning-api
-import RxInferClientOpenAPI: create_episode, CreateEpisodeRequest
+import RxInferServer.RxInferClientOpenAPI: create_episode, CreateEpisodeRequest
 
 create_episode_request = CreateEpisodeRequest(name = "experiment-1")
 
@@ -167,7 +167,7 @@ response
 !!! note "Current Episode"
     Creating a new episode automatically sets it as the current active episode. You can verify this by checking the model instance details:
     ```@example learning-api
-    import RxInferClientOpenAPI: get_model_instance
+    import RxInferServer.RxInferClientOpenAPI: get_model_instance
     response, _ = get_model_instance(api, instance_id)
     @test !isnothing(response) #hide
     @test response.current_episode == "experiment-1" #hide
@@ -177,7 +177,7 @@ response
 To confirm the new episode has been added to the list:
 
 ```@example learning-api
-import RxInferClientOpenAPI: get_episodes
+import RxInferServer.RxInferClientOpenAPI: get_episodes
 
 response, _ = get_episodes(api, instance_id)
 @test !isnothing(response) #hide
@@ -198,7 +198,7 @@ Each event in your dataset should include:
 
 ```@example learning-api
 import Dates
-import RxInferClientOpenAPI: attach_events_to_episode, AttachEventsToEpisodeRequest
+import RxInferServer.RxInferClientOpenAPI: attach_events_to_episode, AttachEventsToEpisodeRequest
 
 # Create events with timestamps and data
 events = map(dataset.y_train) do y
@@ -217,7 +217,7 @@ response
 To verify that your data was loaded correctly:
 
 ```@example learning-api
-import RxInferClientOpenAPI: get_episode_info
+import RxInferServer.RxInferClientOpenAPI: get_episode_info
 
 response, _ = get_episode_info(api, instance_id, "experiment-1")
 @test !isnothing(response) #hide
@@ -235,7 +235,7 @@ response.events[1:5] # show only the first 5 events to avoid overwhelming the co
 To learn the parameters of the model on the loaded data, create a learning request that specifies which episodes to use for training:
 
 ```@example learning-api
-import RxInferClientOpenAPI: LearnRequest, run_learning
+import RxInferServer.RxInferClientOpenAPI: LearnRequest, run_learning
 
 learn_request = LearnRequest(
     episodes = ["experiment-1"] # learn from the "experiment-1" episode explicitly
@@ -248,7 +248,7 @@ learn_response
 The learning process returns a `LearnResponse` containing the model's learned parameters. The model's state has been updated automatically with the new parameters. We can verify this by fetching the current model parameters:
 
 ```@example learning-api
-import RxInferClientOpenAPI: get_model_instance_parameters
+import RxInferServer.RxInferClientOpenAPI: get_model_instance_parameters
 
 response, _ = get_model_instance_parameters(api, instance_id)
 @test !isnothing(response) #hide
@@ -259,7 +259,7 @@ After the learning process is complete, we can use the model to make predictions
 Here we also chose the desired output format for the inference response. Read more about preferences in the [Request Preferences](@ref request-preferences-api) section.
 
 ```@example learning-api
-import RxInferClientOpenAPI.OpenAPI.Clients: set_header
+import RxInferServer.RxInferClientOpenAPI.OpenAPI.Clients: set_header
 
 set_header(client, "Prefer", "distributions_repr=data,distributions_data=mean_cov,mdarray_data=diagonal,mdarray_repr=data")
 nothing #hide
@@ -268,7 +268,7 @@ nothing #hide
 That ensures that the inference response will be in the desired format suitable for plotting.
 
 ```@example learning-api
-import RxInferClientOpenAPI: InferRequest, run_inference
+import RxInferServer.RxInferClientOpenAPI: InferRequest, run_inference
 
 inference_request = InferRequest(
     data = Dict("observation" => dataset.y_train[end], "current_state" => dataset.x_train[end])
@@ -306,7 +306,7 @@ The plot above demonstrates the model's predictive performance. The predicted st
 When an episode is no longer needed, you can remove it using the delete endpoint. 
 
 ```@example learning-api
-import RxInferClientOpenAPI: delete_episode
+import RxInferServer.RxInferClientOpenAPI: delete_episode
 
 response, _ = delete_episode(api, instance_id, "experiment-1")
 @test !isnothing(response) #hide
@@ -340,7 +340,7 @@ response
 To clear the data from an episode, use the `wipe_episode` endpoint. This will remove all events from the episode, effectively resetting it to an empty state.
 
 ```@example learning-api
-import RxInferClientOpenAPI: wipe_episode
+import RxInferServer.RxInferClientOpenAPI: wipe_episode
 
 # Clearing the default episode's data
 response, _ = get_episode_info(api, instance_id, "default")

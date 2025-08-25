@@ -1,8 +1,43 @@
 using RxInferServer
 using Documenter
 using DocumenterMermaid
+using HTTP, Dates
 
 DocMeta.setdocmeta!(RxInferServer, :DocTestSetup, :(using RxInferServer); recursive = true)
+
+# Check if the server is running by pinging it with timeout
+function wait_for_server(;
+    host = "localhost", port = RxInferServer.RXINFER_SERVER_PORT(), timeout_seconds = 600, retry_interval = 5
+)
+    @info "Waiting for server to start before building documentation..."
+    endpoint = "http://$(host):$(port)/v1/ping"
+    start_time = now()
+    server_started = false
+
+    while (now() - start_time) < Second(timeout_seconds)
+        try
+            response = HTTP.get(endpoint, status_exception = false)
+            if response.status == 200
+                @info "Server started successfully! Proceeding with documentation build."
+                server_started = true
+                break
+            end
+        catch e
+            # This is expected if the server isn't ready yet
+            @info "Server not ready yet, retrying in $(retry_interval) seconds..."
+        end
+        sleep(retry_interval)
+    end
+
+    if !server_started
+        error("Server failed to start within the timeout period ($(timeout_seconds)s). Cannot build documentation.")
+    end
+
+    return server_started
+end
+
+# Verify that the server is running before proceeding with documentation build
+wait_for_server()
 
 function snake_case(camelstring; joinwith = "_")
     wordpat = r"

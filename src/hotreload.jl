@@ -120,10 +120,20 @@ function hot_reload_task_models(server::ServerState)
         locations = vcat(locations, [Models.RXINFER_SERVER_TEST_MODELS_LOCATION()])
     end
 
-    hot_reload_models_locations = [
-        joinpath(root, file) for location in locations for (root, _, files) in walkdir(location) if isdir(location) for
-        file in files
-    ]
+    # Double check that the specified locations are valid
+    hot_reload_models_locations = String[]
+    for location in locations
+        if isdir(location)
+            for (root, _, files) in walkdir(location)
+                for file in files
+                    if isdir(joinpath(root, file))
+                        push!(hot_reload_models_locations, string(joinpath(root, file)))
+                    end
+                end
+            end
+        end
+    end
+
     return hot_reload_task(:models, server, hot_reload_models_locations, []; all = false) do
         Models.reload!(Models.get_models_dispatcher())
         @warn "[HOT-RELOAD] Models have been reloaded" _id = :hot_reload

@@ -7,27 +7,27 @@ All URIs are relative to *http://localhost:8000/v1*
 
 | Class | Method | HTTP request | Description |
 |------------ | ------------- | ------------- | -------------|
-| *AuthenticationApi* | [**tokenGenerate**](Apis/AuthenticationApi.md#tokengenerate) | **POST** /token/generate | Generate authentication token |
-*AuthenticationApi* | [**tokenRoles**](Apis/AuthenticationApi.md#tokenroles) | **GET** /token/roles | Get token roles |
-| *ModelsApi* | [**attachEventsToEpisode**](Apis/ModelsApi.md#attacheventstoepisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/attach-events | Attach events to an episode |
-*ModelsApi* | [**attachMetadataToEvent**](Apis/ModelsApi.md#attachmetadatatoevent) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
-*ModelsApi* | [**createEpisode**](Apis/ModelsApi.md#createepisode) | **POST** /models/i/{instance_id}/create-episode | Create a new episode for a model instance |
-*ModelsApi* | [**createModelInstance**](Apis/ModelsApi.md#createmodelinstance) | **POST** /models/create-instance | Create a new model instance |
-*ModelsApi* | [**deleteEpisode**](Apis/ModelsApi.md#deleteepisode) | **DELETE** /models/i/{instance_id}/episodes/{episode_name} | Delete an episode for a model |
-*ModelsApi* | [**deleteModelInstance**](Apis/ModelsApi.md#deletemodelinstance) | **DELETE** /models/i/{instance_id} | Delete a model instance |
-*ModelsApi* | [**getAvailableModel**](Apis/ModelsApi.md#getavailablemodel) | **GET** /models/available/{model_name} | Get information about a specific model available for creation |
-*ModelsApi* | [**getAvailableModels**](Apis/ModelsApi.md#getavailablemodels) | **GET** /models/available | Get models available for creation |
-*ModelsApi* | [**getEpisodeInfo**](Apis/ModelsApi.md#getepisodeinfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
-*ModelsApi* | [**getEpisodes**](Apis/ModelsApi.md#getepisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model instance |
-*ModelsApi* | [**getModelInstance**](Apis/ModelsApi.md#getmodelinstance) | **GET** /models/i/{instance_id} | Get model instance information |
-*ModelsApi* | [**getModelInstanceParameters**](Apis/ModelsApi.md#getmodelinstanceparameters) | **GET** /models/i/{instance_id}/parameters | Get the parameters of a model instance |
-*ModelsApi* | [**getModelInstanceState**](Apis/ModelsApi.md#getmodelinstancestate) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
-*ModelsApi* | [**getModelInstances**](Apis/ModelsApi.md#getmodelinstances) | **GET** /models/instances | Get all created model instances |
-*ModelsApi* | [**runInference**](Apis/ModelsApi.md#runinference) | **POST** /models/i/{instance_id}/infer | Run inference |
-*ModelsApi* | [**runLearning**](Apis/ModelsApi.md#runlearning) | **POST** /models/i/{instance_id}/learn | Learn from previous observations |
-*ModelsApi* | [**wipeEpisode**](Apis/ModelsApi.md#wipeepisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
-| *ServerApi* | [**getServerInfo**](Apis/ServerApi.md#getserverinfo) | **GET** /info | Get server information |
-*ServerApi* | [**pingServer**](Apis/ServerApi.md#pingserver) | **GET** /ping | Health check endpoint |
+| *AuthenticationApi* | [**tokenGenerate**](Apis/AuthenticationApi.md#tokenGenerate) | **POST** /token/generate | Generate authentication token |
+*AuthenticationApi* | [**tokenRoles**](Apis/AuthenticationApi.md#tokenRoles) | **GET** /token/roles | Get token roles |
+| *ModelsApi* | [**attachEventsToEpisode**](Apis/ModelsApi.md#attachEventsToEpisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/attach-events | Attach events to an episode |
+*ModelsApi* | [**attachMetadataToEvent**](Apis/ModelsApi.md#attachMetadataToEvent) | **POST** /models/i/{instance_id}/episodes/{episode_name}/events/{event_id}/attach-metadata | Attach metadata to an event |
+*ModelsApi* | [**createEpisode**](Apis/ModelsApi.md#createEpisode) | **POST** /models/i/{instance_id}/create-episode | Create a new episode for a model instance |
+*ModelsApi* | [**createModelInstance**](Apis/ModelsApi.md#createModelInstance) | **POST** /models/create-instance | Create a new model instance |
+*ModelsApi* | [**deleteEpisode**](Apis/ModelsApi.md#deleteEpisode) | **DELETE** /models/i/{instance_id}/episodes/{episode_name} | Delete an episode for a model |
+*ModelsApi* | [**deleteModelInstance**](Apis/ModelsApi.md#deleteModelInstance) | **DELETE** /models/i/{instance_id} | Delete a model instance |
+*ModelsApi* | [**getAvailableModel**](Apis/ModelsApi.md#getAvailableModel) | **GET** /models/available/{model_name} | Get information about a specific model available for creation |
+*ModelsApi* | [**getAvailableModels**](Apis/ModelsApi.md#getAvailableModels) | **GET** /models/available | Get models available for creation |
+*ModelsApi* | [**getEpisodeInfo**](Apis/ModelsApi.md#getEpisodeInfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
+*ModelsApi* | [**getEpisodes**](Apis/ModelsApi.md#getEpisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model instance |
+*ModelsApi* | [**getModelInstance**](Apis/ModelsApi.md#getModelInstance) | **GET** /models/i/{instance_id} | Get model instance information |
+*ModelsApi* | [**getModelInstanceParameters**](Apis/ModelsApi.md#getModelInstanceParameters) | **GET** /models/i/{instance_id}/parameters | Get the parameters of a model instance |
+*ModelsApi* | [**getModelInstanceState**](Apis/ModelsApi.md#getModelInstanceState) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
+*ModelsApi* | [**getModelInstances**](Apis/ModelsApi.md#getModelInstances) | **GET** /models/instances | Get all created model instances |
+*ModelsApi* | [**runInference**](Apis/ModelsApi.md#runInference) | **POST** /models/i/{instance_id}/infer | Run inference |
+*ModelsApi* | [**runLearning**](Apis/ModelsApi.md#runLearning) | **POST** /models/i/{instance_id}/learn | Learn from previous observations |
+*ModelsApi* | [**wipeEpisode**](Apis/ModelsApi.md#wipeEpisode) | **POST** /models/i/{instance_id}/episodes/{episode_name}/wipe | Wipe all events from an episode |
+| *ServerApi* | [**getServerInfo**](Apis/ServerApi.md#getServerInfo) | **GET** /info | Get server information |
+*ServerApi* | [**pingServer**](Apis/ServerApi.md#pingServer) | **GET** /ping | Health check endpoint |
 
 
 <a name="documentation-for-models"></a>

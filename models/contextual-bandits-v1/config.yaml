@@ -9,17 +9,14 @@ arguments:
     description: The dimensionality of the context vectors
     type: int
     required: true
-    default: 2
   - name: n_arms
     description: The number of arms/actions available for selection
     type: int
     required: true
-    default: 3
   - name: iterations
     description: The number of inference iterations for learning
     type: int
     required: true
-    default: 10
 
 parameters:
   - name: θ

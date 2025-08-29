@@ -43,7 +43,7 @@ function initial_parameters(arguments)
     )
 end
 
-function context_to_mvnormal(context_vec; tiny_precision=1e-6, huge_precision=1e6)
+function context_to_mvnormal(context_vec; tiny_precision = 1e-6, huge_precision = 1e6)
     context_mean = Vector{Float64}(undef, length(context_vec))
     context_precision = Vector{Float64}(undef, length(context_vec))
 
@@ -58,6 +58,12 @@ function context_to_mvnormal(context_vec; tiny_precision=1e-6, huge_precision=1e
     end
 
     return MvNormalMeanPrecision(context_mean, Diagonal(context_precision))
+end
+
+function arm_index_to_one_hot(arm_index, n_arms)
+    one_hot = zeros(n_arms)
+    one_hot[arm_index] = 1
+    return one_hot
 end
 
 function run_inference(state, parameters, data)
@@ -77,18 +83,18 @@ function run_inference(state, parameters, data)
     # Choose best arm based on sampled parameters
     chosen_arm = argmax(expected_rewards)
 
-    return chosen_arm
+    result = Dict("chosen_arm" => chosen_arm)
+
+    return result, state
 end
 
 function run_learning(state, parameters, events)
     @debug "Running learning in ContextualBandits-v1 model" state parameters events
 
-    priors = Dict(
-        :θ => parameters["θ"],
-        :γ => parameters["γ"],
-        :τ => parameters["τ"],
-        :latent_context => parameters["latent_context"]
-    )
+    context_dim = state["context_dim"]
+    n_arms = state["n_arms"]
+
+    priors = Dict(:θ => parameters["θ"], :γ => parameters["γ"], :τ => parameters["τ"])
 
     init = @initialization begin
         q(θ) = priors[:θ]
@@ -97,21 +103,26 @@ function run_learning(state, parameters, events)
         q(latent_context) = MvNormalMeanPrecision(zeros(context_dim), Diagonal(ones(context_dim)))
     end
 
-    past_contexts = map(e -> e["context"], events)
-    past_rewards = map(e -> e["reward"], events)
-    past_choices = map(e -> e["choice"], events)
+    past_contexts = context_to_mvnormal.(map(e -> e["data"]["context"], events))
+    past_rewards = convert(Vector{Float64}, map(e -> e["data"]["reward"], events))
+    past_choices = arm_index_to_one_hot.(map(e -> e["data"]["choice"], events), n_arms)
 
     result = infer(
         model = conditional_regression(n_arms = n_arms, priors = priors, past_contexts = past_contexts),
         data = (past_rewards = past_rewards, past_choices = past_choices),
         constraints = MeanField(),
         initialization = init,
-        iterations = state["iterations"]
+        iterations = state["iterations"],
+        returnvars = KeepLast()
     )
 
     parameters["θ"] = result.posteriors[:θ]
     parameters["γ"] = result.posteriors[:γ]
     parameters["τ"] = result.posteriors[:τ]
 
-    return result, state, parameters
+    result_from_inference = Dict(
+        "θ" => result.posteriors[:θ], "γ" => result.posteriors[:γ], "τ" => result.posteriors[:τ]
+    )
+
+    return result_from_inference, state, parameters
 end

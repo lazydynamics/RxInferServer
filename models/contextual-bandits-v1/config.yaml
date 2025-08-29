@@ -1,0 +1,48 @@
+name: ContextualBandits-v1
+description: A Contextual Bandits model using Thompson Sampling with multivariate normal priors
+author: Lazy Dynamics
+roles:
+  - user
+
+arguments:
+  - name: context_dim
+    description: The dimensionality of the context vectors
+    type: int
+    required: true
+    default: 2
+  - name: n_arms
+    description: The number of arms/actions available for selection
+    type: int
+    required: true
+    default: 3
+  - name: iterations
+    description: The number of inference iterations for learning
+    type: int
+    required: true
+    default: 10
+
+parameters:
+  - name: θ
+    description: The posterior parameters for each arm's mean vector (multivariate normal)
+  - name: γ
+    description: The posterior parameters for each arm's precision matrix (Wishart)
+  - name: τ
+    description: The posterior parameter for noise precision (Gamma)
+
+data:
+  - name: context
+    description: The current context vector for arm selection
+    type: array
+    required: true
+  - name: reward
+    description: Historical rewards from previous arm selections
+    type: array
+    required: false
+  - name: choice
+    description: Historical arm choices from previous selections
+    type: array
+    required: false
+  - name: context
+    description: Historical context vectors from previous selections
+    type: array
+    required: false

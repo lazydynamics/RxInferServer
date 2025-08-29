@@ -21,6 +21,11 @@ arguments:
     type: float
     required: true
     default: 9.81
+  - name: arm_length
+    description: The length of the arm
+    type: float
+    required: true
+    default: 0.5
   - name: mass
     description: The mass of the drone
     type: float

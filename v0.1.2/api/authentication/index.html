@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Authentication · RxInferServer</title><meta name="title" content="Authentication · RxInferServer"/><meta property="og:title" content="Authentication · RxInferServer"/><meta property="twitter:title" content="Authentication · RxInferServer"/><meta name="description" content="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models."/><meta property="og:description" content="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models."/><meta property="twitter:description" content="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models."/><meta property="og:url" content="https://server.rxinfer.com/api/authentication/"/><meta property="twitter:url" content="https://server.rxinfer.com/api/authentication/"/><link rel="canonical" href="https://server.rxinfer.com/api/authentication/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">RxInferServer</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../getting-started/">Getting started</a></li><li><span class="tocitem">API design</span><ul><li class="is-active"><a class="tocitem" href>Authentication</a><ul class="internal"><li><a class="tocitem" href="#Overview"><span>Overview</span></a></li><li><a class="tocitem" href="#Getting-Started-with-Authentication"><span>Getting Started with Authentication</span></a></li><li><a class="tocitem" href="#authentication-api-roles"><span>Understanding Token Roles</span></a></li></ul></li><li><a class="tocitem" href="../model-management/">Model management</a></li><li><a class="tocitem" href="../learning/">Learning parameters of a model</a></li><li><a class="tocitem" href="../status-codes/">Status codes and error handling</a></li><li><a class="tocitem" href="../server-info/">Server details and version</a></li><li><a class="tocitem" href="../request-preferences/">Request preferences</a></li><li><a class="tocitem" href="../design-proposal/">Proposal (outdated)</a></li></ul></li><li><a class="tocitem" href="../../configuration/">Configuration</a></li><li><span class="tocitem">Models structure</span><ul><li><a class="tocitem" href="../../models/models-configuration/">Models configuration</a></li></ul></li><li><span class="tocitem">Server components</span><ul><li><a class="tocitem" href="../../components/models/">Models</a></li><li><a class="tocitem" href="../../components/database/">Database</a></li><li><a class="tocitem" href="../../components/logging/">Logging</a></li><li><a class="tocitem" href="../../components/serialization/">Serialization</a></li></ul></li><li><a class="tocitem" href="../../developers-guide/">Developers guide</a></li><li><span class="tocitem">OpenAPI documentation</span><ul><li><a class="tocitem" href="../../openapi/">Overview</a></li><li><input class="collapse-toggle" id="menuitem-8-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2"><span class="docs-label">Server</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/README/">Overview</a></li><li><input class="collapse-toggle" id="menuitem-8-2-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2-2"><span class="docs-label">Apis</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Apis/AuthenticationApi/">AuthenticationApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ModelsApi/">ModelsApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ServerApi/">ServerApi</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-2-3" type="checkbox"/><label class="tocitem" for="menuitem-8-2-3"><span class="docs-label">Models</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Models/AttachEventsToEpisodeRequest/">AttachEventsToEpisodeRequest</a></li><li><a class="tocitem" href="../../openapi/Models/AttachEventsToEpisodeRequest_events_inner/">AttachEventsToEpisodeRequest<em>events</em>inner</a></li><li><a class="tocitem" href="../../openapi/Models/AttachMetadataToEventRequest/">AttachMetadataToEventRequest</a></li><li><a class="tocitem" href="../../openapi/Models/AvailableModel/">AvailableModel</a></li><li><a class="tocitem" href="../../openapi/Models/AvailableModel_details/">AvailableModel_details</a></li><li><a class="tocitem" href="../../openapi/Models/CreateEpisodeRequest/">CreateEpisodeRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelInstanceRequest/">CreateModelInstanceRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelInstanceResponse/">CreateModelInstanceResponse</a></li><li><a class="tocitem" href="../../openapi/Models/DeleteModelInstanceRequest/">DeleteModelInstanceRequest</a></li><li><a class="tocitem" href="../../openapi/Models/EpisodeInfo/">EpisodeInfo</a></li><li><a class="tocitem" href="../../openapi/Models/ErrorResponse/">ErrorResponse</a></li><li><a class="tocitem" href="../../openapi/Models/InferRequest/">InferRequest</a></li><li><a class="tocitem" href="../../openapi/Models/InferResponse/">InferResponse</a></li><li><a class="tocitem" href="../../openapi/Models/LearnRequest/">LearnRequest</a></li><li><a class="tocitem" href="../../openapi/Models/LearnResponse/">LearnResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstance/">ModelInstance</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstanceParameters/">ModelInstanceParameters</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstanceState/">ModelInstanceState</a></li><li><a class="tocitem" href="../../openapi/Models/NotFoundResponse/">NotFoundResponse</a></li><li><a class="tocitem" href="../../openapi/Models/PingResponse/">PingResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ServerInfo/">ServerInfo</a></li><li><a class="tocitem" href="../../openapi/Models/SuccessResponse/">SuccessResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenGenerateResponse/">TokenGenerateResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenRolesResponse/">TokenRolesResponse</a></li><li><a class="tocitem" href="../../openapi/Models/UnauthorizedResponse/">UnauthorizedResponse</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3"><span class="docs-label">Client</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/README/">Overview</a></li><li><input class="collapse-toggle" id="menuitem-8-3-2" type="checkbox"/><label class="tocitem" for="menuitem-8-3-2"><span class="docs-label">Apis</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Apis/AuthenticationApi/">AuthenticationApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ModelsApi/">ModelsApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ServerApi/">ServerApi</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3-3"><span class="docs-label">Models</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Models/AttachEventsToEpisodeRequest/">AttachEventsToEpisodeRequest</a></li><li><a class="tocitem" href="../../openapi/Models/AttachEventsToEpisodeRequest_events_inner/">AttachEventsToEpisodeRequest<em>events</em>inner</a></li><li><a class="tocitem" href="../../openapi/Models/AttachMetadataToEventRequest/">AttachMetadataToEventRequest</a></li><li><a class="tocitem" href="../../openapi/Models/AvailableModel/">AvailableModel</a></li><li><a class="tocitem" href="../../openapi/Models/AvailableModel_details/">AvailableModel_details</a></li><li><a class="tocitem" href="../../openapi/Models/CreateEpisodeRequest/">CreateEpisodeRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelInstanceRequest/">CreateModelInstanceRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelInstanceResponse/">CreateModelInstanceResponse</a></li><li><a class="tocitem" href="../../openapi/Models/DeleteModelInstanceRequest/">DeleteModelInstanceRequest</a></li><li><a class="tocitem" href="../../openapi/Models/EpisodeInfo/">EpisodeInfo</a></li><li><a class="tocitem" href="../../openapi/Models/ErrorResponse/">ErrorResponse</a></li><li><a class="tocitem" href="../../openapi/Models/InferRequest/">InferRequest</a></li><li><a class="tocitem" href="../../openapi/Models/InferResponse/">InferResponse</a></li><li><a class="tocitem" href="../../openapi/Models/LearnRequest/">LearnRequest</a></li><li><a class="tocitem" href="../../openapi/Models/LearnResponse/">LearnResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstance/">ModelInstance</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstanceParameters/">ModelInstanceParameters</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstanceState/">ModelInstanceState</a></li><li><a class="tocitem" href="../../openapi/Models/NotFoundResponse/">NotFoundResponse</a></li><li><a class="tocitem" href="../../openapi/Models/PingResponse/">PingResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ServerInfo/">ServerInfo</a></li><li><a class="tocitem" href="../../openapi/Models/SuccessResponse/">SuccessResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenGenerateResponse/">TokenGenerateResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenRolesResponse/">TokenRolesResponse</a></li><li><a class="tocitem" href="../../openapi/Models/UnauthorizedResponse/">UnauthorizedResponse</a></li></ul></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">API design</a></li><li class="is-active"><a href>Authentication</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Authentication</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lazydynamics/RxInferServer" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lazydynamics/RxInferServer/blob/main/docs/src/api/authentication.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="authentication-api"><a class="docs-heading-anchor" href="#authentication-api">Authentication</a><a id="authentication-api-1"></a><a class="docs-heading-anchor-permalink" href="#authentication-api" title="Permalink"></a></h1><p>The RxInferServer uses token-based authentication to secure access to its endpoints. This guide explains how to obtain and use authentication tokens, understand token roles, and manage model access.</p><h2 id="Overview"><a class="docs-heading-anchor" href="#Overview">Overview</a><a id="Overview-1"></a><a class="docs-heading-anchor-permalink" href="#Overview" title="Permalink"></a></h2><p>Most endpoints in RxInferServer require authentication, with a few exceptions. The authentication system is based on tokens and follows the Bearer token scheme. All authentication-related endpoints are grouped under the <code>Authentication</code> tag in <a href="../../openapi/#openapi">the OpenAPI specification</a>.</p><h2 id="Getting-Started-with-Authentication"><a class="docs-heading-anchor" href="#Getting-Started-with-Authentication">Getting Started with Authentication</a><a id="Getting-Started-with-Authentication-1"></a><a class="docs-heading-anchor-permalink" href="#Getting-Started-with-Authentication" title="Permalink"></a></h2><h3 id="Obtaining-a-Token"><a class="docs-heading-anchor" href="#Obtaining-a-Token">Obtaining a Token</a><a id="Obtaining-a-Token-1"></a><a class="docs-heading-anchor-permalink" href="#Obtaining-a-Token" title="Permalink"></a></h3><p>To authenticate with the server, you first need to obtain a token using the <code>token_generate</code> operation. This endpoint supports both user authentication and API key authentication.</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI
+import RxInferClientOpenAPI.OpenAPI.Clients: Client
+import RxInferClientOpenAPI: AuthenticationApi, token_generate, basepath
+
+url          = basepath(AuthenticationApi)
+client       = Client(url)
+api          = AuthenticationApi(client)
+response, _  = token_generate(api)
+
+response.token</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;40408d76-aa17-48ff-8e53-7775d1d70c12&quot;</code></pre><div class="admonition is-success"><header class="admonition-header">Development Mode</header><div class="admonition-body"><p>During development, you can enable the development mode by setting the <a href="../../configuration/#RxInferServer.RXINFER_SERVER_ENABLE_DEV_TOKEN"><code>RXINFER_SERVER_ENABLE_DEV_TOKEN</code></a> environment variable to <code>true</code>.</p></div></div><h3 id="Using-the-Token"><a class="docs-heading-anchor" href="#Using-the-Token">Using the Token</a><a id="Using-the-Token-1"></a><a class="docs-heading-anchor-permalink" href="#Using-the-Token" title="Permalink"></a></h3><p>Once you have obtained a token, you need to include it in the <code>Authorization</code> header of your requests. The token should be prefixed with <code>Bearer</code> as shown below:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI.OpenAPI.Clients: set_header
+
+set_header(client, &quot;Authorization&quot;, &quot;Bearer $(response.token)&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;Bearer 40408d76-aa17-48ff-8e53-7775d1d70c12&quot;</code></pre><div class="admonition is-warning"><header class="admonition-header">Token Security</header><div class="admonition-body"><ul><li>Keep your tokens secure and private</li><li>Store tokens in a secure location</li><li>Never expose tokens in client-side code or version control</li><li>Implement proper token rotation and management in production</li><li>Remember that models are associated with the token used to create them</li></ul></div></div><h2 id="authentication-api-roles"><a class="docs-heading-anchor" href="#authentication-api-roles">Understanding Token Roles</a><a id="authentication-api-roles-1"></a><a class="docs-heading-anchor-permalink" href="#authentication-api-roles" title="Permalink"></a></h2><h3 id="Viewing-Token-Roles"><a class="docs-heading-anchor" href="#Viewing-Token-Roles">Viewing Token Roles</a><a id="Viewing-Token-Roles-1"></a><a class="docs-heading-anchor-permalink" href="#Viewing-Token-Roles" title="Permalink"></a></h3><p>Each token comes with a set of assigned roles that determine its access permissions. You can retrieve the roles associated with your token using the <code>token_roles</code> operation:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: token_roles
+
+response, _ = token_roles(api)
+
+response.roles</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-element Vector{String}:
+ &quot;user&quot;</code></pre><h3 id="Model-Access-and-Roles"><a class="docs-heading-anchor" href="#Model-Access-and-Roles">Model Access and Roles</a><a id="Model-Access-and-Roles-1"></a><a class="docs-heading-anchor-permalink" href="#Model-Access-and-Roles" title="Permalink"></a></h3><p>Roles control which models a token can access. Here&#39;s how to list accessible models:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: ModelsApi, get_available_models
+
+models_api = ModelsApi(client)
+available_models, _ = get_available_models(models_api)
+
+available_models</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{RxInferClientOpenAPI.AvailableModel}:
+ {
+  &quot;details&quot;: {
+    &quot;name&quot;: &quot;BetaBernoulli-v1&quot;,
+    &quot;description&quot;: &quot;A simple Beta-Bernoulli model&quot;,
+    &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+    &quot;roles&quot;: [
+      &quot;user&quot;
+    ]
+  },
+  &quot;config&quot;: {
+    &quot;name&quot;: &quot;BetaBernoulli-v1&quot;,
+    &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+    &quot;arguments&quot;: [
+      {
+        &quot;name&quot;: &quot;prior_a&quot;,
+        &quot;default&quot;: 1,
+        &quot;required&quot;: true,
+        &quot;description&quot;: &quot;The initial alpha parameter of the prior Beta distribution `p`&quot;,
+        &quot;type&quot;: &quot;int&quot;
+      },
+      {
+        &quot;name&quot;: &quot;prior_b&quot;,
+        &quot;default&quot;: 1,
+        &quot;required&quot;: true,
+        &quot;description&quot;: &quot;The initial beta parameter of the prior Beta distribution `p`&quot;,
+        &quot;type&quot;: &quot;int&quot;
+      }
+    ],
+    &quot;parameters&quot;: [
+      {
+        &quot;name&quot;: &quot;posterior_a&quot;,
+        &quot;description&quot;: &quot;The posterior parameter `a` of the Beta distribution&quot;
+      },
+      {
+        &quot;name&quot;: &quot;posterior_b&quot;,
+        &quot;description&quot;: &quot;The posterior parameter `b` of the Beta distribution&quot;
+      }
+    ],
+    &quot;data&quot;: [
+      {
+        &quot;name&quot;: &quot;observation&quot;,
+        &quot;required&quot;: true,
+        &quot;description&quot;: &quot;A single `1` or `0` value indicating the outcome of a Bernoulli trial&quot;,
+        &quot;type&quot;: &quot;int&quot;
+      }
+    ],
+    &quot;roles&quot;: [
+      &quot;user&quot;
+    ],
+    &quot;description&quot;: &quot;A simple Beta-Bernoulli model&quot;
+  }
+}
+
+ {
+  &quot;details&quot;: {
+    &quot;name&quot;: &quot;BlackBoxStateSpaceModel-v1&quot;,
+    &quot;description&quot;: &quot;This model represents a linear Guassian dynamical system with unknown dynamics.\nThe state transition is modeled as a matrix with Gaussian prior on the elements.\nThe observational model is assumed to be the diagonal matrix with `1` on the diagonal.\n&quot;,
+    &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+    &quot;roles&quot;: [
+      &quot;user&quot;
+    ]
+  },
+  &quot;config&quot;: {
+    &quot;name&quot;: &quot;BlackBoxStateSpaceModel-v1&quot;,
+    &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+    &quot;arguments&quot;: [
+      {
+        &quot;name&quot;: &quot;state_dimension&quot;,
+        &quot;required&quot;: true,
+        &quot;description&quot;: &quot;The dimension of the state space&quot;,
+        &quot;type&quot;: &quot;int&quot;
+      },
+      {
+        &quot;name&quot;: &quot;horizon&quot;,
+        &quot;default&quot;: 10,
+        &quot;description&quot;: &quot;The horizon of the model for prediction&quot;,
+        &quot;type&quot;: &quot;int&quot;
+      }
+    ],
+    &quot;parameters&quot;: [
+      {
+        &quot;name&quot;: &quot;A&quot;,
+        &quot;description&quot;: &quot;The state transition matrix&quot;
+      }
+    ],
+    &quot;roles&quot;: [
+      &quot;user&quot;
+    ],
+    &quot;description&quot;: &quot;This model represents a linear Guassian dynamical system with unknown dynamics.\nThe state transition is modeled as a matrix with Gaussian prior on the elements.\nThe observational model is assumed to be the diagonal matrix with `1` on the diagonal.\n&quot;
+  }
+}
+</code></pre><p>To inspect the roles required for a specific model, you can simply access the <code>roles</code> field of the model details:</p><pre><code class="language-julia hljs">available_models[1].details</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;name&quot;: &quot;BetaBernoulli-v1&quot;,
+  &quot;description&quot;: &quot;A simple Beta-Bernoulli model&quot;,
+  &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+  &quot;roles&quot;: [
+    &quot;user&quot;
+  ]
+}
+</code></pre><p>or alternatively use the <code>get_available_model</code> operation:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: ModelsApi, get_available_model
+
+models_api = ModelsApi(client)
+response, _ = get_available_model(models_api, available_models[1].details.name)
+
+response.details</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;name&quot;: &quot;BetaBernoulli-v1&quot;,
+  &quot;description&quot;: &quot;A simple Beta-Bernoulli model&quot;,
+  &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+  &quot;roles&quot;: [
+    &quot;user&quot;
+  ]
+}
+</code></pre><p>Read more about how to create and manage models in the <a href="../model-management/#model-management-api">Models management</a> section.</p><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({
+    startOnLoad: true,
+    theme: "neutral"
+});
+</script></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting-started/">« Getting started</a><a class="docs-footer-nextpage" href="../model-management/">Model management »</a><div class="flexbox-break"></div><p class="footer-message">Created and sponsored by <a href="https://lazydynamics.com/">LazyDynamics</a>, powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>. Licensed under <a href="http://github.com/lazydynamics/RxInferServer?tab=readme-ov-file#license">AGPL-3.0</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.1 on <span class="colophon-date" title="Tuesday 8 April 2025 16:06">Tuesday 8 April 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

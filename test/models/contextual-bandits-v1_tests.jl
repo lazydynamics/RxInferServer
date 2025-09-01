@@ -144,6 +144,10 @@ end
         chosen_arm = inference_response.results["chosen_arm"]
         @test chosen_arm isa Integer
         @test 1 <= chosen_arm <= n_arms
+        @test haskey(inference_response.results, "expected_rewards")
+        expected_rewards = inference_response.results["expected_rewards"]
+        @test length(expected_rewards) == n_arms
+        @test all(expected_rewards .<= expected_rewards[chosen_arm])
 
         # Delete model instance
         response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
@@ -182,6 +186,10 @@ end
         @test haskey(inference_response.results, "chosen_arm")
         chosen_arm = inference_response.results["chosen_arm"]
         @test 1 <= chosen_arm <= n_arms
+        @test haskey(inference_response.results, "expected_rewards")
+        expected_rewards = inference_response.results["expected_rewards"]
+        @test length(expected_rewards) == n_arms
+        @test all(expected_rewards .<= expected_rewards[chosen_arm])
 
         # Clean up
         response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)

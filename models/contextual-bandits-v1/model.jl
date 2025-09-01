@@ -83,7 +83,7 @@ function run_inference(state, parameters, data)
     # Choose best arm based on sampled parameters
     chosen_arm = argmax(expected_rewards)
 
-    result = Dict("chosen_arm" => chosen_arm)
+    result = Dict("chosen_arm" => chosen_arm, "expected_rewards" => expected_rewards)
 
     return result, state
 end

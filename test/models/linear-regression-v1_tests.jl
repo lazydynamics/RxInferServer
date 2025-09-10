@@ -43,8 +43,7 @@ end
     end
 
     @testset for n in (1000, 2000),
-        true_a in (0.5, 2.0, -1.0),
-        true_b in (0.0, 5.0, -3.0),
+        true_a in (0.5, 2.0, -1.0), true_b in (0.0, 5.0, -3.0),
         true_noise in (0.1, 0.5, 2.0)
 
         x_data, y_data = generate_linear_regression_data(n, true_a, true_b, true_noise)

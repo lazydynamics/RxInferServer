@@ -1,17 +1,17 @@
 using RxInfer
 
 @model function linear_regression_unknown_noise(x, y)
-    a ~ Normal(mean = 0.0, variance = 1.0)
-    b ~ Normal(mean = 0.0, variance = 100.0)
-    s ~ InverseGamma(1.0, 1.0)
-    y .~ Normal(mean = a .* x .+ b, variance = s)
+    a ~ Uninformative()
+    b ~ Uninformative()
+    s ~ Uninformative()
+    y .~ Normal(mean = a .* x .+ b, precision = s)
 end
 
 @model function linear_regression_predictive(x, y, priors)
     a ~ priors[:a]
     b ~ priors[:b]
     s ~ priors[:s]
-    y ~ Normal(mean = a * x + b, variance = s)
+    y ~ Normal(mean = a * x + b, precision = s)
 end
 
 function initial_state(arguments)
@@ -21,11 +21,11 @@ end
 function initial_parameters(arguments)
     return Dict(
         "a_mean" => 0.0,
-        "a_variance" => 100.0,
+        "a_variance" => 1e6,
         "b_mean" => 0.0,
-        "b_variance" => 100.0,
-        "noise_shape" => 2.0,
-        "noise_scale" => 1e6
+        "b_variance" => 1e6,
+        "noise_shape" => 1e6,
+        "noise_scale" => 1e12
     )
 end
 
@@ -36,14 +36,14 @@ function run_inference(state, parameters, data)
 
     a_distribution = NormalMeanVariance(parameters["a_mean"], parameters["a_variance"])
     b_distribution = NormalMeanVariance(parameters["b_mean"], parameters["b_variance"])
-    noise_distribution = InverseGamma(parameters["noise_shape"], parameters["noise_scale"])
+    noise_distribution = GammaShapeScale(parameters["noise_shape"], parameters["noise_scale"])
 
     priors = Dict(:a => a_distribution, :b => b_distribution, :s => noise_distribution)
 
     # Create initialization for the inference
     init = @initialization begin
         μ(b) = NormalMeanVariance(parameters["b_mean"], parameters["b_variance"])
-        q(s) = InverseGamma(parameters["noise_shape"], parameters["noise_scale"])
+        q(s) = GammaShapeScale(parameters["noise_shape"], parameters["noise_scale"])
     end
 
     inference_results = infer(
@@ -71,7 +71,7 @@ function run_learning(state, parameters, events)
     # Create initialization for the inference
     init = @initialization begin
         μ(b) = NormalMeanVariance(parameters["b_mean"], parameters["b_variance"])
-        q(s) = InverseGamma(parameters["noise_shape"], parameters["noise_scale"])
+        q(s) = GammaShapeScale(parameters["noise_shape"], parameters["noise_scale"])
     end
 
     inference_results = infer(

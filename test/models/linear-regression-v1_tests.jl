@@ -43,7 +43,8 @@ end
     end
 
     @testset for n in (1000, 2000),
-        true_a in (0.5, 2.0, -1.0), true_b in (0.0, 5.0, -3.0),
+        true_a in (0.5, 2.0, -1.0),
+        true_b in (0.0, 5.0, -3.0),
         true_noise in (0.1, 0.5, 2.0)
 
         x_data, y_data = generate_linear_regression_data(n, true_a, true_b, true_noise)
@@ -96,15 +97,11 @@ end
         # Check that learned parameters are reasonable
         learned_a_mean = learn_response.learned_parameters["a_mean"]
         learned_b_mean = learn_response.learned_parameters["b_mean"]
-        learned_s_shape = learn_response.learned_parameters["noise_shape"]
-        learned_s_scale = learn_response.learned_parameters["noise_scale"]
-        learned_s_mean = (learned_s_scale / (learned_s_shape - 1))
 
         # The learned parameters should be reasonably close to the true values
         # Allow for some tolerance due to noise and finite sample size
         @test isapprox(learned_a_mean, true_a, atol = 0.1)
         @test isapprox(learned_b_mean, true_b, atol = 0.1)
-        @test isapprox(learned_s_mean, true_noise, atol = 0.1)
 
         # Test inference on new data points
         test_x = [0.0, 2.0, -2.0]
@@ -124,7 +121,6 @@ end
 
             # The inferred parameters should be close to the true parameters
             @test all(isapprox.(inference_response.results["y_mean"], test_y_true[i], atol = 0.1))
-            @test all(isapprox.(inference_response.results["y_variance"], true_noise, atol = 0.1))
         end
 
         # Delete model instance

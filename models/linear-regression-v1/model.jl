@@ -11,7 +11,7 @@ end
     a ~ priors[:a]
     b ~ priors[:b]
     s ~ priors[:s]
-    y .~ Normal(mean = a .* x .+ b, variance = s)
+    y ~ Normal(mean = a * x + b, variance = s)
 end
 
 function initial_state(arguments)
@@ -32,7 +32,7 @@ end
 function run_inference(state, parameters, data)
     @debug "Running inference in LinearRegression-v1 model" state parameters data
 
-    x = Float64.(data["x"])
+    x = Float64(data["x"])
 
     a_distribution = NormalMeanVariance(parameters["a_mean"], parameters["a_variance"])
     b_distribution = NormalMeanVariance(parameters["b_mean"], parameters["b_variance"])
@@ -48,7 +48,7 @@ function run_inference(state, parameters, data)
 
     inference_results = infer(
         model = linear_regression_predictive(priors = priors),
-        data = (x = x, y = [missing for _ in 1:length(x)]),
+        data = (x = x, y = missing),
         predictvars = (y = KeepLast(),),
         initialization = init,
         iterations = state["number_of_iterations"],

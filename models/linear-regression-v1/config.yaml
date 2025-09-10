@@ -10,7 +10,7 @@ arguments:
     description: The number of variational inference iterations
     type: int
     required: false
-    default: 20
+    default: 25
 
 parameters:
   - name: a_mean

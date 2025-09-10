@@ -1,0 +1,37 @@
+
+name: LinearRegression-v1
+description: A Bayesian linear regression model with unknown noise variance
+author: Lazy Dynamics
+roles:
+  - user
+
+arguments:
+  - name: number_of_iterations
+    description: The number of variational inference iterations
+    type: int
+    required: false
+    default: 20
+
+parameters:
+  - name: a_mean
+    description: The posterior mean of the slope parameter `a`
+  - name: a_variance
+    description: The posterior variance of the slope parameter `a`
+  - name: b_mean
+    description: The posterior mean of the intercept parameter `b`
+  - name: b_variance
+    description: The posterior variance of the intercept parameter `b`
+  - name: s_shape
+    description: The posterior shape parameter of the noise variance `s`
+  - name: s_rate
+    description: The posterior rate parameter of the noise variance `s`
+
+data:
+  - name: x
+    description: Input features (independent variables) for linear regression
+    type: array
+    required: true
+  - name: y
+    description: Target values (dependent variables) for linear regression
+    type: array
+    required: true

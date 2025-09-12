@@ -24,8 +24,8 @@ function initial_parameters(arguments)
         "a_variance" => 1e6,
         "b_mean" => 0.0,
         "b_variance" => 1e6,
-        "noise_shape" => 1e6,
-        "noise_scale" => 1e12
+        "noise_shape" => 1e-12,
+        "noise_scale" => 1e8
     )
 end
 
@@ -99,7 +99,7 @@ function run_learning(state, parameters, events)
         "b_mean" => parameters["b_mean"],
         "b_variance" => parameters["b_variance"],
         "noise_shape" => parameters["noise_shape"],
-        "noise_scale" => parameters["noise_scale"]
+        "noise_scale" => parameters["noise_scale"],
     )
 
     return result, state, parameters

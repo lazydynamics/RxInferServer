@@ -5,12 +5,8 @@ roles:
   - user
 
 arguments:
-  - name: iterations 
+  - name: number_of_iterations 
     description: The number of variational inference iterations
-    type: int
-    required: false
-    default: 25
-  - name: n_features
     type: int
     required: false
     default: 25

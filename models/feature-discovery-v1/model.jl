@@ -31,7 +31,12 @@ end
     ω ~ priors[:ω]
     s ~ priors[:s]
     ϕx = [ϕ(x) for ϕ in ϕs]
-    y ~ Normal(mean = dot(ϕx, ω), precision = s)
+    μ := dot(ϕx, ω)
+    y ~ Normal(mean = μ, precision = s)
+end
+
+@constraints function feature_regressions_predictive_constraints()
+    q(μ, s, y) = q(μ, y)q(s)
 end
 
 function initial_state(arguments)
@@ -63,11 +68,11 @@ function run_inference(state, parameters, data)
 
     inference_results = infer(
         model = feature_regression_predictive(ϕs = phi_s, priors = priors),
-        data = (x = x, y = missing),
+        data = (x = x, y = UnfactorizedData(missing)),
         predictvars = (y = KeepLast(),),
         initialization = init,
         iterations = state["number_of_iterations"],
-        constraints = MeanField()
+        constraints = feature_regressions_predictive_constraints()
     )
 
     result = Dict(

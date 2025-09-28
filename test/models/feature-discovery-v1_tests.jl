@@ -129,9 +129,7 @@ end
     f = (x) -> x[1] * 2.0 + x[2] * 3.0 + x[3] * 4.0
     real_noise_precision = 5.0
 
-    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
-        models_api, create_model_instance_request
-    )
+    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
     @test info.status == 200
     instance_id = response.instance_id
 
@@ -159,7 +157,9 @@ end
 
     # Phase 2: Create new episode for continual learning
     create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "phase2")
-    episode_response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, instance_id, create_episode_request)
+    episode_response, info = TestUtils.RxInferClientOpenAPI.create_episode(
+        models_api, instance_id, create_episode_request
+    )
     @test info.status == 200
 
     N2 = 100
@@ -193,9 +193,7 @@ end
     test_y_true = f(test_x)
 
     inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("x" => test_x))
-    inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(
-        models_api, instance_id, inference_request
-    )
+    inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(models_api, instance_id, inference_request)
 
     @test info.status == 200
     @test haskey(inference_response.results, "y_mean")
@@ -218,19 +216,17 @@ end
     )
 
     rng = StableRNG(123)
-    
+
     # Simple test case
     x_dim = 2
     f = (x) -> x[1] + x[2]
     N = 100
-    
+
     x = [randn(rng, x_dim) for _ in 1:N]
     y = [f(x[i]) + 0.1 * randn(rng) for i in 1:N]
     events = [Dict("data" => Dict("x" => x[i], "y" => y[i])) for i in 1:N]
 
-    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
-        models_api, create_model_instance_request
-    )
+    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
     @test info.status == 200
     instance_id = response.instance_id
 
@@ -242,7 +238,7 @@ end
 
     learn_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
     learn_response, info = TestUtils.RxInferClientOpenAPI.run_learning(models_api, instance_id, learn_request)
-    
+
     @test info.status == 200
     @test haskey(learn_response.learned_parameters, "omega_mean")
     @test haskey(learn_response.learned_parameters, "omega_covariance")
@@ -252,10 +248,8 @@ end
     # Test inference still works
     test_x = [1.0, 2.0]
     inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("x" => test_x))
-    inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(
-        models_api, instance_id, inference_request
-    )
-    
+    inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(models_api, instance_id, inference_request)
+
     @test info.status == 200
     @test haskey(inference_response.results, "y_mean")
     @test haskey(inference_response.results, "y_variance")

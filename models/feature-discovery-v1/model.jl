@@ -82,8 +82,8 @@ function run_inference(state, parameters, data)
     return result, state
 end
 
-function run_learning(state, parameters, events)
-    @debug "Running inference in FeatureDiscovery-v1 model" state parameters events
+function run_learning(state, parameters, events; forgetting_factor=nothing)
+    @debug "Running learning in FeatureDiscovery-v1 model" state parameters events forgetting_factor
 
     x = convert(Vector{Vector{Float64}}, [convert(Vector{Float64}, event["data"]["x"]) for event in events])
     y = convert(Vector{Float64}, [convert(Float64, event["data"]["y"]) for event in events])
@@ -92,10 +92,25 @@ function run_learning(state, parameters, events)
     phi_s = create_feature_functions_1(x_dim)
     phi_dim = length(phi_s)
 
-    parameters["omega_mean"] = zeros(phi_dim)
-    parameters["omega_covariance"] = 1e6 * Diagonal(ones(phi_dim))
-    parameters["noise_shape"] = 1e-12
-    parameters["noise_scale"] = 1e8
+    # Initialize parameters based on learning mode
+    # Auto-detect continual learning: if parameters exist and have been learned before, use continual learning
+    has_learned_parameters = !isnothing(parameters["omega_mean"]) && !isnothing(parameters["omega_covariance"]) && 
+                            !isnothing(parameters["noise_shape"]) && !isnothing(parameters["noise_scale"])
+    
+    if forgetting_factor === nothing && !has_learned_parameters
+        # Fresh learning - initialize with default priors
+        parameters["omega_mean"] = zeros(phi_dim)
+        parameters["omega_covariance"] = 1e6 * Diagonal(ones(phi_dim))
+        parameters["noise_shape"] = 1e-12
+        parameters["noise_scale"] = 1e8
+    else
+        # Continual learning - apply forgetting factor (use default 0.1 if not specified)
+        effective_forgetting_factor = @something(forgetting_factor, 0.1)
+        parameters["omega_mean"] = parameters["omega_mean"]
+        parameters["omega_covariance"] = parameters["omega_covariance"] / effective_forgetting_factor
+        parameters["noise_shape"] = parameters["noise_shape"] * effective_forgetting_factor
+        parameters["noise_scale"] = parameters["noise_scale"]
+    end
 
     # Create initialization for the inference
     init = @initialization begin
@@ -129,3 +144,9 @@ function run_learning(state, parameters, events)
 
     return result, state, parameters
 end
+
+# Convenience wrapper for continual learning
+function run_continual_learning(state, parameters, events, forgetting_factor=0.1)
+    return run_learning(state, parameters, events; forgetting_factor=forgetting_factor)
+end
+

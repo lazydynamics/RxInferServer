@@ -82,7 +82,7 @@ function run_inference(state, parameters, data)
     return result, state
 end
 
-function run_learning(state, parameters, events; forgetting_factor=nothing)
+function run_learning(state, parameters, events; forgetting_factor = nothing)
     @debug "Running learning in FeatureDiscovery-v1 model" state parameters events forgetting_factor
 
     x = convert(Vector{Vector{Float64}}, [convert(Vector{Float64}, event["data"]["x"]) for event in events])
@@ -94,9 +94,12 @@ function run_learning(state, parameters, events; forgetting_factor=nothing)
 
     # Initialize parameters based on learning mode
     # Auto-detect continual learning: if parameters exist and have been learned before, use continual learning
-    has_learned_parameters = !isnothing(parameters["omega_mean"]) && !isnothing(parameters["omega_covariance"]) && 
-                            !isnothing(parameters["noise_shape"]) && !isnothing(parameters["noise_scale"])
-    
+    has_learned_parameters =
+        !isnothing(parameters["omega_mean"]) &&
+        !isnothing(parameters["omega_covariance"]) &&
+        !isnothing(parameters["noise_shape"]) &&
+        !isnothing(parameters["noise_scale"])
+
     if forgetting_factor === nothing && !has_learned_parameters
         # Fresh learning - initialize with default priors
         parameters["omega_mean"] = zeros(phi_dim)
@@ -146,7 +149,6 @@ function run_learning(state, parameters, events; forgetting_factor=nothing)
 end
 
 # Convenience wrapper for continual learning
-function run_continual_learning(state, parameters, events, forgetting_factor=0.1)
-    return run_learning(state, parameters, events; forgetting_factor=forgetting_factor)
+function run_continual_learning(state, parameters, events, forgetting_factor = 0.1)
+    return run_learning(state, parameters, events; forgetting_factor = forgetting_factor)
 end
-

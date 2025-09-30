@@ -1166,6 +1166,7 @@ components:
         - episode_name
         - created_at
         - events
+        - parameters
       properties:
         instance_id:
           type: string
@@ -1184,11 +1185,16 @@ components:
           items:
             type: object
             additionalProperties: true
+        parameters:
+          type: object
+          description: Parameters of the episode
+          additionalProperties: true
       example:
         instance_id: "123e4567-e89b-12d3-a456-426614174000"
         episode_name: "default"
         created_at: "2024-03-20T12:00:00Z"
         events: []
+        parameters: {}
 
     AttachEventsToEpisodeRequest:
       type: object

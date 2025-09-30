@@ -14,7 +14,7 @@ function run_inference(state, parameters, data)
 end
 
 function run_learning(state, parameters, events)
-    parameter = 0
+    parameter = parameters["parameter"]
     for event in events
         parameter += event["data"]["observation"]
     end

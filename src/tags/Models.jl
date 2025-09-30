@@ -203,7 +203,7 @@ function run_inference(req::HTTP.Request, instance_id::String, infer_request::Rx
                 error = "Bad Request", message = "Unable to get current episode for inference"
             )
 
-            # Deserialize episode parameters if they exist and are in binary format
+            # Deserialize episode parameters
             episode_parameters = Models.deserialize_parameters(current_episode["parameters"])
 
             @debug "Calling the model's `run_inference` method" instance_id
@@ -340,7 +340,7 @@ function get_episode_info(req::HTTP.Request, instance_id::String, episode_name::
         error = "Not Found", message = "The requested episode could not be found"
     )
 
-    # Deserialize episode parameters if they exist and are in binary format
+    # Deserialize episode parameters
     episode_parameters = Models.deserialize_parameters(episode["parameters"])
 
     return RxInferServerOpenAPI.EpisodeInfo(
@@ -362,22 +362,12 @@ function get_episodes(req::HTTP.Request, instance_id::String)
     episodes = __database_op_get_all_episodes(; instance_id)
 
     return map(episodes) do episode
-        # Deserialize episode parameters if they exist and are in binary format
-        episode_parameters = Dict{String, Any}()
-        if haskey(episode, "parameters")
-            if isa(episode["parameters"], Vector{UInt8})
-                episode_parameters = Models.deserialize_parameters(episode["parameters"])
-            else
-                episode_parameters = episode["parameters"]
-            end
-        end
-
         return RxInferServerOpenAPI.EpisodeInfo(
             instance_id = instance_id,
             episode_name = episode["episode_name"],
             created_at = ZonedDateTime(episode["created_at"], TimeZones.localzone()),
             events = episode["events"],
-            parameters = episode_parameters
+            parameters = Models.deserialize_parameters(episode["parameters"])
         )
     end
 end
@@ -560,10 +550,6 @@ function __database_op_get_model_instance(; token, instance_id)
         if haskey(result, "state") && isa(result["state"], Vector{UInt8})
             result["state"] = Models.deserialize_state(result["state"])
         end
-        # Deserialize the parameters if it exists and in binary format
-        if haskey(result, "parameters") && isa(result["parameters"], Vector{UInt8})
-            result["parameters"] = Models.deserialize_parameters(result["parameters"])
-        end
     end
 
     return result
@@ -575,7 +561,6 @@ function __database_op_create_model_instance(;
     @debug "Creating new model instance in the database" model_name token
 
     serialized_state = Models.serialize_state(initial_state)
-    serialized_parameters = Models.serialize_parameters(initial_parameters)
     instance_id = string(UUIDs.uuid4())
     document = Mongoc.BSON(
         "instance_id" => instance_id,
@@ -585,7 +570,6 @@ function __database_op_create_model_instance(;
         "created_by" => token,
         "arguments" => arguments,
         "state" => serialized_state,
-        "parameters" => serialized_parameters,
         "current_episode" => "default",
         "deleted" => false
     )
@@ -658,21 +642,20 @@ function __database_op_get_episode(; instance_id::String, episode_name::String)
 end
 
 ## Create a new episode
-function __database_op_create_episode(; instance_id::String, episode_name::String, initial_parameters = nothing)
+function __database_op_create_episode(; instance_id::String, episode_name::String)
     @debug "Creating new episode in the database" instance_id episode_name
 
     # Get the model instance to get initial parameters if not provided
-    if isnothing(initial_parameters)
-        model_instance = __database_op_get_model_instance(; token = current_token(), instance_id)
-        if !isnothing(model_instance)
-            # Get the model's dispatcher to get initial parameters
-            dispatcher = Models.get_models_dispatcher()
-            model_name = model_instance["model_name"]
-            arguments = model_instance["arguments"]
-            initial_parameters = Models.dispatch(dispatcher, model_name, :initial_parameters, arguments)
-        else
-            initial_parameters = Dict{String, Any}()
-        end
+    model_instance = __database_op_get_model_instance(; token = current_token(), instance_id)
+    if !isnothing(model_instance)
+        # Get the model's dispatcher to get initial parameters
+        dispatcher = Models.get_models_dispatcher()
+        model_name = model_instance["model_name"]
+        arguments = model_instance["arguments"]
+        initial_parameters = Models.dispatch(dispatcher, model_name, :initial_parameters, arguments)
+    else
+        @debug "Cannot create episode because model instance does not exist" instance_id episode_name
+        return nothing
     end
 
     document = Mongoc.BSON(

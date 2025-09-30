@@ -15,7 +15,7 @@ All URIs are relative to *http://localhost:8000/v1*
 | [**getEpisodeInfo**](ModelsApi.md#getEpisodeInfo) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information |
 | [**getEpisodes**](ModelsApi.md#getEpisodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model instance |
 | [**getModelInstance**](ModelsApi.md#getModelInstance) | **GET** /models/i/{instance_id} | Get model instance information |
-| [**getModelInstanceParameters**](ModelsApi.md#getModelInstanceParameters) | **GET** /models/i/{instance_id}/parameters | Get the parameters of a model instance |
+| [**getModelInstanceParameters**](ModelsApi.md#getModelInstanceParameters) | **GET** /models/i/{instance_id}/parameters | Get the parameters of a model instance (current episode) |
 | [**getModelInstanceState**](ModelsApi.md#getModelInstanceState) | **GET** /models/i/{instance_id}/state | Get the state of a model instance |
 | [**getModelInstances**](ModelsApi.md#getModelInstances) | **GET** /models/instances | Get all created model instances |
 | [**runInference**](ModelsApi.md#runInference) | **POST** /models/i/{instance_id}/infer | Run inference |
@@ -329,9 +329,9 @@ Get model instance information
 # **getModelInstanceParameters**
 > ModelInstanceParameters getModelInstanceParameters(instance\_id)
 
-Get the parameters of a model instance
+Get the parameters of a model instance (current episode)
 
-    Retrieve the parameters of a specific model instance
+    Retrieve the parameters of a specific model instance. Those are simply the parameters of the current episode.
 
 ### Parameters
 

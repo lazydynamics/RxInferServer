@@ -711,7 +711,7 @@ end
         for (i, event) in enumerate(response.events)
             @test event["data"] == events[i]["data"]
             @test event["metadata"] == events[i]["metadata"]
-            @test event["id"] == i
+            @test event["event_id"] == i
             @test DateTime(event["timestamp"]) == DateTime(events[i]["timestamp"])
         end
     end
@@ -772,7 +772,7 @@ end
         for (i, event) in enumerate(response.events)
             @test event["data"] == events[i]["data"]
             @test event["metadata"] == events[i]["metadata"]
-            @test event["id"] == i
+            @test event["event_id"] == i
             @test DateTime(event["timestamp"]) == DateTime(events[i]["timestamp"])
         end
     end
@@ -1389,7 +1389,7 @@ end
     @test model_state.state["number_of_inference_calls"] == 10
 
     for i in 1:10
-        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => 0))
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => -1))
         iter_inference, iter_info = TestUtils.RxInferClientOpenAPI.run_inference(
             models_api, model_instance.instance_id, inference_request
         )
@@ -1404,7 +1404,7 @@ end
     @test info.status == 200
     @test !isnothing(learning_response)
 
-    @test learning_response.learned_parameters["parameter"] == 55
+    @test learning_response.learned_parameters["parameter"] == 45 # 55 - 10
 
     model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, model_instance.instance_id)
     @test info.status == 200
@@ -1637,14 +1637,14 @@ end
     episode_info, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model_instance.instance_id, create_episode_request)
     @test info.status == 200
     @test !isnothing(episode_info)
-    @test episode_info.episode_name == "new_episode"
+    @test episode_info.episode_name == "episode1"
     @test episode_info.parameters["parameter"] == 0
 
     create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "episode2")
     episode_info, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model_instance.instance_id, create_episode_request)
     @test info.status == 200
     @test !isnothing(episode_info)
-    @test episode_info.episode_name == "new_episode"
+    @test episode_info.episode_name == "episode2"
     @test episode_info.parameters["parameter"] == 0
     
     # Check that the `episode2` is the current episode

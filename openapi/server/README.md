@@ -58,7 +58,7 @@ Class | Method | HTTP request | Description
 *ModelsApi* | [**get_episode_info**](docs/ModelsApi.md#get_episode_info) | **GET** /models/i/{instance_id}/episodes/{episode_name} | Get episode information
 *ModelsApi* | [**get_episodes**](docs/ModelsApi.md#get_episodes) | **GET** /models/i/{instance_id}/episodes | Get all episodes for a model instance
 *ModelsApi* | [**get_model_instance**](docs/ModelsApi.md#get_model_instance) | **GET** /models/i/{instance_id} | Get model instance information
-*ModelsApi* | [**get_model_instance_parameters**](docs/ModelsApi.md#get_model_instance_parameters) | **GET** /models/i/{instance_id}/parameters | Get the parameters of a model instance
+*ModelsApi* | [**get_model_instance_parameters**](docs/ModelsApi.md#get_model_instance_parameters) | **GET** /models/i/{instance_id}/parameters | Get the parameters of a model instance (current episode)
 *ModelsApi* | [**get_model_instance_state**](docs/ModelsApi.md#get_model_instance_state) | **GET** /models/i/{instance_id}/state | Get the state of a model instance
 *ModelsApi* | [**get_model_instances**](docs/ModelsApi.md#get_model_instances) | **GET** /models/instances | Get all created model instances
 *ModelsApi* | [**run_inference**](docs/ModelsApi.md#run_inference) | **POST** /models/i/{instance_id}/infer | Run inference

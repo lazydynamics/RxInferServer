@@ -10,7 +10,7 @@
     )
 
     - episodes::Vector{String} : List of episodes to learn from
-    - relearn::Bool : If true, reset previously learned parameters and use all data to learn from scratch
+    - relearn::Bool : If true, reset episode parameters and process all events from scratch. If false, only process unprocessed events for incremental learning.
 """
 Base.@kwdef mutable struct LearnRequest <: OpenAPI.APIModel
     episodes::Union{Nothing, Vector{String}} = nothing

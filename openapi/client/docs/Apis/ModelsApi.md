@@ -331,7 +331,7 @@ Get model instance information
 
 Get the parameters of a model instance (current episode)
 
-    Retrieve the parameters of a specific model instance. Those are simply the parameters of the current episode.
+    Retrieve the parameters of a specific model instance. These parameters reflect the current episode&#39;s learned parameters.
 
 ### Parameters
 

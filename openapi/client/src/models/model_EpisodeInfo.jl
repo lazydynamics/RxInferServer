@@ -16,7 +16,7 @@
     - episode_name::String : Name of the episode
     - created_at::ZonedDateTime : Timestamp of when the episode was created
     - events::Vector{Dict{String, Any}} : List of events that have occurred in the episode
-    - parameters::Dict{String, Any} : Parameters of the episode
+    - parameters::Dict{String, Any} : Learned parameters of the episode
 """
 Base.@kwdef mutable struct EpisodeInfo <: OpenAPI.APIModel
     instance_id::Union{Nothing, String} = nothing

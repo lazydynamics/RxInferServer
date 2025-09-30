@@ -1461,7 +1461,9 @@ end
     @test model_state.state["number_of_learning_calls"] == 1
     @test model_state.state["number_of_inference_calls"] == 0
 
-    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "default")
+    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+        models_api, model_instance.instance_id, "default"
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test length(episode_info.events) == 10
@@ -1488,7 +1490,9 @@ end
     @test model_state.state["number_of_learning_calls"] == 2
     @test model_state.state["number_of_inference_calls"] == 0
 
-    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "default")
+    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+        models_api, model_instance.instance_id, "default"
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test length(episode_info.events) == 20
@@ -1521,7 +1525,7 @@ end
     )
     @test info.status == 200
     @test !isnothing(attach_response)
-    
+
     learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
     learning_response, info = TestUtils.RxInferClientOpenAPI.run_learning(
         models_api, model_instance.instance_id, learning_request
@@ -1530,14 +1534,18 @@ end
     @test !isnothing(learning_response)
     @test learning_response.learned_parameters["parameter"] == 55
 
-    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "default")
+    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+        models_api, model_instance.instance_id, "default"
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test episode_info.parameters["parameter"] == 55
 
     # Create a new episode here
     create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "new_episode")
-    episode_info, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model_instance.instance_id, create_episode_request)
+    episode_info, info = TestUtils.RxInferClientOpenAPI.create_episode(
+        models_api, model_instance.instance_id, create_episode_request
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test episode_info.episode_name == "new_episode"
@@ -1550,7 +1558,7 @@ end
     )
     @test info.status == 200
     @test !isnothing(attach_response)
-    
+
     learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["new_episode"])
     learning_response, info = TestUtils.RxInferClientOpenAPI.run_learning(
         models_api, model_instance.instance_id, learning_request
@@ -1559,55 +1567,73 @@ end
     @test !isnothing(learning_response)
     @test learning_response.learned_parameters["parameter"] == 15
 
-    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "new_episode")
+    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+        models_api, model_instance.instance_id, "new_episode"
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test episode_info.parameters["parameter"] == 15
 
     # Check the first episode is not affected 
-    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "default")
+    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+        models_api, model_instance.instance_id, "default"
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test episode_info.parameters["parameter"] == 55
 
     # Check that the model parameters are set to the second episode's parameters
-    model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(models_api, model_instance.instance_id)
+    model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(
+        models_api, model_instance.instance_id
+    )
     @test info.status == 200
     @test !isnothing(model_parameters)
     @test model_parameters.parameters["parameter"] == 15
 
     # Wipe the second episode
-    wipe_episode_response, info = TestUtils.RxInferClientOpenAPI.wipe_episode(models_api, model_instance.instance_id, "new_episode")
+    wipe_episode_response, info = TestUtils.RxInferClientOpenAPI.wipe_episode(
+        models_api, model_instance.instance_id, "new_episode"
+    )
     @test info.status == 200
     @test !isnothing(wipe_episode_response)
     @test wipe_episode_response.message == "Episode wiped successfully"
 
     # Check that the episode's parameters are reset to the default
-    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "new_episode")
+    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+        models_api, model_instance.instance_id, "new_episode"
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test episode_info.parameters["parameter"] == 0
 
     # Check that the default episode is not affected
-    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "default")
+    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+        models_api, model_instance.instance_id, "default"
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test episode_info.parameters["parameter"] == 55
 
     # Check that the model parameters are also reset since the second episode was set to current
-    model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(models_api, model_instance.instance_id)
+    model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(
+        models_api, model_instance.instance_id
+    )
     @test info.status == 200
     @test !isnothing(model_parameters)
     @test model_parameters.parameters["parameter"] == 0
 
     # Delete the second episode
-    delete_episode_response, info = TestUtils.RxInferClientOpenAPI.delete_episode(models_api, model_instance.instance_id, "new_episode")
+    delete_episode_response, info = TestUtils.RxInferClientOpenAPI.delete_episode(
+        models_api, model_instance.instance_id, "new_episode"
+    )
     @test info.status == 200
     @test !isnothing(delete_episode_response)
     @test delete_episode_response.message == "Episode deleted successfully"
 
     # Check that the model parameters are set to the default episode's parameters (since it become the current episode)
-    model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(models_api, model_instance.instance_id)
+    model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(
+        models_api, model_instance.instance_id
+    )
     @test info.status == 200
     @test !isnothing(model_parameters)
     @test model_parameters.parameters["parameter"] == 55
@@ -1634,19 +1660,23 @@ end
 
     # Create new episodes
     create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "episode1")
-    episode_info, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model_instance.instance_id, create_episode_request)
+    episode_info, info = TestUtils.RxInferClientOpenAPI.create_episode(
+        models_api, model_instance.instance_id, create_episode_request
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test episode_info.episode_name == "episode1"
     @test episode_info.parameters["parameter"] == 0
 
     create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = "episode2")
-    episode_info, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, model_instance.instance_id, create_episode_request)
+    episode_info, info = TestUtils.RxInferClientOpenAPI.create_episode(
+        models_api, model_instance.instance_id, create_episode_request
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test episode_info.episode_name == "episode2"
     @test episode_info.parameters["parameter"] == 0
-    
+
     # Check that the `episode2` is the current episode
     model_instance, info = TestUtils.RxInferClientOpenAPI.get_model_instance(models_api, model_instance.instance_id)
     @test info.status == 200
@@ -1678,13 +1708,17 @@ end
     @test model_instance.current_episode == "episode2"
 
     # Check that the parameters of the episode2 are not affected
-    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, model_instance.instance_id, "episode2")
+    episode_info, info = TestUtils.RxInferClientOpenAPI.get_episode_info(
+        models_api, model_instance.instance_id, "episode2"
+    )
     @test info.status == 200
     @test !isnothing(episode_info)
     @test episode_info.parameters["parameter"] == 0
 
     # Check that the model parameters are equivalent to the episode2's parameters
-    model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(models_api, model_instance.instance_id)
+    model_parameters, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(
+        models_api, model_instance.instance_id
+    )
     @test info.status == 200
     @test !isnothing(model_parameters)
     @test model_parameters.parameters["parameter"] == 0
@@ -1693,5 +1727,80 @@ end
     response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, model_instance.instance_id)
     @test info.status == 200
     @test response.message == "Model instance deleted successfully"
-    
+end
+
+@testitem "It should be possible to relearn from an episode" setup = [TestUtils] begin
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "TestModelLearningCall", description = "Testing learning call"
+    )
+
+    model_instance, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
+        models_api, create_model_instance_request
+    )
+    @test info.status == 200
+    @test !isnothing(model_instance)
+
+    data = [Dict("data" => Dict("observation" => i)) for i in 1:10]
+
+    attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = data)
+    attach_response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+        models_api, model_instance.instance_id, "default", attach_events_request
+    )
+    @test info.status == 200
+    @test !isnothing(attach_response)
+
+    learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
+    learning_response, info = TestUtils.RxInferClientOpenAPI.run_learning(
+        models_api, model_instance.instance_id, learning_request
+    )
+    @test info.status == 200
+    @test !isnothing(learning_response)
+    @test learning_response.learned_parameters["parameter"] == 55
+
+    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, model_instance.instance_id)
+    @test info.status == 200
+    @test !isnothing(model_state)
+    @test model_state.state["number_of_learning_calls"] == 1
+    @test model_state.state["number_of_inference_calls"] == 0
+    @test model_state.state["number_of_processed_events"] == 10
+
+    # Learn again, but relearn set to false 
+    learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"], relearn = false)
+    learning_response, info = TestUtils.RxInferClientOpenAPI.run_learning(
+        models_api, model_instance.instance_id, learning_request
+    )
+    @test info.status == 200
+    @test !isnothing(learning_response)
+    @test learning_response.learned_parameters["parameter"] == 55
+
+    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, model_instance.instance_id)
+    @test info.status == 200
+    @test !isnothing(model_state)
+    @test model_state.state["number_of_learning_calls"] == 2
+    @test model_state.state["number_of_inference_calls"] == 0
+    @test model_state.state["number_of_processed_events"] == 10 # number of processed events should not change here!
+
+    # Now, relearn set to true
+    learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"], relearn = true)
+    learning_response, info = TestUtils.RxInferClientOpenAPI.run_learning(
+        models_api, model_instance.instance_id, learning_request
+    )
+    @test info.status == 200
+    @test !isnothing(learning_response)
+    @test learning_response.learned_parameters["parameter"] == 110 # 55 + 55
+
+    model_state, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, model_instance.instance_id)
+    @test info.status == 200
+    @test !isnothing(model_state)
+    @test model_state.state["number_of_learning_calls"] == 3
+    @test model_state.state["number_of_inference_calls"] == 0
+    @test model_state.state["number_of_processed_events"] == 20 # number of processed events should change here!
+
+    # Delete the model instance
+    response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, model_instance.instance_id)
+    @test info.status == 200
+    @test response.message == "Model instance deleted successfully"
 end

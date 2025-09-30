@@ -23,7 +23,7 @@ function run_learning(state, parameters, events)
     parameters["parameter"] = parameter
     state["number_of_learning_calls"] += 1
     state["number_of_processed_events"] = processed_events
-    
+
     result = Dict("parameter" => parameter)
     return result, state, parameters
 end

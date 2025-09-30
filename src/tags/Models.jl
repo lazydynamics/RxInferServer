@@ -340,15 +340,12 @@ function get_episode_info(req::HTTP.Request, instance_id::String, episode_name::
         error = "Not Found", message = "The requested episode could not be found"
     )
 
-    # Deserialize episode parameters
-    episode_parameters = Models.deserialize_parameters(episode["parameters"])
-
     return RxInferServerOpenAPI.EpisodeInfo(
         instance_id = instance_id,
         episode_name = episode_name,
         created_at = ZonedDateTime(episode["created_at"], TimeZones.localzone()),
         events = episode["events"],
-        parameters = episode_parameters
+        parameters = Models.deserialize_parameters(episode["parameters"])
     )
 end
 
@@ -555,6 +552,22 @@ function __database_op_get_model_instance(; token, instance_id)
     return result
 end
 
+function __database_op_get_model_instance_initial_parameters(; token, instance_id)
+    @debug "Attempting to get model instance initial parameters" token instance_id
+
+    model_instance = __database_op_get_model_instance(; token = current_token(), instance_id)
+    if !isnothing(model_instance)
+        # Get the model's dispatcher to get initial parameters
+        dispatcher = Models.get_models_dispatcher()
+        model_name = model_instance["model_name"]
+        arguments = model_instance["arguments"]
+        return Models.dispatch(dispatcher, model_name, :initial_parameters, arguments)
+    else
+        @debug "Cannot create episode because model instance does not exist" instance_id episode_name
+        return nothing
+    end
+end
+
 function __database_op_create_model_instance(;
     token, model_name, description, arguments, initial_state, initial_parameters
 )
@@ -646,15 +659,9 @@ function __database_op_create_episode(; instance_id::String, episode_name::Strin
     @debug "Creating new episode in the database" instance_id episode_name
 
     # Get the model instance to get initial parameters if not provided
-    model_instance = __database_op_get_model_instance(; token = current_token(), instance_id)
-    if !isnothing(model_instance)
-        # Get the model's dispatcher to get initial parameters
-        dispatcher = Models.get_models_dispatcher()
-        model_name = model_instance["model_name"]
-        arguments = model_instance["arguments"]
-        initial_parameters = Models.dispatch(dispatcher, model_name, :initial_parameters, arguments)
-    else
-        @debug "Cannot create episode because model instance does not exist" instance_id episode_name
+    initial_parameters = __database_op_get_model_instance_initial_parameters(; token = current_token(), instance_id)
+    if isnothing(initial_parameters)
+        @debug "Cannot create episode, unable to get initial parameters" instance_id episode_name
         return nothing
     end
 
@@ -757,18 +764,11 @@ function __database_op_wipe_episode(; instance_id::String, episode_name::String)
     # Get the episode to reset parameters to initial values
     episode = Mongoc.find_one(collection, query)
     update = if !isnothing(episode)
-        # Get the model instance to get initial parameters
-        model_instance = __database_op_get_model_instance(; token = current_token(), instance_id)
-        if !isnothing(model_instance)
-            dispatcher = Models.get_models_dispatcher()
-            model_name = model_instance["model_name"]
-            arguments = model_instance["arguments"]
-            initial_parameters = Models.dispatch(dispatcher, model_name, :initial_parameters, arguments)
-        else
+        initial_parameters = __database_op_get_model_instance_initial_parameters(; token = current_token(), instance_id)
+        if isnothing(initial_parameters)
             @debug "Cannot wipe episode because model instance does not exist" instance_id episode_name
             return nothing
         end
-
         Mongoc.BSON(
             "\$set" => Mongoc.BSON(
                 "events" => [],

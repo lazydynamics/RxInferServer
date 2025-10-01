@@ -21,7 +21,7 @@ response, _  = token_generate(api)
 @test !isnothing(response)
 token = response.token
 
-using Plots
+using Plots, Distributions
 ```
 
 ```@example continual-learning-beta-bernoulli
@@ -64,6 +64,16 @@ import RxInferClientOpenAPI: attach_events_to_episode, AttachEventsToEpisodeRequ
 # Simulate first week data: 15 successes out of 20 trials
 first_week_data = [1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0]
 
+# Visualize the first week data distribution
+p1 = bar([0, 1], [count(==(0), first_week_data), count(==(1), first_week_data)], 
+         label="Week 1 Data (15 successes, 5 failures)", 
+         color=:lightblue, alpha=0.7)
+plot!(p1, title="Week 1 Data Distribution", xlabel="Observation", ylabel="Count", 
+      xticks=([0, 1], ["Failure (0)", "Success (1)"]))
+p1
+```
+
+```@example continual-learning-beta-bernoulli
 events = [Dict("data" => Dict("observation" => obs)) for obs in first_week_data]
 
 request = AttachEventsToEpisodeRequest(events = events)
@@ -119,6 +129,19 @@ inference_response
 
 After the first week, our model estimates the success probability at approximately 75% (15 successes out of 20 trials), with the posterior parameters α=16, β=6.
 
+```@example continual-learning-beta-bernoulli
+# Visualize the posterior distribution after first week
+posterior_week1 = Beta(16, 6)
+p2 = plot(0:0.01:1, pdf.(posterior_week1, 0:0.01:1), 
+          label="Posterior after Week 1 (α=16, β=6)", 
+          color=:blue, lw=2, title="Posterior Distribution After Week 1")
+vline!(p2, [mean(posterior_week1)], 
+       label="Mean: $(round(mean(posterior_week1), digits=3))", 
+       linestyle=:dash, color=:red)
+plot!(p2, xlabel="Success Probability", ylabel="Density")
+p2
+```
+
 !!! note
     The inference request adds an event to the episode, so we have one more event than the first week's data.
     ```@example continual-learning-beta-bernoulli
@@ -139,6 +162,16 @@ Now, let's simulate the second week of data. This time, we observe 30 more inter
 # Simulate second week data: 18 successes out of 30 trials
 second_week_data = [1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1]
 
+# Visualize the second week data distribution
+p3 = bar([0, 1], [count(==(0), second_week_data), count(==(1), second_week_data)], 
+         label="Week 2 Data (18 successes, 12 failures)", 
+         color=:lightgreen, alpha=0.7)
+plot!(p3, title="Week 2 Data Distribution", xlabel="Observation", ylabel="Count", 
+      xticks=([0, 1], ["Failure (0)", "Success (1)"]))
+p3
+```
+
+```@example continual-learning-beta-bernoulli
 new_events = [Dict("data" => Dict("observation" => obs)) for obs in second_week_data]
 
 request = AttachEventsToEpisodeRequest(events = new_events)
@@ -193,6 +226,19 @@ inference_response
 
 After the second week, our model now estimates the success probability at approximately 70% (36 successes out of 51 total trials), with posterior parameters α=37, β=16. Notice how the model efficiently updated its beliefs without reprocessing the first week's data.
 
+```@example continual-learning-beta-bernoulli
+# Visualize the posterior distribution after second week
+posterior_week2 = Beta(37, 16)
+p4 = plot(0:0.01:1, pdf.(posterior_week2, 0:0.01:1), 
+          label="Posterior after Week 2 (α=37, β=16)", 
+          color=:green, lw=2, title="Posterior Distribution After Week 2")
+vline!(p4, [mean(posterior_week2)], 
+       label="Mean: $(round(mean(posterior_week2), digits=3))", 
+       linestyle=:dash, color=:red)
+plot!(p4, xlabel="Success Probability", ylabel="Density")
+p4
+```
+
 ## Phase 3: Comparing Learning Modes
 
 Let's demonstrate the difference between incremental learning and relearning by creating a new episode and comparing the results.
@@ -240,6 +286,31 @@ episode_info.parameters
 
 Both approaches yield the same final parameters (α=36, β=16). The difference is in the α parameter because the default episode also had an inference call where the observation has also been added.
 
+```@example continual-learning-beta-bernoulli
+# Visualize the comparison between continual learning and relearning
+p5 = plot(title="Comparison: Continual Learning vs Relearning", xlabel="Success Probability", ylabel="Density", legend=:topright)
+
+# Continual learning result (from default episode)
+posterior_continual = Beta(37, 16)
+plot!(p5, 0:0.01:1, pdf.(posterior_continual, 0:0.01:1), 
+      label="Continual Learning (α=37, β=16)", color=:blue, lw=2)
+
+# Relearning result (from new episode)
+posterior_relearning = Beta(36, 16)
+plot!(p5, 0:0.01:1, pdf.(posterior_relearning, 0:0.01:1), 
+      label="Relearning (α=36, β=16)", color=:red, lw=2, linestyle=:dash)
+
+# Add vertical lines for means
+vline!(p5, [mean(posterior_continual)], 
+       label="Continual Mean: $(round(mean(posterior_continual), digits=3))", 
+       linestyle=:dash, color=:blue)
+vline!(p5, [mean(posterior_relearning)], 
+       label="Relearning Mean: $(round(mean(posterior_relearning), digits=3))", 
+       linestyle=:dash, color=:red)
+
+p5
+```
+
 ## Visualizing the Learning Process
 
 Let's create a visualization showing how the posterior distribution evolves:
@@ -248,28 +319,57 @@ Let's create a visualization showing how the posterior distribution evolves:
 using Distributions
 
 # Plot the evolution of the posterior distribution
-p = plot(title="Evolution of Success Probability Belief", xlabel="Success Probability", ylabel="Density", legend=:topright)
+p6 = plot(title="Evolution of Success Probability Belief", xlabel="Success Probability", ylabel="Density", legend=:topright)
 
 # Initial prior (uniform)
 prior = Beta(1, 1)
-plot!(p, 0:0.01:1, pdf.(prior, 0:0.01:1), label="Initial Prior (α=1, β=1)", lw=2)
+plot!(p6, 0:0.01:1, pdf.(prior, 0:0.01:1), label="Initial Prior (α=1, β=1)", color=:gray, lw=2)
 
 # After first week
 posterior1 = Beta(16, 6)
-plot!(p, 0:0.01:1, pdf.(posterior1, 0:0.01:1), label="After Week 1 (α=16, β=6)", lw=2)
+plot!(p6, 0:0.01:1, pdf.(posterior1, 0:0.01:1), label="After Week 1 (α=16, β=6)", color=:blue, lw=2)
 
 # After second week (continual learning)
-posterior2 = Beta(34, 18)
-plot!(p, 0:0.01:1, pdf.(posterior2, 0:0.01:1), label="After Week 2 (α=34, β=18)", lw=2)
+posterior2 = Beta(37, 16)
+plot!(p6, 0:0.01:1, pdf.(posterior2, 0:0.01:1), label="After Week 2 (α=37, β=16)", color=:green, lw=2)
 
 # Add vertical lines for the means
-vline!(p, [mean(posterior1)], label="Week 1 Mean: $(round(mean(posterior1), digits=3))", linestyle=:dash, color=:blue)
-vline!(p, [mean(posterior2)], label="Week 2 Mean: $(round(mean(posterior2), digits=3))", linestyle=:dash, color=:red)
+vline!(p6, [mean(prior)], label="Prior Mean: $(round(mean(prior), digits=3))", linestyle=:dash, color=:gray)
+vline!(p6, [mean(posterior1)], label="Week 1 Mean: $(round(mean(posterior1), digits=3))", linestyle=:dash, color=:blue)
+vline!(p6, [mean(posterior2)], label="Week 2 Mean: $(round(mean(posterior2), digits=3))", linestyle=:dash, color=:green)
 
-p
+p6
 ```
 
-The plot shows how our belief about the success probability becomes more concentrated as we gather more data, and how the mean shifts from the initial 50% to approximately 66% after observing the actual data.
+The plot shows how our belief about the success probability becomes more concentrated as we gather more data, and how the mean shifts from the initial 50% to approximately 70% after observing the actual data.
+
+```@example continual-learning-beta-bernoulli
+# Create a summary plot showing data distributions and posterior evolution
+p7 = plot(layout=(2,2), size=(800, 600))
+
+# Week 1 data
+bar!(p7[1], [0, 1], [count(==(0), first_week_data), count(==(1), first_week_data)], 
+     label="Week 1 Data", color=:lightblue, alpha=0.7, title="Week 1 Data Distribution")
+plot!(p7[1], xticks=([0, 1], ["Failure", "Success"]))
+
+# Week 2 data  
+bar!(p7[2], [0, 1], [count(==(0), second_week_data), count(==(1), second_week_data)], 
+     label="Week 2 Data", color=:lightgreen, alpha=0.7, title="Week 2 Data Distribution")
+plot!(p7[2], xticks=([0, 1], ["Failure", "Success"]))
+
+# Posterior evolution
+plot!(p7[3], 0:0.01:1, pdf.(prior, 0:0.01:1), label="Initial Prior", color=:gray, lw=2, title="Posterior Evolution")
+plot!(p7[3], 0:0.01:1, pdf.(posterior1, 0:0.01:1), label="After Week 1", color=:blue, lw=2)
+plot!(p7[3], 0:0.01:1, pdf.(posterior2, 0:0.01:1), label="After Week 2", color=:green, lw=2)
+
+# Success rate over time
+success_rates = [mean(first_week_data), mean([first_week_data; second_week_data])]
+weeks = ["Week 1", "Week 2"]
+bar!(p7[4], weeks, success_rates, label="Observed Success Rate", color=:orange, alpha=0.7, title="Observed Success Rate Over Time")
+plot!(p7[4], ylims=(0, 1), ylabel="Success Rate")
+
+p7
+```
 
 ## Key Benefits of Continual Learning
 

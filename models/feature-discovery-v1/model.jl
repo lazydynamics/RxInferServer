@@ -64,8 +64,8 @@ function run_inference(state, parameters, data)
     end
 
     inference_results = infer(
-        model = feature_regression_predictive(ϕs = phi_s, priors = priors),
-        data = (x = x, y = UnfactorizedData(missing)),
+        model = feature_regression_predictive(ϕs = phi_s, priors = priors, x = x),
+        data = (y = UnfactorizedData(missing),),
         predictvars = (y = KeepLast(),),
         initialization = init,
         iterations = state["number_of_iterations"],
@@ -113,8 +113,8 @@ function run_learning(state, parameters, events)
         )
 
         inference_results = infer(
-            model = feature_regression_unknown_noise(ϕs = phi_s, priors = priors),
-            data = (x = x, y = y),
+            model = feature_regression_unknown_noise(ϕs = phi_s, priors = priors, x = x),
+            data = (y = y,),
             initialization = init,
             returnvars = (ω = KeepLast(), s = KeepLast()),
             iterations = state["number_of_iterations"],

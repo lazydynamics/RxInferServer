@@ -179,6 +179,8 @@ Let's check how the parameters have evolved:
 ```@example continual-learning-beta-bernoulli
 params_response, _ = get_model_instance_parameters(api, instance_id)
 @test !isnothing(params_response) #hide
+@test params_response.parameters["posterior_a"] == 37 #hide
+@test params_response.parameters["posterior_b"] == 16 #hide
 params_response
 ```
 
@@ -189,7 +191,7 @@ inference_response, _ = run_inference(api, instance_id, inference_request)
 inference_response
 ```
 
-After the second week, our model now estimates the success probability at approximately 66% (33 successes out of 50 total trials), with posterior parameters α=34, β=18. Notice how the model efficiently updated its beliefs without reprocessing the first week's data.
+After the second week, our model now estimates the success probability at approximately 70% (36 successes out of 51 total trials), with posterior parameters α=37, β=16. Notice how the model efficiently updated its beliefs without reprocessing the first week's data.
 
 ## Phase 3: Comparing Learning Modes
 
@@ -231,10 +233,12 @@ import RxInferClientOpenAPI: get_episode_info
 
 episode_info, _ = get_episode_info(api, instance_id, "relearning-experiment")
 @test !isnothing(episode_info) #hide
+@test episode_info.parameters["posterior_a"] == 36 #hide
+@test episode_info.parameters["posterior_b"] == 16 #hide
 episode_info.parameters
 ```
 
-Both approaches yield the same final parameters (α=34, β=18), but continual learning is more efficient as it only processes new data.
+Both approaches yield the same final parameters (α=36, β=16). The difference is in the α parameter because the default episode also had an inference call where the observation has also been added.
 
 ## Visualizing the Learning Process
 

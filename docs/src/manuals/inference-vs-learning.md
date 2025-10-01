@@ -138,6 +138,8 @@ If we call learning now, it will use only the unprocessed events and the previou
 learn_request = LearnRequest(episodes = ["default"])
 learn_response, _ = run_learning(api, instance_id, learn_request)
 @test !isnothing(learn_response) #hide
+@test learn_response.learned_parameters["posterior_a"] == 11 #hide
+@test learn_response.learned_parameters["posterior_b"] == 3 #hide
 learn_response
 ```
 

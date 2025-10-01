@@ -120,6 +120,8 @@ Episodes serve as containers for organizing training data and metadata in your m
 - Store sequential observations and arbitrary metadata attached to each event
 - Track experiments and perform learning
 - Organize model validation
+- Maintain episode-specific learned parameters
+- Enable incremental learning by tracking which events have been processed
 
 ### Listing Episodes
 
@@ -148,7 +150,7 @@ response, _ = get_episode_info(api, instance_id, "default")
 response
 ```
 
-As we can see, the `default` episode has no events since we haven't loaded any data into it yet nor run any inference.
+As we can see, the `default` episode has no events since we haven't loaded any data into it yet nor run any inference. The episode also shows its current parameters, which are initialized to default values.
 
 ### Creating New Episodes
 
@@ -165,7 +167,7 @@ response
 ```
 
 !!! note "Current Episode"
-    Creating a new episode automatically sets it as the current active episode. You can verify this by checking the model instance details:
+    Creating a new episode automatically sets it as the current active episode. The new episode starts with default parameters. You can verify this by checking the model instance details:
     ```@example learning-api
     import RxInferClientOpenAPI: get_model_instance
     response, _ = get_model_instance(api, instance_id)
@@ -195,6 +197,7 @@ Each event in your dataset should include:
 - `data`: The actual observation or measurement data (required)
 - `timestamp`: The time when the event occurred (optional, defaults to current time)
 - `metadata`: Additional contextual information about the event (optional)
+- `processed`: Whether this event has been used in a learning procedure (optional, defaults to false)
 
 ```@example learning-api
 import Dates
@@ -229,6 +232,7 @@ response.events[1:5] # show only the first 5 events to avoid overwhelming the co
     - Use `wipe_episode` to clear an episode's data and start fresh
     - Events persist across episode switches
     - Deleting a model instance removes all associated episodes and their data
+    - Events are automatically marked as processed after being used in learning
 
 ## Learn the Parameters of the Model
 
@@ -238,14 +242,15 @@ To learn the parameters of the model on the loaded data, create a learning reque
 import RxInferClientOpenAPI: LearnRequest, run_learning
 
 learn_request = LearnRequest(
-    episodes = ["experiment-1"] # learn from the "experiment-1" episode explicitly
+    episodes = ["experiment-1"], # learn from the "experiment-1" episode explicitly
+    relearn = false # set to true to reset parameters and use all data from scratch
 )
 learn_response, _ = run_learning(api, instance_id, learn_request)
 @test !isnothing(learn_response) #hide
 learn_response
 ```
 
-The learning process returns a `LearnResponse` containing the model's learned parameters. The model's state has been updated automatically with the new parameters. We can verify this by fetching the current model parameters:
+The learning process returns a `LearnResponse` containing the model's learned parameters. The episode's parameters have been updated automatically with the new parameters. By default, only unprocessed events are used for learning, enabling incremental learning. We can verify this by fetching the current model parameters (which reflect the current episode's parameters):
 
 ```@example learning-api
 import RxInferClientOpenAPI: get_model_instance_parameters
@@ -301,6 +306,26 @@ plot(pf1, pf2, layout = (2, 1)) #hide
 
 The plot above demonstrates the model's predictive performance. The predicted states closely follow the true hidden states, with some deviation due to the inherent stochastic nature of the system.
 
+## Incremental Learning and Relearning
+
+RxInferServer supports two learning modes:
+
+- **Incremental Learning** (default): Only processes events that haven't been used in previous learning calls, enabling efficient continual learning
+- **Relearning**: Resets the episode's parameters and processes all events from scratch
+
+To use relearning, set the `relearn` parameter to `true` in your learning request:
+
+```@example learning-api
+# Relearn from all data, resetting parameters
+relearn_request = LearnRequest(
+    episodes = ["experiment-1"],
+    relearn = true
+)
+relearn_response, _ = run_learning(api, instance_id, relearn_request)
+@test !isnothing(relearn_response) #hide
+relearn_response
+```
+
 ## Deleting Episodes
 
 When an episode is no longer needed, you can remove it using the delete endpoint. 
@@ -322,7 +347,7 @@ response.current_episode
 ```
 
 !!! note "Deleting Episode After Learning"
-    If you delete an episode after learning, the model state will not be affected. The model will continue to use the learned parameters.
+    If you delete an episode after learning, the model state will also be affected! If the deleted episode was the current episode, the model will switch to the `default` episode and use the parameters from the `default` episode.
 
 !!! warning "Deleting the Default Episode"
     The `default` episode cannot be deleted. While you can clear the `default` episode's data, the episode itself must remain
@@ -337,7 +362,7 @@ response
 
 ## Wiping Data from an Episode
 
-To clear the data from an episode, use the `wipe_episode` endpoint. This will remove all events from the episode, effectively resetting it to an empty state.
+To clear the data from an episode, use the `wipe_episode` endpoint. This will remove all events from the episode and reset its parameters to initial values, effectively resetting it to an empty state.
 
 ```@example learning-api
 import RxInferClientOpenAPI: wipe_episode

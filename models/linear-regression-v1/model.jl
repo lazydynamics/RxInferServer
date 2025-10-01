@@ -99,7 +99,7 @@ function run_learning(state, parameters, events)
         "b_mean" => parameters["b_mean"],
         "b_variance" => parameters["b_variance"],
         "noise_shape" => parameters["noise_shape"],
-        "noise_scale" => parameters["noise_scale"],
+        "noise_scale" => parameters["noise_scale"]
     )
 
     return result, state, parameters

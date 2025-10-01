@@ -8,25 +8,28 @@
         timestamp=nothing,
         data=nothing,
         metadata=nothing,
+        processed=false,
     )
 
     - timestamp::ZonedDateTime : Timestamp of the event
     - data::Dict{String, Any} : Arbitrary data to attach to the event, model-specific
     - metadata::Dict{String, Any} : Arbitrary metadata to attach to the event, model-specific
+    - processed::Bool : Whether this event has been used in a learning procedure
 """
 Base.@kwdef mutable struct AttachEventsToEpisodeRequestEventsInner <: OpenAPI.APIModel
     timestamp::Union{Nothing, ZonedDateTime} = nothing
     data::Union{Nothing, Dict{String, Any}} = nothing
     metadata::Union{Nothing, Dict{String, Any}} = nothing
+    processed::Union{Nothing, Bool} = false
 
-    function AttachEventsToEpisodeRequestEventsInner(timestamp, data, metadata, )
-        o = new(timestamp, data, metadata, )
+    function AttachEventsToEpisodeRequestEventsInner(timestamp, data, metadata, processed, )
+        o = new(timestamp, data, metadata, processed, )
         OpenAPI.validate_properties(o)
         return o
     end
 end # type AttachEventsToEpisodeRequestEventsInner
 
-const _property_types_AttachEventsToEpisodeRequestEventsInner = Dict{Symbol,String}(Symbol("timestamp")=>"ZonedDateTime", Symbol("data")=>"Dict{String, Any}", Symbol("metadata")=>"Dict{String, Any}", )
+const _property_types_AttachEventsToEpisodeRequestEventsInner = Dict{Symbol,String}(Symbol("timestamp")=>"ZonedDateTime", Symbol("data")=>"Dict{String, Any}", Symbol("metadata")=>"Dict{String, Any}", Symbol("processed")=>"Bool", )
 OpenAPI.property_type(::Type{ AttachEventsToEpisodeRequestEventsInner }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_AttachEventsToEpisodeRequestEventsInner[name]))}
 
 function OpenAPI.check_required(o::AttachEventsToEpisodeRequestEventsInner)
@@ -37,6 +40,7 @@ function OpenAPI.validate_properties(o::AttachEventsToEpisodeRequestEventsInner)
     OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("timestamp"), o.timestamp)
     OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("data"), o.data)
     OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("metadata"), o.metadata)
+    OpenAPI.validate_property(AttachEventsToEpisodeRequestEventsInner, Symbol("processed"), o.processed)
 end
 
 function OpenAPI.validate_property(::Type{ AttachEventsToEpisodeRequestEventsInner }, name::Symbol, val)
@@ -44,6 +48,7 @@ function OpenAPI.validate_property(::Type{ AttachEventsToEpisodeRequestEventsInn
     if name === Symbol("timestamp")
         OpenAPI.validate_param(name, "AttachEventsToEpisodeRequestEventsInner", :format, val, "date-time")
     end
+
 
 
 end

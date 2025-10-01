@@ -9,12 +9,12 @@ arguments:
   - name: prior_a
     description: The initial alpha parameter of the prior Beta distribution `p`
     type: int
-    required: true
+    required: false
     default: 1
   - name: prior_b
     description: The initial beta parameter of the prior Beta distribution `p`
     type: int
-    required: true
+    required: false
     default: 1
 
 parameters:

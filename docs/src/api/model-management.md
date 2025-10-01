@@ -37,7 +37,7 @@ nothing #hide
 In RxInferServer, a **model** is a type of probabilistic program that you can create and interact with. We distinguish between _available models_ and _model instances_.
 
 - **Available models** are the models that you can use to create an instance of. They contain all the code and configuration to create an actual model instance and are usually identified by their `model_name`.
-- **Model instances** are the actual instances of a model that you have created. They contain the state of the model, including the learned parameters. You can have multiple model instances of the same model which are identified by a unique `instance_id`. Individual instances are isolated from each other, meaning that they do not share state.
+- **Model instances** are the actual instances of a model that you have created. They contain the state of the model and manage episodes, each with their own learned parameters. You can have multiple model instances of the same model which are identified by a unique `instance_id`. Individual instances are isolated from each other, meaning that they do not share state.
 
 ## Discovering Available Models
 
@@ -182,7 +182,7 @@ response
 ```
 
 !!! note "State of a Model Instance vs Parameters of a Model Instance"
-    Note that the state of a model instance is not the same as the parameters of the model. You can consider the state as an internal implementation detail of the model and is not exposed to the user. The parameters are, however, directly exposed through the [Learning API](@ref learning-api) and can be updated and learned from data using different episodes.
+    Note that the state of a model instance is not the same as the parameters of the model. You can consider the state as an internal implementation detail of the model and is not exposed to the user. The parameters are, however, directly exposed through the [Learning API](@ref learning-api) and are stored at the episode level. Each episode maintains its own parameters, and the model instance parameters reflect the current episode's parameters.
 
 ## Deleting a Model Instance
 

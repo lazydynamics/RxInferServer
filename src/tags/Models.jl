@@ -148,7 +148,21 @@ function get_model_instance_parameters(req::HTTP.Request, instance_id::String)
     instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
         error = "Not Found", message = "The requested model instance could not be found"
     )
-    return RxInferServerOpenAPI.ModelInstanceParameters(parameters = instance["parameters"])
+
+    # Get the current episode's parameters
+    current_episode_name = instance["current_episode"]
+    current_episode = @expect __database_op_get_episode(; instance_id, episode_name = current_episode_name) ||
+        RxInferServerOpenAPI.NotFoundResponse(
+        error = "Not Found", message = "The current episode could not be found"
+    )
+
+    # Deserialize the parameters of the current episode
+    # TODO note: currently we only support learning from a single episode
+    # so the model parameters are the same as the episode parameters
+    # this might be changed in the future
+    current_episode_parameters = Models.deserialize_parameters(current_episode["parameters"])
+
+    return RxInferServerOpenAPI.ModelInstanceParameters(parameters = current_episode_parameters)
 end
 
 function run_inference(req::HTTP.Request, instance_id::String, infer_request::RxInferServerOpenAPI.InferRequest)
@@ -181,11 +195,20 @@ function run_inference(req::HTTP.Request, instance_id::String, infer_request::Rx
         try
             model_name = instance["model_name"]
             model_state = instance["state"]
-            model_parameters = instance["parameters"]
+
+            # Get the current episode's parameters
+            current_episode_name = instance["current_episode"]
+            current_episode = @expect __database_op_get_episode(; instance_id, episode_name = current_episode_name) ||
+                RxInferServerOpenAPI.ErrorResponse(
+                error = "Bad Request", message = "Unable to get current episode for inference"
+            )
+
+            # Deserialize episode parameters
+            episode_parameters = Models.deserialize_parameters(current_episode["parameters"])
 
             @debug "Calling the model's `run_inference` method" instance_id
             inference_result, new_state = Models.dispatch(
-                dispatcher, model_name, :run_inference, model_state, model_parameters, infer_request.data
+                dispatcher, model_name, :run_inference, model_state, episode_parameters, infer_request.data
             )
 
             # Update the model's state
@@ -236,6 +259,7 @@ function run_learning(req::HTTP.Request, instance_id::String, learn_request::RxI
     )
 
     episodes = @something(learn_request.episodes, ["default"])
+    relearn = @something(learn_request.relearn, false)
 
     # TODO: Only one episode is supported for now
     if length(episodes) != 1
@@ -254,12 +278,31 @@ function run_learning(req::HTTP.Request, instance_id::String, learn_request::RxI
 
     model_name = instance["model_name"]
     model_state = instance["state"]
-    model_parameters = instance["parameters"]
-    episode_events = episode["events"]
+
+    # Get episode parameters
+    episode_parameters = Models.deserialize_parameters(episode["parameters"])
+
+    # Filter events based on relearn flag
+    all_events = episode["events"]
+    if relearn
+        # Use all events and reset processed flags
+        event_to_use_during_learning = all_events
+        # Reset all events to unprocessed by updating them directly
+        if !isempty(all_events)
+            @expect __database_op_mark_events_as_processed(;
+                instance_id, episode_name = episodes[1], events = all_events, processed = false
+            ) || RxInferServerOpenAPI.ErrorResponse(
+                error = "Bad Request", message = "Unable to reset event processed flags"
+            )
+        end
+    else
+        # Only use non-processed events
+        event_to_use_during_learning = [event for event in all_events if !get(event, "processed", false)]
+    end
 
     @debug "Calling the model's `run_learning` method" instance_id
     learning_result, new_state, new_parameters = Models.dispatch(
-        dispatcher, model_name, :run_learning, model_state, model_parameters, episode_events
+        dispatcher, model_name, :run_learning, model_state, episode_parameters, event_to_use_during_learning
     )
 
     # Update the model's state
@@ -267,10 +310,20 @@ function run_learning(req::HTTP.Request, instance_id::String, learn_request::RxI
         error = "Bad Request", message = "Unable to update model's state due to internal error"
     )
 
-    # Update the model's parameters
-    @expect __database_op_update_model_parameters(; instance_id, new_parameters) || RxInferServerOpenAPI.ErrorResponse(
-        error = "Bad Request", message = "Unable to update model's parameters due to internal error"
+    # Update the episode's parameters
+    @expect __database_op_update_episode_parameters(; instance_id, episode_name = episodes[1], new_parameters) ||
+        RxInferServerOpenAPI.ErrorResponse(
+        error = "Bad Request", message = "Unable to update episode's parameters due to internal error"
     )
+
+    # Mark used events as processed 
+    if !isempty(event_to_use_during_learning)
+        @expect __database_op_mark_events_as_processed(;
+            instance_id, episode_name = episodes[1], events = event_to_use_during_learning, processed = true
+        ) || RxInferServerOpenAPI.ErrorResponse(
+            error = "Bad Request", message = "Unable to mark events as processed"
+        )
+    end
 
     @debug "Learning completed successfully" instance_id
     return RxInferServerOpenAPI.LearnResponse(learned_parameters = learning_result)
@@ -291,7 +344,8 @@ function get_episode_info(req::HTTP.Request, instance_id::String, episode_name::
         instance_id = instance_id,
         episode_name = episode_name,
         created_at = ZonedDateTime(episode["created_at"], TimeZones.localzone()),
-        events = episode["events"]
+        events = episode["events"],
+        parameters = Models.deserialize_parameters(episode["parameters"])
     )
 end
 
@@ -309,7 +363,8 @@ function get_episodes(req::HTTP.Request, instance_id::String)
             instance_id = instance_id,
             episode_name = episode["episode_name"],
             created_at = ZonedDateTime(episode["created_at"], TimeZones.localzone()),
-            events = episode["events"]
+            events = episode["events"],
+            parameters = Models.deserialize_parameters(episode["parameters"])
         )
     end
 end
@@ -492,13 +547,25 @@ function __database_op_get_model_instance(; token, instance_id)
         if haskey(result, "state") && isa(result["state"], Vector{UInt8})
             result["state"] = Models.deserialize_state(result["state"])
         end
-        # Deserialize the parameters if it exists and in binary format
-        if haskey(result, "parameters") && isa(result["parameters"], Vector{UInt8})
-            result["parameters"] = Models.deserialize_parameters(result["parameters"])
-        end
     end
 
     return result
+end
+
+function __database_op_get_model_instance_initial_parameters(; token, instance_id)
+    @debug "Attempting to get model instance initial parameters" token instance_id
+
+    model_instance = __database_op_get_model_instance(; token = current_token(), instance_id)
+    if !isnothing(model_instance)
+        # Get the model's dispatcher to get initial parameters
+        dispatcher = Models.get_models_dispatcher()
+        model_name = model_instance["model_name"]
+        arguments = model_instance["arguments"]
+        return Models.dispatch(dispatcher, model_name, :initial_parameters, arguments)
+    else
+        @debug "Cannot create episode because model instance does not exist" instance_id episode_name
+        return nothing
+    end
 end
 
 function __database_op_create_model_instance(;
@@ -507,7 +574,6 @@ function __database_op_create_model_instance(;
     @debug "Creating new model instance in the database" model_name token
 
     serialized_state = Models.serialize_state(initial_state)
-    serialized_parameters = Models.serialize_parameters(initial_parameters)
     instance_id = string(UUIDs.uuid4())
     document = Mongoc.BSON(
         "instance_id" => instance_id,
@@ -517,7 +583,6 @@ function __database_op_create_model_instance(;
         "created_by" => token,
         "arguments" => arguments,
         "state" => serialized_state,
-        "parameters" => serialized_parameters,
         "current_episode" => "default",
         "deleted" => false
     )
@@ -593,12 +658,20 @@ end
 function __database_op_create_episode(; instance_id::String, episode_name::String)
     @debug "Creating new episode in the database" instance_id episode_name
 
+    # Get the model instance to get initial parameters if not provided
+    initial_parameters = __database_op_get_model_instance_initial_parameters(; token = current_token(), instance_id)
+    if isnothing(initial_parameters)
+        @debug "Cannot create episode, unable to get initial parameters" instance_id episode_name
+        return nothing
+    end
+
     document = Mongoc.BSON(
         "instance_id" => instance_id,
         "episode_name" => episode_name,
         "created_at" => Dates.now(),
         "events" => [],
         "events_id_counter" => 0,
+        "parameters" => Models.serialize_parameters(initial_parameters),
         "deleted" => false
     )
     collection = Database.collection("episodes")
@@ -637,7 +710,8 @@ function __database_op_attach_events_to_episode(; instance_id::String, episode_n
             "data" => event.data,
             "timestamp" => DateTime(@something(event.timestamp, Dates.now())),
             "metadata" => @something(event.metadata, Dict()),
-            "id" => counter
+            "processed" => @something(event.processed, false),
+            "event_id" => counter
         )
     end
 
@@ -686,7 +760,26 @@ function __database_op_wipe_episode(; instance_id::String, episode_name::String)
     @debug "Attempting to wipe episode" instance_id episode_name
     collection = Database.collection("episodes")
     query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
-    update = Mongoc.BSON("\$set" => Mongoc.BSON("events" => [], "events_id_counter" => 0))
+
+    # Get the episode to reset parameters to initial values
+    episode = Mongoc.find_one(collection, query)
+    update = if !isnothing(episode)
+        initial_parameters = __database_op_get_model_instance_initial_parameters(; token = current_token(), instance_id)
+        if isnothing(initial_parameters)
+            @debug "Cannot wipe episode because model instance does not exist" instance_id episode_name
+            return nothing
+        end
+        Mongoc.BSON(
+            "\$set" => Mongoc.BSON(
+                "events" => [],
+                "events_id_counter" => 0,
+                "parameters" => Models.serialize_parameters(initial_parameters)
+            )
+        )
+    else
+        Mongoc.BSON("\$set" => Mongoc.BSON("events" => [], "events_id_counter" => 0))
+    end
+
     result = Mongoc.update_one(collection, query, update)
 
     if result["matchedCount"] != 1
@@ -696,6 +789,45 @@ function __database_op_wipe_episode(; instance_id::String, episode_name::String)
 
     # modifiedCount can be 0 if the episode has been empty before wiping
     @debug "Successfully wiped episode" instance_id episode_name
+    return result
+end
+
+## Update episode parameters
+function __database_op_update_episode_parameters(; instance_id::String, episode_name::String, new_parameters::Any)
+    @debug "Attempting to update episode parameters" instance_id episode_name
+    collection = Database.collection("episodes")
+    query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("parameters" => Models.serialize_parameters(new_parameters)))
+    result = Mongoc.update_one(collection, query, update)
+
+    if result["matchedCount"] != 1
+        @debug "Unable to update episode parameters due to internal error" instance_id episode_name
+        return nothing
+    end
+
+    return result
+end
+
+## Mark events as processed
+function __database_op_mark_events_as_processed(;
+    instance_id::String, episode_name::String, events::AbstractVector, processed::Bool
+)
+    @debug "Attempting to mark events as processed" instance_id episode_name
+    collection = Database.collection("episodes")
+    query = Mongoc.BSON("instance_id" => instance_id, "episode_name" => episode_name, "deleted" => false)
+
+    # Update all events with matching IDs to set processed = true
+    event_ids = [event["event_id"] for event in events]
+    update = Mongoc.BSON("\$set" => Mongoc.BSON("events.\$[elem].processed" => processed))
+    filter_condition = Mongoc.BSON("elem.event_id" => Mongoc.BSON("\$in" => event_ids))
+
+    result = Mongoc.update_one(collection, query, update, options = Mongoc.BSON("arrayFilters" => [filter_condition]))
+
+    if result["matchedCount"] != 1
+        @debug "Unable to mark events as processed due to internal error" instance_id episode_name
+        return nothing
+    end
+
     return result
 end
 
@@ -796,7 +928,9 @@ function __database_op_attach_event_to_episode(;
     next_id = isnothing(current) ? 1 : current["events_id_counter"] + 1
 
     update = Mongoc.BSON(
-        "\$push" => Mongoc.BSON("events" => Dict("event_id" => next_id, "data" => data, "timestamp" => timestamp)),
+        "\$push" => Mongoc.BSON(
+            "events" => Dict("event_id" => next_id, "data" => data, "timestamp" => timestamp, "processed" => false)
+        ),
         "\$set" => Mongoc.BSON("events_id_counter" => next_id)
     )
 

@@ -1,0 +1,39 @@
+name: FeatureDiscovery-v1
+description: A Bayesian feature regression model with unknown noise precision
+author: Lazy Dynamics
+roles:
+  - user
+
+arguments:
+  - name: number_of_iterations
+    description: The number of variational inference iterations
+    type: int
+    required: false
+    default: 25
+
+parameters:
+  - name: omega_mean
+    description: The posterior mean of the coefficients parameter `omega`
+  - name: omega_covariance
+    description: The posterior covariance of the coefficients parameter `omega`
+  - name: s_shape
+    description: The posterior shape parameter of the noise precision `s` for the likelihood
+  - name: s_rate
+    description: The posterior rate parameter of the noise precision `s` for the likelihood
+
+data:
+  - name: x
+    description: |
+      Input features for feature discovery.
+      This should be an array of numbers. 
+      For example, if you have D features, `x` should be an array of D numbers.
+    type: array
+    required: true
+  - name: y
+    description: |
+      Target values (dependent variables) for the feature discovery regression.
+      This is the output variable that the model will attempt to predict
+      based on the input features `x` using Bayesian regression. Can be omitted
+      if the model is used for inference only.
+    type: number
+    required: false

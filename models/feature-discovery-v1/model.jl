@@ -8,12 +8,9 @@ function create_feature_functions_1(x_dim)
     return vcat(linear, quadratic, pairwise, tripplewise)
 end
 
-@model function feature_regression_unknown_noise(ϕs, x, y)
-    # Prior distribution over parameters ω
-    ω ~ Uninformative()
-
-    # Prior distribution over noise precision s
-    s ~ Uninformative()
+@model function feature_regression_unknown_noise(ϕs, x, y, priors)
+    ω ~ priors[:ω]
+    s ~ priors[:s]
 
     if length(x) != length(y)
         throw(DimensionMismatch("x and y must have the same length"))
@@ -85,40 +82,53 @@ end
 function run_learning(state, parameters, events)
     @debug "Running inference in FeatureDiscovery-v1 model" state parameters events
 
-    x = convert(Vector{Vector{Float64}}, [convert(Vector{Float64}, event["data"]["x"]) for event in events])
-    y = convert(Vector{Float64}, [convert(Float64, event["data"]["y"]) for event in events])
+    x = Vector{Vector{Float64}}()
+    y = Vector{Float64}()
 
-    x_dim = length(x[1])
-    phi_s = create_feature_functions_1(x_dim)
-    phi_dim = length(phi_s)
-
-    parameters["omega_mean"] = zeros(phi_dim)
-    parameters["omega_covariance"] = 1e6 * Diagonal(ones(phi_dim))
-    parameters["noise_shape"] = 1e-12
-    parameters["noise_scale"] = 1e8
-
-    # Create initialization for the inference
-    init = @initialization begin
-        μ(ω) = MvNormalMeanCovariance(parameters["omega_mean"], parameters["omega_covariance"])
-        q(s) = GammaShapeScale(parameters["noise_shape"], parameters["noise_scale"])
+    for event in events
+        if haskey(event, "data") && haskey(event["data"], "x") && haskey(event["data"], "y")
+            push!(x, convert(Vector{Float64}, event["data"]["x"]))
+            push!(y, convert(Float64, event["data"]["y"]))
+        end
     end
 
-    inference_results = infer(
-        model = feature_regression_unknown_noise(ϕs = phi_s),
-        data = (x = x, y = y),
-        initialization = init,
-        returnvars = (ω = KeepLast(), s = KeepLast()),
-        iterations = state["number_of_iterations"],
-        constraints = MeanField(),
-        options = (limit_stack_depth = 300,)
-    )
+    if !isempty(x) && !isempty(y)
+        x_dim = length(x[1])
+        phi_s = create_feature_functions_1(x_dim)
+        phi_dim = length(phi_s)
 
-    parameters = Dict(
-        "omega_mean" => mean(inference_results.posteriors[:ω]),
-        "omega_covariance" => cov(inference_results.posteriors[:ω]),
-        "noise_shape" => shape(inference_results.posteriors[:s]),
-        "noise_scale" => scale(inference_results.posteriors[:s])
-    )
+        omega_mean = @something(parameters["omega_mean"], zeros(phi_dim))
+        omega_covariance = @something(parameters["omega_covariance"], 1e6 * Diagonal(ones(phi_dim)))
+        noise_shape = @something(parameters["noise_shape"], 1e-12)
+        noise_scale = @something(parameters["noise_scale"], 1e8)
+
+        # Create initialization for the inference
+        init = @initialization begin
+            μ(ω) = MvNormalMeanCovariance(omega_mean, omega_covariance)
+            q(s) = GammaShapeScale(noise_shape, noise_scale)
+        end
+
+        priors = Dict(
+            :ω => MvNormalMeanCovariance(omega_mean, omega_covariance), :s => GammaShapeScale(noise_shape, noise_scale)
+        )
+
+        inference_results = infer(
+            model = feature_regression_unknown_noise(ϕs = phi_s, priors = priors),
+            data = (x = x, y = y),
+            initialization = init,
+            returnvars = (ω = KeepLast(), s = KeepLast()),
+            iterations = state["number_of_iterations"],
+            constraints = MeanField(),
+            options = (limit_stack_depth = 300,)
+        )
+
+        parameters = Dict(
+            "omega_mean" => mean(inference_results.posteriors[:ω]),
+            "omega_covariance" => cov(inference_results.posteriors[:ω]),
+            "noise_shape" => shape(inference_results.posteriors[:s]),
+            "noise_scale" => scale(inference_results.posteriors[:s])
+        )
+    end
 
     result = Dict(
         "omega_mean" => parameters["omega_mean"],

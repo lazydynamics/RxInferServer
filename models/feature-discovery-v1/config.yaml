@@ -5,7 +5,7 @@ roles:
   - user
 
 arguments:
-  - name: number_of_iterations 
+  - name: number_of_iterations
     description: The number of variational inference iterations
     type: int
     required: false
@@ -23,10 +23,17 @@ parameters:
 
 data:
   - name: x
-    description: Input features for feature discovery
+    description: |
+      Input features for feature discovery.
+      This should be an array of numbers. 
+      For example, if you have D features, `x` should be an array of D numbers.
     type: array
     required: true
   - name: y
-    description: Target values (dependent variables) for the feature discovery regression
+    description: |
+      Target values (dependent variables) for the feature discovery regression.
+      This is the output variable that the model will attempt to predict
+      based on the input features `x` using Bayesian regression. Can be omitted
+      if the model is used for inference only.
     type: number
-    required: true
+    required: false

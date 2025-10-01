@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Continual learning · RxInferServer</title><meta name="title" content="Continual learning · RxInferServer"/><meta property="og:title" content="Continual learning · RxInferServer"/><meta property="twitter:title" content="Continual learning · RxInferServer"/><meta name="description" content="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models."/><meta property="og:description" content="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models."/><meta property="twitter:description" content="A RESTful HTTP server implementation for RxInfer.jl, a reactive message passing inference engine for probabilistic models."/><meta property="og:url" content="https://server.rxinfer.com/manuals/continual-learning/"/><meta property="twitter:url" content="https://server.rxinfer.com/manuals/continual-learning/"/><link rel="canonical" href="https://server.rxinfer.com/manuals/continual-learning/"/><script async src="https://www.googletagmanager.com/gtag/js?id=G-TCF3D8BVYF"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-TCF3D8BVYF', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">RxInferServer</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../getting-started/">Getting started</a></li><li><span class="tocitem">API design</span><ul><li><a class="tocitem" href="../../api/authentication/">Authentication</a></li><li><a class="tocitem" href="../../api/model-management/">Model management</a></li><li><a class="tocitem" href="../../api/learning/">Learning parameters of a model</a></li><li><a class="tocitem" href="../../api/status-codes/">Status codes and error handling</a></li><li><a class="tocitem" href="../../api/server-info/">Server details and version</a></li><li><a class="tocitem" href="../../api/request-preferences/">Request preferences</a></li></ul></li><li><a class="tocitem" href="../../configuration/">Configuration</a></li><li><span class="tocitem">Manuals</span><ul><li><a class="tocitem" href="../how-to-add-a-model/">How to add a model</a></li><li><a class="tocitem" href="../inference-vs-learning/">Inference vs Learning</a></li><li class="is-active"><a class="tocitem" href>Continual learning</a><ul class="internal"><li><a class="tocitem" href="#The-Scenario:-Feature-Rollout-Monitoring"><span>The Scenario: Feature Rollout Monitoring</span></a></li><li><a class="tocitem" href="#Prerequisites"><span>Prerequisites</span></a></li><li><a class="tocitem" href="#Creating-the-Model-Instance"><span>Creating the Model Instance</span></a></li><li><a class="tocitem" href="#Phase-1:-Initial-Data-Collection"><span>Phase 1: Initial Data Collection</span></a></li><li><a class="tocitem" href="#Phase-2:-Continual-Learning-with-New-Data"><span>Phase 2: Continual Learning with New Data</span></a></li><li><a class="tocitem" href="#Phase-3:-Comparing-Learning-Modes"><span>Phase 3: Comparing Learning Modes</span></a></li><li><a class="tocitem" href="#Visualizing-the-Learning-Process"><span>Visualizing the Learning Process</span></a></li><li><a class="tocitem" href="#Key-Benefits-of-Continual-Learning"><span>Key Benefits of Continual Learning</span></a></li><li><a class="tocitem" href="#Cleaning-Up"><span>Cleaning Up</span></a></li><li><a class="tocitem" href="#Summary"><span>Summary</span></a></li></ul></li></ul></li><li><span class="tocitem">Server components</span><ul><li><a class="tocitem" href="../../components/models/">Models</a></li><li><a class="tocitem" href="../../components/database/">Database</a></li><li><a class="tocitem" href="../../components/logging/">Logging</a></li><li><a class="tocitem" href="../../components/serialization/">Serialization</a></li></ul></li><li><a class="tocitem" href="../../developers-guide/">Developers guide</a></li><li><span class="tocitem">OpenAPI documentation</span><ul><li><a class="tocitem" href="../../openapi/">Overview</a></li><li><input class="collapse-toggle" id="menuitem-8-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2"><span class="docs-label">Server</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/README/">Overview</a></li><li><input class="collapse-toggle" id="menuitem-8-2-2" type="checkbox"/><label class="tocitem" for="menuitem-8-2-2"><span class="docs-label">Apis</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Apis/AuthenticationApi/">AuthenticationApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ModelsApi/">ModelsApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ServerApi/">ServerApi</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-2-3" type="checkbox"/><label class="tocitem" for="menuitem-8-2-3"><span class="docs-label">Models</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Models/AttachEventsToEpisodeRequest/">AttachEventsToEpisodeRequest</a></li><li><a class="tocitem" href="../../openapi/Models/AttachEventsToEpisodeRequest_events_inner/">AttachEventsToEpisodeRequest<em>events</em>inner</a></li><li><a class="tocitem" href="../../openapi/Models/AttachMetadataToEventRequest/">AttachMetadataToEventRequest</a></li><li><a class="tocitem" href="../../openapi/Models/AvailableModel/">AvailableModel</a></li><li><a class="tocitem" href="../../openapi/Models/AvailableModel_details/">AvailableModel_details</a></li><li><a class="tocitem" href="../../openapi/Models/CreateEpisodeRequest/">CreateEpisodeRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelInstanceRequest/">CreateModelInstanceRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelInstanceResponse/">CreateModelInstanceResponse</a></li><li><a class="tocitem" href="../../openapi/Models/DeleteModelInstanceRequest/">DeleteModelInstanceRequest</a></li><li><a class="tocitem" href="../../openapi/Models/EpisodeInfo/">EpisodeInfo</a></li><li><a class="tocitem" href="../../openapi/Models/ErrorResponse/">ErrorResponse</a></li><li><a class="tocitem" href="../../openapi/Models/InferRequest/">InferRequest</a></li><li><a class="tocitem" href="../../openapi/Models/InferResponse/">InferResponse</a></li><li><a class="tocitem" href="../../openapi/Models/LearnRequest/">LearnRequest</a></li><li><a class="tocitem" href="../../openapi/Models/LearnResponse/">LearnResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstance/">ModelInstance</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstanceParameters/">ModelInstanceParameters</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstanceState/">ModelInstanceState</a></li><li><a class="tocitem" href="../../openapi/Models/NotFoundResponse/">NotFoundResponse</a></li><li><a class="tocitem" href="../../openapi/Models/PingResponse/">PingResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ServerInfo/">ServerInfo</a></li><li><a class="tocitem" href="../../openapi/Models/SuccessResponse/">SuccessResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenGenerateResponse/">TokenGenerateResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenRolesResponse/">TokenRolesResponse</a></li><li><a class="tocitem" href="../../openapi/Models/UnauthorizedResponse/">UnauthorizedResponse</a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3"><span class="docs-label">Client</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/README/">Overview</a></li><li><input class="collapse-toggle" id="menuitem-8-3-2" type="checkbox"/><label class="tocitem" for="menuitem-8-3-2"><span class="docs-label">Apis</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Apis/AuthenticationApi/">AuthenticationApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ModelsApi/">ModelsApi</a></li><li><a class="tocitem" href="../../openapi/Apis/ServerApi/">ServerApi</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-8-3-3" type="checkbox"/><label class="tocitem" for="menuitem-8-3-3"><span class="docs-label">Models</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../openapi/Models/AttachEventsToEpisodeRequest/">AttachEventsToEpisodeRequest</a></li><li><a class="tocitem" href="../../openapi/Models/AttachEventsToEpisodeRequest_events_inner/">AttachEventsToEpisodeRequest<em>events</em>inner</a></li><li><a class="tocitem" href="../../openapi/Models/AttachMetadataToEventRequest/">AttachMetadataToEventRequest</a></li><li><a class="tocitem" href="../../openapi/Models/AvailableModel/">AvailableModel</a></li><li><a class="tocitem" href="../../openapi/Models/AvailableModel_details/">AvailableModel_details</a></li><li><a class="tocitem" href="../../openapi/Models/CreateEpisodeRequest/">CreateEpisodeRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelInstanceRequest/">CreateModelInstanceRequest</a></li><li><a class="tocitem" href="../../openapi/Models/CreateModelInstanceResponse/">CreateModelInstanceResponse</a></li><li><a class="tocitem" href="../../openapi/Models/DeleteModelInstanceRequest/">DeleteModelInstanceRequest</a></li><li><a class="tocitem" href="../../openapi/Models/EpisodeInfo/">EpisodeInfo</a></li><li><a class="tocitem" href="../../openapi/Models/ErrorResponse/">ErrorResponse</a></li><li><a class="tocitem" href="../../openapi/Models/InferRequest/">InferRequest</a></li><li><a class="tocitem" href="../../openapi/Models/InferResponse/">InferResponse</a></li><li><a class="tocitem" href="../../openapi/Models/LearnRequest/">LearnRequest</a></li><li><a class="tocitem" href="../../openapi/Models/LearnResponse/">LearnResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstance/">ModelInstance</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstanceParameters/">ModelInstanceParameters</a></li><li><a class="tocitem" href="../../openapi/Models/ModelInstanceState/">ModelInstanceState</a></li><li><a class="tocitem" href="../../openapi/Models/NotFoundResponse/">NotFoundResponse</a></li><li><a class="tocitem" href="../../openapi/Models/PingResponse/">PingResponse</a></li><li><a class="tocitem" href="../../openapi/Models/ServerInfo/">ServerInfo</a></li><li><a class="tocitem" href="../../openapi/Models/SuccessResponse/">SuccessResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenGenerateResponse/">TokenGenerateResponse</a></li><li><a class="tocitem" href="../../openapi/Models/TokenRolesResponse/">TokenRolesResponse</a></li><li><a class="tocitem" href="../../openapi/Models/UnauthorizedResponse/">UnauthorizedResponse</a></li></ul></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manuals</a></li><li class="is-active"><a href>Continual learning</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Continual learning</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lazydynamics/RxInferServer" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lazydynamics/RxInferServer/blob/main/docs/src/manuals/continual-learning.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Continual-Learning"><a class="docs-heading-anchor" href="#Continual-Learning">Continual Learning</a><a id="Continual-Learning-1"></a><a class="docs-heading-anchor-permalink" href="#Continual-Learning" title="Permalink"></a></h1><p>This guide demonstrates how to use continual learning with the Beta-Bernoulli model to track the probability of success in a series of Bernoulli trials. We&#39;ll follow a story of a data scientist monitoring the success rate of a new feature rollout, showing how the model&#39;s beliefs evolve as more data arrives.</p><h2 id="The-Scenario:-Feature-Rollout-Monitoring"><a class="docs-heading-anchor" href="#The-Scenario:-Feature-Rollout-Monitoring">The Scenario: Feature Rollout Monitoring</a><a id="The-Scenario:-Feature-Rollout-Monitoring-1"></a><a class="docs-heading-anchor-permalink" href="#The-Scenario:-Feature-Rollout-Monitoring" title="Permalink"></a></h2><p>Imagine you&#39;re a data scientist at a tech company monitoring the success rate of a new feature. Each user interaction with the feature is a Bernoulli trial - either successful (1) or unsuccessful (0). You want to track how the success probability evolves over time as more users interact with the feature.</p><h2 id="Prerequisites"><a class="docs-heading-anchor" href="#Prerequisites">Prerequisites</a><a id="Prerequisites-1"></a><a class="docs-heading-anchor-permalink" href="#Prerequisites" title="Permalink"></a></h2><p>Before using the Learning API, you need a valid authentication token. If you haven&#39;t obtained one yet, please refer to the <a href="../../api/authentication/#authentication-api">Authentication</a> guide.</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI.OpenAPI.Clients: Client
+import RxInferClientOpenAPI: ModelsApi
+
+client = Client(basepath(ModelsApi); headers = Dict(
+    &quot;Authorization&quot; =&gt; &quot;Bearer $token&quot;
+))
+
+api = ModelsApi(client)</code></pre><h2 id="Creating-the-Model-Instance"><a class="docs-heading-anchor" href="#Creating-the-Model-Instance">Creating the Model Instance</a><a id="Creating-the-Model-Instance-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-the-Model-Instance" title="Permalink"></a></h2><p>We&#39;ll create a Beta-Bernoulli model with a uniform prior (α=1, β=1), representing no prior knowledge about the success probability.</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
+
+request = CreateModelInstanceRequest(
+    model_name = &quot;BetaBernoulli-v1&quot;,
+    description = &quot;Monitoring feature success rate&quot;,
+    arguments = Dict(&quot;prior_a&quot; =&gt; 1, &quot;prior_b&quot; =&gt; 1)
+)
+
+response, _ = create_model_instance(api, request)
+instance_id = response.instance_id</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;d2f1bd04-539a-4cbb-aabf-89b7b325209b&quot;</code></pre><h2 id="Phase-1:-Initial-Data-Collection"><a class="docs-heading-anchor" href="#Phase-1:-Initial-Data-Collection">Phase 1: Initial Data Collection</a><a id="Phase-1:-Initial-Data-Collection-1"></a><a class="docs-heading-anchor-permalink" href="#Phase-1:-Initial-Data-Collection" title="Permalink"></a></h2><p>Let&#39;s simulate the first week of data collection. We observe 20 user interactions with our new feature, where 15 are successful and 5 are unsuccessful.</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: attach_events_to_episode, AttachEventsToEpisodeRequest
+
+# Simulate first week data: 15 successes out of 20 trials
+first_week_data = [1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0]
+
+# Visualize the first week data distribution
+p1 = bar([0, 1], [count(==(0), first_week_data), count(==(1), first_week_data)],
+         label=&quot;Week 1 Data (15 successes, 5 failures)&quot;,
+         color=:lightblue, alpha=0.7)
+plot!(p1, title=&quot;Week 1 Data Distribution&quot;, xlabel=&quot;Observation&quot;, ylabel=&quot;Count&quot;,
+      xticks=([0, 1], [&quot;Failure (0)&quot;, &quot;Success (1)&quot;]))
+p1</code></pre><img src="2869e589.svg" alt="Example block output"/><pre><code class="language-julia hljs">events = [Dict(&quot;data&quot; =&gt; Dict(&quot;observation&quot; =&gt; obs)) for obs in first_week_data]
+
+request = AttachEventsToEpisodeRequest(events = events)
+response, _ = attach_events_to_episode(api, instance_id, &quot;default&quot;, request)
+response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;message&quot;: &quot;Events attached to the episode successfully&quot;
+}
+</code></pre><p>We can verify that the events are not processed yet:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: get_episode_info
+
+episode_info, _ = get_episode_info(api, instance_id, &quot;default&quot;)
+
+unprocessed_events = filter(episode_info.events) do event
+    return !get(event, &quot;processed&quot;, false)
+end
+unprocessed_events</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">20-element Vector{Dict{String, Any}}:
+ Dict(&quot;event_id&quot; =&gt; 1, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 2, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 3, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 4, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 5, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 6, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 7, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 8, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 9, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 10, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 11, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 12, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 13, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 14, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 15, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 16, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 17, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 18, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 19, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 20, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:42.362&quot;, &quot;processed&quot; =&gt; false)</code></pre><p>Now let&#39;s learn from this initial data:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: LearnRequest, run_learning
+
+learn_request = LearnRequest(episodes = [&quot;default&quot;])
+learn_response, _ = run_learning(api, instance_id, learn_request)
+learn_response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;learned_parameters&quot;: {
+    &quot;posterior_a&quot;: 16,
+    &quot;posterior_b&quot;: 6
+  }
+}
+</code></pre><p>Let&#39;s check the learned parameters and make an inference:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: get_model_instance_parameters, InferRequest, run_inference
+
+# Get the learned parameters
+params_response, _ = get_model_instance_parameters(api, instance_id)
+params_response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;parameters&quot;: {
+    &quot;posterior_a&quot;: 16,
+    &quot;posterior_b&quot;: 6
+  }
+}
+</code></pre><pre><code class="language-julia hljs"># Make an inference about the success probability
+inference_request = InferRequest(data = Dict(&quot;observation&quot; =&gt; 1))
+inference_response, _ = run_inference(api, instance_id, inference_request)
+inference_response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;event_id&quot;: 21,
+  &quot;results&quot;: {
+    &quot;mean_p&quot;: 0.7391304347826086,
+    &quot;number_of_infer_calls&quot;: 1
+  },
+  &quot;errors&quot;: []
+}
+</code></pre><p>After the first week, our model estimates the success probability at approximately 75% (15 successes out of 20 trials), with the posterior parameters α=16, β=6.</p><pre><code class="language-julia hljs"># Visualize the posterior distribution after first week
+posterior_week1 = Beta(16, 6)
+p2 = plot(0:0.01:1, pdf.(posterior_week1, 0:0.01:1),
+          label=&quot;Posterior after Week 1 (α=16, β=6)&quot;,
+          color=:blue, lw=2, title=&quot;Posterior Distribution After Week 1&quot;)
+vline!(p2, [mean(posterior_week1)],
+       label=&quot;Mean: $(round(mean(posterior_week1), digits=3))&quot;,
+       linestyle=:dash, color=:red)
+plot!(p2, xlabel=&quot;Success Probability&quot;, ylabel=&quot;Density&quot;)
+p2</code></pre><img src="47fa5400.svg" alt="Example block output"/><div class="admonition is-info" id="Note-e9ac656ca61e91b4"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-e9ac656ca61e91b4" title="Permalink"></a></header><div class="admonition-body"><p>The inference request adds an event to the episode, so we have one more event than the first week&#39;s data.</p><pre><code class="language-julia hljs">episode_info, _ = get_episode_info(api, instance_id, &quot;default&quot;)
+unprocessed_events = filter(episode_info.events) do event
+    return !get(event, &quot;processed&quot;, false)
+end
+unprocessed_events</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-element Vector{Dict{String, Any}}:
+ Dict(&quot;event_id&quot; =&gt; 21, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:46.111&quot;, &quot;processed&quot; =&gt; false)</code></pre></div></div><h2 id="Phase-2:-Continual-Learning-with-New-Data"><a class="docs-heading-anchor" href="#Phase-2:-Continual-Learning-with-New-Data">Phase 2: Continual Learning with New Data</a><a id="Phase-2:-Continual-Learning-with-New-Data-1"></a><a class="docs-heading-anchor-permalink" href="#Phase-2:-Continual-Learning-with-New-Data" title="Permalink"></a></h2><p>Now, let&#39;s simulate the second week of data. This time, we observe 30 more interactions, with 18 successes and 12 failures. The key insight is that we can add this new data and learn from it without reprocessing the first week&#39;s data.</p><pre><code class="language-julia hljs"># Simulate second week data: 18 successes out of 30 trials
+second_week_data = [1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1]
+
+# Visualize the second week data distribution
+p3 = bar([0, 1], [count(==(0), second_week_data), count(==(1), second_week_data)],
+         label=&quot;Week 2 Data (18 successes, 12 failures)&quot;,
+         color=:lightgreen, alpha=0.7)
+plot!(p3, title=&quot;Week 2 Data Distribution&quot;, xlabel=&quot;Observation&quot;, ylabel=&quot;Count&quot;,
+      xticks=([0, 1], [&quot;Failure (0)&quot;, &quot;Success (1)&quot;]))
+p3</code></pre><img src="96993731.svg" alt="Example block output"/><pre><code class="language-julia hljs">new_events = [Dict(&quot;data&quot; =&gt; Dict(&quot;observation&quot; =&gt; obs)) for obs in second_week_data]
+
+request = AttachEventsToEpisodeRequest(events = new_events)
+response, _ = attach_events_to_episode(api, instance_id, &quot;default&quot;, request)
+response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;message&quot;: &quot;Events attached to the episode successfully&quot;
+}
+</code></pre><p>We can verify that the events are not processed yet:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: get_episode_info
+
+episode_info, _ = get_episode_info(api, instance_id, &quot;default&quot;)
+
+unprocessed_events = filter(episode_info.events) do event
+    return !get(event, &quot;processed&quot;, false)
+end
+unprocessed_events</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">31-element Vector{Dict{String, Any}}:
+ Dict(&quot;event_id&quot; =&gt; 21, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:46.111&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 22, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 23, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 24, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 25, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 26, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 27, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 28, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 29, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 30, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ ⋮
+ Dict(&quot;event_id&quot; =&gt; 43, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 44, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 45, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 46, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 47, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 48, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 49, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 50, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 0), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)
+ Dict(&quot;event_id&quot; =&gt; 51, &quot;data&quot; =&gt; Dict{String, Any}(&quot;observation&quot; =&gt; 1), &quot;metadata&quot; =&gt; Dict{String, Any}(), &quot;timestamp&quot; =&gt; &quot;2025-10-01T11:34:47.077&quot;, &quot;processed&quot; =&gt; false)</code></pre><div class="admonition is-info" id="Note-faa3a77d7ba40d6b"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-faa3a77d7ba40d6b" title="Permalink"></a></header><div class="admonition-body"><p>Notice that we have one more event than the second week&#39;s data because we also have one data point coming from the inference request.</p></div></div><p>Now let&#39;s learn from the new data using continual learning (the default behavior):</p><pre><code class="language-julia hljs">learn_request = LearnRequest(episodes = [&quot;default&quot;])  # relearn=false by default
+learn_response, _ = run_learning(api, instance_id, learn_request)
+learn_response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;learned_parameters&quot;: {
+    &quot;posterior_a&quot;: 37,
+    &quot;posterior_b&quot;: 16
+  }
+}
+</code></pre><p>Let&#39;s check how the parameters have evolved:</p><pre><code class="language-julia hljs">params_response, _ = get_model_instance_parameters(api, instance_id)
+params_response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;parameters&quot;: {
+    &quot;posterior_a&quot;: 37,
+    &quot;posterior_b&quot;: 16
+  }
+}
+</code></pre><pre><code class="language-julia hljs"># Make another inference
+inference_response, _ = run_inference(api, instance_id, inference_request)
+inference_response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;event_id&quot;: 52,
+  &quot;results&quot;: {
+    &quot;mean_p&quot;: 0.7037037037037037,
+    &quot;number_of_infer_calls&quot;: 2
+  },
+  &quot;errors&quot;: []
+}
+</code></pre><p>After the second week, our model now estimates the success probability at approximately 70% (36 successes out of 51 total trials), with posterior parameters α=37, β=16. Notice how the model efficiently updated its beliefs without reprocessing the first week&#39;s data.</p><pre><code class="language-julia hljs"># Visualize the posterior distribution after second week
+posterior_week2 = Beta(37, 16)
+p4 = plot(0:0.01:1, pdf.(posterior_week2, 0:0.01:1),
+          label=&quot;Posterior after Week 2 (α=37, β=16)&quot;,
+          color=:green, lw=2, title=&quot;Posterior Distribution After Week 2&quot;)
+vline!(p4, [mean(posterior_week2)],
+       label=&quot;Mean: $(round(mean(posterior_week2), digits=3))&quot;,
+       linestyle=:dash, color=:red)
+plot!(p4, xlabel=&quot;Success Probability&quot;, ylabel=&quot;Density&quot;)
+p4</code></pre><img src="1467d659.svg" alt="Example block output"/><h2 id="Phase-3:-Comparing-Learning-Modes"><a class="docs-heading-anchor" href="#Phase-3:-Comparing-Learning-Modes">Phase 3: Comparing Learning Modes</a><a id="Phase-3:-Comparing-Learning-Modes-1"></a><a class="docs-heading-anchor-permalink" href="#Phase-3:-Comparing-Learning-Modes" title="Permalink"></a></h2><p>Let&#39;s demonstrate the difference between incremental learning and relearning by creating a new episode and comparing the results.</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: create_episode, CreateEpisodeRequest
+
+# Create a new episode for comparison
+create_episode_request = CreateEpisodeRequest(name = &quot;relearning-experiment&quot;)
+response, _ = create_episode(api, instance_id, create_episode_request)
+response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;instance_id&quot;: &quot;d2f1bd04-539a-4cbb-aabf-89b7b325209b&quot;,
+  &quot;episode_name&quot;: &quot;relearning-experiment&quot;,
+  &quot;created_at&quot;: &quot;2025-10-01T11:34:47.242+00:00&quot;,
+  &quot;events&quot;: [],
+  &quot;parameters&quot;: {
+    &quot;posterior_a&quot;: 1,
+    &quot;posterior_b&quot;: 1
+  }
+}
+</code></pre><pre><code class="language-julia hljs"># Add all data to the new episode
+all_data = [first_week_data; second_week_data]
+all_events = [Dict(&quot;data&quot; =&gt; Dict(&quot;observation&quot; =&gt; obs)) for obs in all_data]
+
+request = AttachEventsToEpisodeRequest(events = all_events)
+response, _ = attach_events_to_episode(api, instance_id, &quot;relearning-experiment&quot;, request)
+response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;message&quot;: &quot;Events attached to the episode successfully&quot;
+}
+</code></pre><p>Now let&#39;s use relearning mode to process all data from scratch:</p><pre><code class="language-julia hljs">learn_request = LearnRequest(episodes = [&quot;relearning-experiment&quot;], relearn = true)
+learn_response, _ = run_learning(api, instance_id, learn_request)
+learn_response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;learned_parameters&quot;: {
+    &quot;posterior_a&quot;: 36,
+    &quot;posterior_b&quot;: 16
+  }
+}
+</code></pre><pre><code class="language-julia hljs"># Check the parameters from relearning
+import RxInferClientOpenAPI: get_episode_info
+
+episode_info, _ = get_episode_info(api, instance_id, &quot;relearning-experiment&quot;)
+episode_info.parameters</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Any} with 2 entries:
+  &quot;posterior_a&quot; =&gt; 36
+  &quot;posterior_b&quot; =&gt; 16</code></pre><p>Both approaches yield the same final parameters (α=36, β=16). The difference is in the α parameter because the default episode also had an inference call where the observation has also been added.</p><pre><code class="language-julia hljs"># Visualize the comparison between continual learning and relearning
+p5 = plot(title=&quot;Comparison: Continual Learning vs Relearning&quot;, xlabel=&quot;Success Probability&quot;, ylabel=&quot;Density&quot;, legend=:topright)
+
+# Continual learning result (from default episode)
+posterior_continual = Beta(37, 16)
+plot!(p5, 0:0.01:1, pdf.(posterior_continual, 0:0.01:1),
+      label=&quot;Continual Learning (α=37, β=16)&quot;, color=:blue, lw=2)
+
+# Relearning result (from new episode)
+posterior_relearning = Beta(36, 16)
+plot!(p5, 0:0.01:1, pdf.(posterior_relearning, 0:0.01:1),
+      label=&quot;Relearning (α=36, β=16)&quot;, color=:red, lw=2, linestyle=:dash)
+
+# Add vertical lines for means
+vline!(p5, [mean(posterior_continual)],
+       label=&quot;Continual Mean: $(round(mean(posterior_continual), digits=3))&quot;,
+       linestyle=:dash, color=:blue)
+vline!(p5, [mean(posterior_relearning)],
+       label=&quot;Relearning Mean: $(round(mean(posterior_relearning), digits=3))&quot;,
+       linestyle=:dash, color=:red)
+
+p5</code></pre><img src="c70f24e6.svg" alt="Example block output"/><h2 id="Visualizing-the-Learning-Process"><a class="docs-heading-anchor" href="#Visualizing-the-Learning-Process">Visualizing the Learning Process</a><a id="Visualizing-the-Learning-Process-1"></a><a class="docs-heading-anchor-permalink" href="#Visualizing-the-Learning-Process" title="Permalink"></a></h2><p>Let&#39;s create a visualization showing how the posterior distribution evolves:</p><pre><code class="language-julia hljs">using Distributions
+
+# Plot the evolution of the posterior distribution
+p6 = plot(title=&quot;Evolution of Success Probability Belief&quot;, xlabel=&quot;Success Probability&quot;, ylabel=&quot;Density&quot;, legend=:topright)
+
+# Initial prior (uniform)
+prior = Beta(1, 1)
+plot!(p6, 0:0.01:1, pdf.(prior, 0:0.01:1), label=&quot;Initial Prior (α=1, β=1)&quot;, color=:gray, lw=2)
+
+# After first week
+posterior1 = Beta(16, 6)
+plot!(p6, 0:0.01:1, pdf.(posterior1, 0:0.01:1), label=&quot;After Week 1 (α=16, β=6)&quot;, color=:blue, lw=2)
+
+# After second week (continual learning)
+posterior2 = Beta(37, 16)
+plot!(p6, 0:0.01:1, pdf.(posterior2, 0:0.01:1), label=&quot;After Week 2 (α=37, β=16)&quot;, color=:green, lw=2)
+
+# Add vertical lines for the means
+vline!(p6, [mean(prior)], label=&quot;Prior Mean: $(round(mean(prior), digits=3))&quot;, linestyle=:dash, color=:gray)
+vline!(p6, [mean(posterior1)], label=&quot;Week 1 Mean: $(round(mean(posterior1), digits=3))&quot;, linestyle=:dash, color=:blue)
+vline!(p6, [mean(posterior2)], label=&quot;Week 2 Mean: $(round(mean(posterior2), digits=3))&quot;, linestyle=:dash, color=:green)
+
+p6</code></pre><img src="e8848191.svg" alt="Example block output"/><p>The plot shows how our belief about the success probability becomes more concentrated as we gather more data, and how the mean shifts from the initial 50% to approximately 70% after observing the actual data.</p><pre><code class="language-julia hljs"># Create a summary plot showing data distributions and posterior evolution
+p7 = plot(layout=(2,2), size=(800, 600))
+
+# Week 1 data
+bar!(p7[1], [0, 1], [count(==(0), first_week_data), count(==(1), first_week_data)],
+     label=&quot;Week 1 Data&quot;, color=:lightblue, alpha=0.7, title=&quot;Week 1 Data Distribution&quot;)
+plot!(p7[1], xticks=([0, 1], [&quot;Failure&quot;, &quot;Success&quot;]))
+
+# Week 2 data
+bar!(p7[2], [0, 1], [count(==(0), second_week_data), count(==(1), second_week_data)],
+     label=&quot;Week 2 Data&quot;, color=:lightgreen, alpha=0.7, title=&quot;Week 2 Data Distribution&quot;)
+plot!(p7[2], xticks=([0, 1], [&quot;Failure&quot;, &quot;Success&quot;]))
+
+# Posterior evolution
+plot!(p7[3], 0:0.01:1, pdf.(prior, 0:0.01:1), label=&quot;Initial Prior&quot;, color=:gray, lw=2, title=&quot;Posterior Evolution&quot;)
+plot!(p7[3], 0:0.01:1, pdf.(posterior1, 0:0.01:1), label=&quot;After Week 1&quot;, color=:blue, lw=2)
+plot!(p7[3], 0:0.01:1, pdf.(posterior2, 0:0.01:1), label=&quot;After Week 2&quot;, color=:green, lw=2)
+
+# Success rate over time
+success_rates = [mean(first_week_data), mean([first_week_data; second_week_data])]
+weeks = [&quot;Week 1&quot;, &quot;Week 2&quot;]
+bar!(p7[4], weeks, success_rates, label=&quot;Observed Success Rate&quot;, color=:orange, alpha=0.7, title=&quot;Observed Success Rate Over Time&quot;)
+plot!(p7[4], ylims=(0, 1), ylabel=&quot;Success Rate&quot;)
+
+p7</code></pre><img src="e0833600.svg" alt="Example block output"/><h2 id="Key-Benefits-of-Continual-Learning"><a class="docs-heading-anchor" href="#Key-Benefits-of-Continual-Learning">Key Benefits of Continual Learning</a><a id="Key-Benefits-of-Continual-Learning-1"></a><a class="docs-heading-anchor-permalink" href="#Key-Benefits-of-Continual-Learning" title="Permalink"></a></h2><ol><li><strong>Efficiency</strong>: Only new data is processed, saving computational resources</li><li><strong>Real-time Updates</strong>: Models can be updated as new data arrives</li><li><strong>Memory Efficiency</strong>: No need to store and reprocess historical data</li><li><strong>Scalability</strong>: Enables learning from streaming data sources</li></ol><h2 id="Cleaning-Up"><a class="docs-heading-anchor" href="#Cleaning-Up">Cleaning Up</a><a id="Cleaning-Up-1"></a><a class="docs-heading-anchor-permalink" href="#Cleaning-Up" title="Permalink"></a></h2><pre><code class="language-julia hljs">import RxInferClientOpenAPI: delete_episode, delete_model_instance
+
+# Delete the experimental episode
+response, _ = delete_episode(api, instance_id, &quot;relearning-experiment&quot;)
+response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;message&quot;: &quot;Episode deleted successfully&quot;
+}
+</code></pre><pre><code class="language-julia hljs"># Delete the model instance
+response, _ = delete_model_instance(api, instance_id)
+response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;message&quot;: &quot;Model instance deleted successfully&quot;
+}
+</code></pre><h2 id="Summary"><a class="docs-heading-anchor" href="#Summary">Summary</a><a id="Summary-1"></a><a class="docs-heading-anchor-permalink" href="#Summary" title="Permalink"></a></h2><p>This example demonstrated how continual learning with the Beta-Bernoulli model allows you to:</p><ul><li>Start with a uniform prior and update beliefs as data arrives</li><li>Efficiently process new data without reprocessing historical data</li><li>Track the evolution of posterior distributions over time</li><li>Compare incremental learning with relearning approaches</li></ul><p>The Beta-Bernoulli model is particularly well-suited for continual learning because the Beta distribution is a conjugate prior for the Bernoulli likelihood, making updates computationally efficient and mathematically elegant.</p><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({
+    startOnLoad: true,
+    theme: "neutral"
+});
+</script></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../inference-vs-learning/">« Inference vs Learning</a><a class="docs-footer-nextpage" href="../../components/models/">Models »</a><div class="flexbox-break"></div><p class="footer-message">Created and sponsored by <a href="https://lazydynamics.com/">LazyDynamics</a>, powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>. Licensed under <a href="http://github.com/lazydynamics/RxInferServer?tab=readme-ov-file#license">AGPL-3.0</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Wednesday 1 October 2025 11:35">Wednesday 1 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

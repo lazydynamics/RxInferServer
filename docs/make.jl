@@ -230,9 +230,11 @@ openapi_server_pages = copy_openapi_docs(subdirectory = "server")
 openapi_client_pages = copy_openapi_docs(subdirectory = "client")
 openapi_spec = copy_openapi_spec()
 
+is_draft = get(ENV, "DOCS_DRAFT", "false") == "true"
+
 makedocs(;
     modules = [RxInferServer],
-    warnonly = false,
+    warnonly = is_draft,
     authors = "Lazy Dynamics <info@lazydynamics.com>",
     sitename = "RxInferServer",
     format = Documenter.HTML(;
@@ -258,10 +260,12 @@ makedocs(;
         "Configuration" => "configuration.md",
         "Manuals" => [
             "How to add a model" => "manuals/how-to-add-a-model.md",
+            "Inference vs Learning" => "manuals/inference-vs-learning.md",
+            "Continual learning" => "manuals/continual-learning.md"
         ],
         "Server components" => [
-            "Models" => "components/models.md", 
-            "Database" => "components/database.md", 
+            "Models" => "components/models.md",
+            "Database" => "components/database.md",
             "Logging" => "components/logging.md",
             "Serialization" => "components/serialization.md"
         ],

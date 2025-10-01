@@ -402,9 +402,9 @@ function _oacinternal_get_model_instance_parameters(_api::ModelsApi, instance_id
     return _ctx
 end
 
-@doc raw"""Get the parameters of a model instance
+@doc raw"""Get the parameters of a model instance (current episode)
 
-Retrieve the parameters of a specific model instance
+Retrieve the parameters of a specific model instance. These parameters reflect the current episode's learned parameters.
 
 Params:
 - instance_id::String (required)

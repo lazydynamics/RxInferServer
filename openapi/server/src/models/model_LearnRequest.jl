@@ -6,21 +6,24 @@
 
     LearnRequest(;
         episodes=nothing,
+        relearn=false,
     )
 
     - episodes::Vector{String} : List of episodes to learn from
+    - relearn::Bool : If true, reset episode parameters and process all events from scratch. If false, only process unprocessed events for incremental learning.
 """
 Base.@kwdef mutable struct LearnRequest <: OpenAPI.APIModel
     episodes::Union{Nothing, Vector{String}} = nothing
+    relearn::Union{Nothing, Bool} = false
 
-    function LearnRequest(episodes, )
-        o = new(episodes, )
+    function LearnRequest(episodes, relearn, )
+        o = new(episodes, relearn, )
         OpenAPI.validate_properties(o)
         return o
     end
 end # type LearnRequest
 
-const _property_types_LearnRequest = Dict{Symbol,String}(Symbol("episodes")=>"Vector{String}", )
+const _property_types_LearnRequest = Dict{Symbol,String}(Symbol("episodes")=>"Vector{String}", Symbol("relearn")=>"Bool", )
 OpenAPI.property_type(::Type{ LearnRequest }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_LearnRequest[name]))}
 
 function OpenAPI.check_required(o::LearnRequest)
@@ -30,8 +33,10 @@ end
 
 function OpenAPI.validate_properties(o::LearnRequest)
     OpenAPI.validate_property(LearnRequest, Symbol("episodes"), o.episodes)
+    OpenAPI.validate_property(LearnRequest, Symbol("relearn"), o.relearn)
 end
 
 function OpenAPI.validate_property(::Type{ LearnRequest }, name::Symbol, val)
+
 
 end

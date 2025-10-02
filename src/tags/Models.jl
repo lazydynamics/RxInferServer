@@ -542,7 +542,7 @@ function __database_op_get_model_instance(; token, instance_id)
     end
 
     if !isnothing(result)
-        result = Dict(result)
+        result = Mongoc.as_dict(result)
         # Deserialize the state if it exists and in binary format
         if haskey(result, "state") && isa(result["state"], Vector{UInt8})
             result["state"] = Models.deserialize_state(result["state"])

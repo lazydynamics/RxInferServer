@@ -26,9 +26,11 @@ YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 [weakdeps]
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 
-[sources]
-RxInferClientOpenAPI = {path = "openapi/client"}
-RxInferServerOpenAPI = {path = "openapi/server"}
+[sources.RxInferClientOpenAPI]
+path = "openapi/client"
+
+[sources.RxInferServerOpenAPI]
+path = "openapi/server"
 
 [extensions]
 HotReloadExt = "Revise"
@@ -42,7 +44,7 @@ LinearAlgebra = "1.11.0"
 Logging = "1.11.0"
 LoggingExtras = "1.1.0"
 MiniLoggers = "0.5.3"
-Mongoc = "0.9.2"
+Mongoc = "0.9.2, 0.10"
 Pkg = "1.11.0"
 Random = "1.11.0"
 Revise = "3.7.2"

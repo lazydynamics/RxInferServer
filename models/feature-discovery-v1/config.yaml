@@ -20,6 +20,11 @@ parameters:
     description: The posterior shape parameter of the noise precision `s` for the likelihood
   - name: s_rate
     description: The posterior rate parameter of the noise precision `s` for the likelihood
+  - name: feature_priors
+    description: |
+      Learned priors for missing feature vectors. This is a dictionary mapping 
+      data point indices (as strings) to prior distributions (mean and covariance).
+     
 
 data:
   - name: x

@@ -223,3 +223,146 @@ end
         end
     end
 end
+
+@testitem "Model can learn with missing features" setup = [TestUtils] begin
+    using RxInfer, StableRNGs, LinearAlgebra
+
+    client = TestUtils.TestClient(roles = ["user"])
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "FeatureDiscovery-v1", description = "Testing feature discovery with missing features"
+    )
+
+    rng = StableRNG(42)
+
+    x_dim = 2
+    f = (x) -> 2.0 * x[1] + 3.0 * x[2]
+    real_noise_precision = 5.0
+
+    N_complete = 20
+    N_missing = 5
+    
+    x_complete = [randn(rng, x_dim) for _ in 1:N_complete]
+    y_complete = [f(x_complete[i]) + randn(rng) * sqrt(inv(real_noise_precision)) for i in 1:N_complete]
+    
+    events_complete = [Dict("data" => Dict("x" => x_complete[i], "y" => y_complete[i])) for i in 1:N_complete]
+
+    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
+        models_api, create_model_instance_request
+    )
+
+    @test info.status == 200
+    @test !isnothing(response)
+    instance_id = response.instance_id
+
+    attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events_complete)
+    attach_response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+        models_api, instance_id, "default", attach_events_request
+    )
+
+    @test info.status == 200
+    @test !isnothing(attach_response)
+
+    learn_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
+    learn_response, info = TestUtils.RxInferClientOpenAPI.run_learning(models_api, instance_id, learn_request)
+
+    @test info.status == 200
+    @test !isnothing(learn_response)
+    @test haskey(learn_response.learned_parameters, "omega_mean")
+    @test haskey(learn_response.learned_parameters, "feature_priors")
+    
+    @test isempty(learn_response.learned_parameters["feature_priors"])
+
+    x_missing_true = [randn(rng, x_dim) for _ in 1:N_missing]
+    y_missing = [f(x_missing_true[i]) + randn(rng) * sqrt(inv(real_noise_precision)) for i in 1:N_missing]
+    
+    events_missing = [Dict("data" => Dict("x" => missing, "y" => y_missing[i])) for i in 1:N_missing]
+
+
+    response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
+    @test info.status == 200
+    @test response.message == "Model instance deleted successfully"
+end
+
+@testitem "Model persists feature_priors across continual learning" setup = [TestUtils] begin
+    using RxInfer, StableRNGs, LinearAlgebra
+
+    client = TestUtils.TestClient(roles = ["user"])
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "FeatureDiscovery-v1", description = "Testing feature_priors persistence"
+    )
+
+    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(
+        models_api, create_model_instance_request
+    )
+
+    @test info.status == 200
+    instance_id = response.instance_id
+
+    rng = StableRNG(123)
+    x_dim = 2
+    f = (x) -> 2.0 * x[1] + 3.0 * x[2]
+    real_noise_precision = 5.0
+
+    N_batch1 = 15
+    x_batch1 = [randn(rng, x_dim) for _ in 1:N_batch1]
+    y_batch1 = [f(x_batch1[i]) + randn(rng) * sqrt(inv(real_noise_precision)) for i in 1:N_batch1]
+    events_batch1 = [Dict("data" => Dict("x" => x_batch1[i], "y" => y_batch1[i])) for i in 1:N_batch1]
+
+    attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events_batch1)
+    attach_response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+        models_api, instance_id, "default", attach_events_request
+    )
+    @test info.status == 200
+
+    learn_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
+    learn_response_1, info = TestUtils.RxInferClientOpenAPI.run_learning(models_api, instance_id, learn_request)
+    @test info.status == 200
+    @test haskey(learn_response_1.learned_parameters, "feature_priors")
+    
+    params_response_1, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(
+        models_api, instance_id
+    )
+    @test info.status == 200
+    @test haskey(params_response_1.parameters, "feature_priors")
+
+    N_batch2 = 10
+    x_batch2 = [randn(rng, x_dim) for _ in 1:N_batch2]
+    y_batch2 = [f(x_batch2[i]) + randn(rng) * sqrt(inv(real_noise_precision)) for i in 1:N_batch2]
+    events_batch2 = [Dict("data" => Dict("x" => x_batch2[i], "y" => y_batch2[i])) for i in 1:N_batch2]
+
+    attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events_batch2)
+    attach_response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+        models_api, instance_id, "default", attach_events_request
+    )
+    @test info.status == 200
+
+    learn_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
+    learn_response_2, info = TestUtils.RxInferClientOpenAPI.run_learning(models_api, instance_id, learn_request)
+    @test info.status == 200
+
+    params_response_2, info = TestUtils.RxInferClientOpenAPI.get_model_instance_parameters(
+        models_api, instance_id
+    )
+    @test info.status == 200
+    @test haskey(params_response_2.parameters, "feature_priors")
+    
+    @test params_response_2.parameters["feature_priors"] isa Dict
+
+    test_x = randn(rng, x_dim)
+    inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("x" => test_x))
+    inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(
+        models_api, instance_id, inference_request
+    )
+    @test info.status == 200
+    @test haskey(inference_response.results, "y_mean")
+    
+    test_y_true = f(test_x)
+    @test inference_response.results["y_mean"] ≈ test_y_true rtol = 0.2
+
+    response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
+    @test info.status == 200
+end

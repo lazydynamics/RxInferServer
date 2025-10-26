@@ -19,7 +19,7 @@
     @test response.message == "Model instance deleted successfully"
 end
 
-@testmodule FeatureDiscoveryUtils begin 
+@testmodule FeatureDiscoveryUtils begin
     function generate_feature_discovery_data(; N, x_dim, f, real_noise_precision, rng = StableRNG(1234))
         x = [randn(rng, x_dim) for _ in 1:N]
         y = [f(x[i]) + randn(rng) * sqrt(inv(real_noise_precision)) for i in 1:N]
@@ -229,7 +229,9 @@ end
     end
 end
 
-@testitem "A model can learn coefficients for tripplewise hidden functions with tanh" setup = [TestUtils, FeatureDiscoveryUtils] begin
+@testitem "A model can learn coefficients for tripplewise hidden functions with tanh" setup = [
+    TestUtils, FeatureDiscoveryUtils
+] begin
     using RxInfer, StableRNGs
     using .FeatureDiscoveryUtils
 
@@ -237,13 +239,9 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "FeatureDiscovery-v1", description = "Testing feature discovery model", arguments = Dict(
-            "functions" => [
-                "linear:sigmoid",
-                "pairwise:abs",
-                "tripplewise:tanh"
-            ]
-        )
+        model_name = "FeatureDiscovery-v1",
+        description = "Testing feature discovery model",
+        arguments = Dict("functions" => ["linear:sigmoid", "pairwise:abs", "tripplewise:tanh"])
     )
 
     rng = StableRNG(34)
@@ -254,7 +252,7 @@ end
         (2, (x) -> 2.0 * sigmoid(x[1]) - 3.0 * sigmoid(x[2])),
         (3, (x) -> 3.0 * tanh(x[1] * x[2] * x[3])),
         (6, (x) -> tanh(x[1] * x[2] * x[3]) - 4.0 * tanh(x[4] * x[5] * x[6])),
-        (4, (x) -> abs(x[1] * x[2]) + 2.0 * abs(x[3] * x[4])),
+        (4, (x) -> abs(x[1] * x[2]) + 2.0 * abs(x[3] * x[4]))
     ]
 
     real_noise_precision_to_test = [5.0]

@@ -5,6 +5,31 @@ roles:
   - user
 
 arguments:
+  - name: functions
+    description: |
+      The functions to use for feature discovery.
+      This should be an array of strings.
+      The available options are: 
+        - "linear"
+        - "quadratic"
+        - "pairwise"
+        - "tripplewise"
+
+      The functions can be combined with modifiers, for example "tripplewise:tanh" or "pairwise:sigmoid".
+      If modifier is not provided, the function is applied as is.
+
+      The available modifiers are:
+        - "tanh"
+        - "abs"
+        - "sigmoid"
+        
+    type: array
+    required: true
+    default: 
+      - "linear"
+      - "quadratic"
+      - "pairwise"
+      - "tripplewise"
   - name: number_of_iterations
     description: The number of variational inference iterations
     type: int

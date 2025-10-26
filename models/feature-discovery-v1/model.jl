@@ -1,11 +1,58 @@
 using RxInfer, LinearAlgebra
 
-function create_feature_functions_1(x_dim)
-    linear = [(x) -> getindex(x, i) for i in 1:x_dim]
-    quadratic = [(x) -> getindex(x, i)^2 for i in 1:x_dim]
-    pairwise = [(x) -> getindex(x, i - 1) * getindex(x, i) for i in 2:x_dim]
-    tripplewise = [(x) -> getindex(x, i - 2) * getindex(x, i - 1) * getindex(x, i) for i in 3:x_dim]
-    return vcat(linear, quadratic, pairwise, tripplewise)
+function linear_functions(x_dim)
+    return [(x) -> getindex(x, i) for i in 1:x_dim]
+end
+function quadratic_functions(x_dim)
+    return [(x) -> getindex(x, i)^2 for i in 1:x_dim]
+end
+function pairwise_functions(x_dim)
+    return [(x) -> getindex(x, i - 1) * getindex(x, i) for i in 2:x_dim]
+end
+function tripplewise_functions(x_dim)
+    return [(x) -> getindex(x, i - 2) * getindex(x, i - 1) * getindex(x, i) for i in 3:x_dim]
+end
+
+const FUNCTIONS_DISPATCH_TABLE = Dict(
+    "linear" => linear_functions,
+    "quadratic" => quadratic_functions,
+    "pairwise" => pairwise_functions,
+    "tripplewise" => tripplewise_functions
+)
+
+const MODIFIERS_DISPATCH_TABLE = Dict("tanh" => tanh, "abs" => abs, "sigmoid" => (x) -> inv(one(x) + exp(-x)))
+
+function create_feature_functions(functions, x_dim)
+    feature_functions = []
+    for fn_specification in functions
+        fns = split(fn_specification, ":")
+
+        if isempty(fns)
+            throw(ArgumentError("Invalid function specification: $fn_specification"))
+        end
+
+        function_name = fns[1]
+
+        if !haskey(FUNCTIONS_DISPATCH_TABLE, function_name)
+            throw(ArgumentError("Invalid function name: $function_name"))``
+        end
+
+        fn = FUNCTIONS_DISPATCH_TABLE[fns[1]](x_dim)
+
+        if length(fns) >= 2
+            # If we have a modifier, we compose it with the original function
+            # First apply the original function, then the modifier
+            if !haskey(MODIFIERS_DISPATCH_TABLE, fns[2])
+                throw(ArgumentError("Invalid modifier name: $fns[2]"))
+            end
+            # We have an array of functions, so we need to compose the modifier with each function
+            fn = map(f -> ComposedFunction(MODIFIERS_DISPATCH_TABLE[fns[2]], f), fn)
+        end
+
+        append!(feature_functions, fn)
+    end
+
+    return feature_functions
 end
 
 @model function feature_regression_unknown_noise(ϕs, x, y, priors)
@@ -37,7 +84,9 @@ end
 end
 
 function initial_state(arguments)
-    return Dict{String, Any}("number_of_iterations" => arguments["number_of_iterations"])
+    return Dict{String, Any}(
+        "functions" => arguments["functions"], "number_of_iterations" => arguments["number_of_iterations"]
+    )
 end
 
 function initial_parameters(arguments)
@@ -50,7 +99,7 @@ function run_inference(state, parameters, data)
     @debug "Running inference in FeatureDiscovery-v1 model" state parameters data
 
     x = Float64.(data["x"])
-    phi_s = create_feature_functions_1(length(x))
+    phi_s = create_feature_functions(state["functions"], length(x))
 
     omega_distribution = MvNormalMeanCovariance(parameters["omega_mean"], parameters["omega_covariance"])
     noise_distribution = GammaShapeScale(parameters["noise_shape"], parameters["noise_scale"])
@@ -94,7 +143,7 @@ function run_learning(state, parameters, events)
 
     if !isempty(x) && !isempty(y)
         x_dim = length(x[1])
-        phi_s = create_feature_functions_1(x_dim)
+        phi_s = create_feature_functions(state["functions"], x_dim)
         phi_dim = length(phi_s)
 
         omega_mean = @something(parameters["omega_mean"], zeros(phi_dim))

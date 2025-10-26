@@ -37,11 +37,7 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
-        model_name = "FeatureDiscovery-v1", description = "Testing feature discovery model", arguments = Dict(
-            "functions" => [
-                "linear", "quadratic", "pairwise", "tripplewise"
-            ]
-        )
+        model_name = "FeatureDiscovery-v1", description = "Testing feature discovery model"
     )
 
     rng = StableRNG(34)

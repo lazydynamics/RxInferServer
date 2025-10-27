@@ -32,11 +32,11 @@ end
 Attach events to a specific episode for a model
 
 Params:
-- instance_id::String (required)
-- episode_name::String (required)
-- attach_events_to_episode_request::AttachEventsToEpisodeRequest (required)
+- `instance_id`::`String` (required)
+- `episode_name`::`String` (required)
+- `attach_events_to_episode_request`::`AttachEventsToEpisodeRequest` (required)
 
-Return: SuccessResponse, OpenAPI.Clients.ApiResponse
+Return: `SuccessResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function attach_events_to_episode(_api::ModelsApi, instance_id::String, episode_name::String, attach_events_to_episode_request::AttachEventsToEpisodeRequest; _mediaType=nothing)
     _ctx = _oacinternal_attach_events_to_episode(_api, instance_id, episode_name, attach_events_to_episode_request; _mediaType=_mediaType)
@@ -69,12 +69,12 @@ end
 Attach metadata to a specific event for a model
 
 Params:
-- instance_id::String (required)
-- episode_name::String (required)
-- event_id::Int64 (required)
-- attach_metadata_to_event_request::AttachMetadataToEventRequest (required)
+- `instance_id`::`String` (required)
+- `episode_name`::`String` (required)
+- `event_id`::`Int64` (required)
+- `attach_metadata_to_event_request`::`AttachMetadataToEventRequest` (required)
 
-Return: SuccessResponse, OpenAPI.Clients.ApiResponse
+Return: `SuccessResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function attach_metadata_to_event(_api::ModelsApi, instance_id::String, episode_name::String, event_id::Int64, attach_metadata_to_event_request::AttachMetadataToEventRequest; _mediaType=nothing)
     _ctx = _oacinternal_attach_metadata_to_event(_api, instance_id, episode_name, event_id, attach_metadata_to_event_request; _mediaType=_mediaType)
@@ -106,10 +106,10 @@ end
 Create a new episode for a specific model instance. Note that the default episode is created automatically when the model instance is created.  When a new episode is created, it becomes the current episode for the model instance. 
 
 Params:
-- instance_id::String (required)
-- create_episode_request::CreateEpisodeRequest (required)
+- `instance_id`::`String` (required)
+- `create_episode_request`::`CreateEpisodeRequest` (required)
 
-Return: EpisodeInfo, OpenAPI.Clients.ApiResponse
+Return: `EpisodeInfo`, `OpenAPI.Clients.ApiResponse`
 """
 function create_episode(_api::ModelsApi, instance_id::String, create_episode_request::CreateEpisodeRequest; _mediaType=nothing)
     _ctx = _oacinternal_create_episode(_api, instance_id, create_episode_request; _mediaType=_mediaType)
@@ -140,9 +140,9 @@ end
 Creates a new instance of a model with the specified configuration
 
 Params:
-- create_model_instance_request::CreateModelInstanceRequest (required)
+- `create_model_instance_request`::`CreateModelInstanceRequest` (required)
 
-Return: CreateModelInstanceResponse, OpenAPI.Clients.ApiResponse
+Return: `CreateModelInstanceResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function create_model_instance(_api::ModelsApi, create_model_instance_request::CreateModelInstanceRequest; _mediaType=nothing)
     _ctx = _oacinternal_create_model_instance(_api, create_model_instance_request; _mediaType=_mediaType)
@@ -175,10 +175,10 @@ end
 Delete a specific episode for a model instance. Note that the default episode cannot be deleted, but you can wipe data from it. If the deleted episode was the current episode, the default episode will become the current episode. 
 
 Params:
-- instance_id::String (required)
-- episode_name::String (required)
+- `instance_id`::`String` (required)
+- `episode_name`::`String` (required)
 
-Return: SuccessResponse, OpenAPI.Clients.ApiResponse
+Return: `SuccessResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function delete_episode(_api::ModelsApi, instance_id::String, episode_name::String; _mediaType=nothing)
     _ctx = _oacinternal_delete_episode(_api, instance_id, episode_name; _mediaType=_mediaType)
@@ -209,9 +209,9 @@ end
 Delete a specific model instance by its ID
 
 Params:
-- instance_id::String (required)
+- `instance_id`::`String` (required)
 
-Return: SuccessResponse, OpenAPI.Clients.ApiResponse
+Return: `SuccessResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function delete_model_instance(_api::ModelsApi, instance_id::String; _mediaType=nothing)
     _ctx = _oacinternal_delete_model_instance(_api, instance_id; _mediaType=_mediaType)
@@ -242,9 +242,9 @@ end
 Retrieve detailed information about a specific model available for creation
 
 Params:
-- model_name::String (required)
+- `model_name`::`String` (required)
 
-Return: AvailableModel, OpenAPI.Clients.ApiResponse
+Return: `AvailableModel`, `OpenAPI.Clients.ApiResponse`
 """
 function get_available_model(_api::ModelsApi, model_name::String; _mediaType=nothing)
     _ctx = _oacinternal_get_available_model(_api, model_name; _mediaType=_mediaType)
@@ -274,7 +274,7 @@ Retrieve the list of models available for creation for a given token. This list 
 
 Params:
 
-Return: Vector{AvailableModel}, OpenAPI.Clients.ApiResponse
+Return: `Vector{AvailableModel}`, `OpenAPI.Clients.ApiResponse`
 """
 function get_available_models(_api::ModelsApi; _mediaType=nothing)
     _ctx = _oacinternal_get_available_models(_api; _mediaType=_mediaType)
@@ -306,10 +306,10 @@ end
 Retrieve information about a specific episode of a model
 
 Params:
-- instance_id::String (required)
-- episode_name::String (required)
+- `instance_id`::`String` (required)
+- `episode_name`::`String` (required)
 
-Return: EpisodeInfo, OpenAPI.Clients.ApiResponse
+Return: `EpisodeInfo`, `OpenAPI.Clients.ApiResponse`
 """
 function get_episode_info(_api::ModelsApi, instance_id::String, episode_name::String; _mediaType=nothing)
     _ctx = _oacinternal_get_episode_info(_api, instance_id, episode_name; _mediaType=_mediaType)
@@ -340,9 +340,9 @@ end
 Retrieve all episodes for a specific model instance
 
 Params:
-- instance_id::String (required)
+- `instance_id`::`String` (required)
 
-Return: Vector{EpisodeInfo}, OpenAPI.Clients.ApiResponse
+Return: `Vector{EpisodeInfo}`, `OpenAPI.Clients.ApiResponse`
 """
 function get_episodes(_api::ModelsApi, instance_id::String; _mediaType=nothing)
     _ctx = _oacinternal_get_episodes(_api, instance_id; _mediaType=_mediaType)
@@ -373,9 +373,9 @@ end
 Retrieve detailed information about a specific model instance
 
 Params:
-- instance_id::String (required)
+- `instance_id`::`String` (required)
 
-Return: ModelInstance, OpenAPI.Clients.ApiResponse
+Return: `ModelInstance`, `OpenAPI.Clients.ApiResponse`
 """
 function get_model_instance(_api::ModelsApi, instance_id::String; _mediaType=nothing)
     _ctx = _oacinternal_get_model_instance(_api, instance_id; _mediaType=_mediaType)
@@ -407,9 +407,9 @@ end
 Retrieve the parameters of a specific model instance. These parameters reflect the current episode's learned parameters.
 
 Params:
-- instance_id::String (required)
+- `instance_id`::`String` (required)
 
-Return: ModelInstanceParameters, OpenAPI.Clients.ApiResponse
+Return: `ModelInstanceParameters`, `OpenAPI.Clients.ApiResponse`
 """
 function get_model_instance_parameters(_api::ModelsApi, instance_id::String; _mediaType=nothing)
     _ctx = _oacinternal_get_model_instance_parameters(_api, instance_id; _mediaType=_mediaType)
@@ -441,9 +441,9 @@ end
 Retrieve the state of a specific model instance
 
 Params:
-- instance_id::String (required)
+- `instance_id`::`String` (required)
 
-Return: ModelInstanceState, OpenAPI.Clients.ApiResponse
+Return: `ModelInstanceState`, `OpenAPI.Clients.ApiResponse`
 """
 function get_model_instance_state(_api::ModelsApi, instance_id::String; _mediaType=nothing)
     _ctx = _oacinternal_get_model_instance_state(_api, instance_id; _mediaType=_mediaType)
@@ -473,7 +473,7 @@ Retrieve detailed information about all created model instances for a specific t
 
 Params:
 
-Return: Vector{ModelInstance}, OpenAPI.Clients.ApiResponse
+Return: `Vector{ModelInstance}`, `OpenAPI.Clients.ApiResponse`
 """
 function get_model_instances(_api::ModelsApi; _mediaType=nothing)
     _ctx = _oacinternal_get_model_instances(_api; _mediaType=_mediaType)
@@ -504,10 +504,10 @@ end
 Run inference on a specific model instance
 
 Params:
-- instance_id::String (required)
-- infer_request::InferRequest (required)
+- `instance_id`::`String` (required)
+- `infer_request`::`InferRequest` (required)
 
-Return: InferResponse, OpenAPI.Clients.ApiResponse
+Return: `InferResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function run_inference(_api::ModelsApi, instance_id::String, infer_request::InferRequest; _mediaType=nothing)
     _ctx = _oacinternal_run_inference(_api, instance_id, infer_request; _mediaType=_mediaType)
@@ -538,10 +538,10 @@ end
 Learn from previous episodes for a specific model
 
 Params:
-- instance_id::String (required)
-- learn_request::LearnRequest (required)
+- `instance_id`::`String` (required)
+- `learn_request`::`LearnRequest` (required)
 
-Return: LearnResponse, OpenAPI.Clients.ApiResponse
+Return: `LearnResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function run_learning(_api::ModelsApi, instance_id::String, learn_request::LearnRequest; _mediaType=nothing)
     _ctx = _oacinternal_run_learning(_api, instance_id, learn_request; _mediaType=_mediaType)
@@ -573,10 +573,10 @@ end
 Wipe all events from a specific episode for a model
 
 Params:
-- instance_id::String (required)
-- episode_name::String (required)
+- `instance_id`::`String` (required)
+- `episode_name`::`String` (required)
 
-Return: SuccessResponse, OpenAPI.Clients.ApiResponse
+Return: `SuccessResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function wipe_episode(_api::ModelsApi, instance_id::String, episode_name::String; _mediaType=nothing)
     _ctx = _oacinternal_wipe_episode(_api, instance_id, episode_name; _mediaType=_mediaType)

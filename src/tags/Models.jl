@@ -1,4 +1,4 @@
-using UUIDs, Mongoc, TimeZones
+using UUIDs, Mongoc, TimeZones, URIs
 
 function get_available_models(req::HTTP.Request)
     models = Models.get_models()
@@ -336,6 +336,7 @@ function get_episode_info(req::HTTP.Request, instance_id::String, episode_name::
         error = "Not Found", message = "The requested model instance could not be found"
     )
 
+    episode_name = __database_op_unescape_episode_name(; episode_name)
     episode = @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
         error = "Not Found", message = "The requested episode could not be found"
     )
@@ -400,7 +401,7 @@ function create_episode(
         message = "The episode has been created, but the model could not be updated to point to the new episode due to internal error"
     )
 
-    return get_episode_info(req, instance_id, episode_name)
+    return get_episode_info(req, instance_id, __database_op_escape_episode_name(; episode_name))
 end
 
 function attach_events_to_episode(
@@ -415,6 +416,7 @@ function attach_events_to_episode(
         error = "Not Found", message = "The requested model could not be found"
     )
 
+    episode_name = __database_op_unescape_episode_name(; episode_name)
     @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
         error = "Not Found", message = "The requested episode could not be found"
     )
@@ -434,6 +436,8 @@ function delete_episode(req::HTTP.Request, instance_id::String, episode_name::St
     instance = @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
         error = "Not Found", message = "The requested model could not be found"
     )
+
+    episode_name = __database_op_unescape_episode_name(; episode_name)
 
     # Short-circuit if the episode is the default episode
     if episode_name == "default"
@@ -470,6 +474,8 @@ function wipe_episode(req::HTTP.Request, instance_id::String, episode_name::Stri
         error = "Not Found", message = "The requested model could not be found"
     )
 
+    episode_name = __database_op_unescape_episode_name(; episode_name)
+
     @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
         error = "Not Found", message = "The requested episode could not be found"
     )
@@ -493,6 +499,8 @@ function attach_metadata_to_event(
     @expect __database_op_get_model_instance(; token, instance_id) || RxInferServerOpenAPI.NotFoundResponse(
         error = "Not Found", message = "The requested model could not be found"
     )
+
+    episode_name = __database_op_unescape_episode_name(; episode_name)
 
     @expect __database_op_get_episode(; instance_id, episode_name) || RxInferServerOpenAPI.NotFoundResponse(
         error = "Not Found",
@@ -635,6 +643,25 @@ function __database_op_get_all_episodes(; instance_id::String)
     end
 
     return result
+end
+
+## These two functions below are an unfortunate consequence of our API design 
+## where we allow to create an episode with a name that is not a valid URL path.
+## We escape and unescape the episode name to make it safe for use in a URL.
+function __database_op_escape_episode_name(; episode_name::String)::String
+    escaped = URIs.escapeuri(episode_name)
+    if escaped != episode_name
+        @debug "Episode name was escaped" episode_name escaped
+    end
+    return escaped
+end
+
+function __database_op_unescape_episode_name(; episode_name::String)::String
+    unescaped = URIs.unescapeuri(episode_name)
+    if unescaped != episode_name
+        @debug "Episode name was unescaped" episode_name unescaped
+    end
+    return unescaped
 end
 
 ## Get episode by instance ID and episode name

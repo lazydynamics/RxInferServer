@@ -65,7 +65,7 @@ jobs:
           exit $TEST_EXIT_CODE
       
       - name: Upload trace compilation artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: server-compilation-trace
           path: server-compilation-trace.jl

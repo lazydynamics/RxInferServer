@@ -1804,3 +1804,161 @@ end
     @test info.status == 200
     @test response.message == "Model instance deleted successfully"
 end
+
+@testitem "It should be possible to create an episode with bad name and retrieve it" setup = [TestUtils] begin
+    using Dates, TimeZones
+
+    client = TestUtils.TestClient()
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "TestModelLearningCall", description = "Testing creation of a model instance with no arguments"
+    )
+
+    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
+    @test info.status == 200
+    @test !isnothing(response)
+
+    instance_id = response.instance_id
+
+    # Its bad because http url cannot contain these characters
+    episode_name = " %%% -- ////// %% <> >< == () {} [] | # % & * + , / : ; = ? @ [ ]"
+
+    @testset "Create episode with bad name" begin
+        create_episode_request = TestUtils.RxInferClientOpenAPI.CreateEpisodeRequest(name = episode_name)
+        response, info = TestUtils.RxInferClientOpenAPI.create_episode(models_api, instance_id, create_episode_request)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.episode_name == episode_name
+        episode_created_at = response.created_at
+    end
+
+    @testset "Get episode info with bad name" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, instance_id, episode_name)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test response.episode_name == episode_name
+        @test response.instance_id == instance_id
+        @test response.events == []
+    end
+
+    @testset "Check episode appears in list of episodes" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, instance_id)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test any(e -> e.episode_name == episode_name, response)
+        @test any(e -> e.episode_name == "default", response)
+    end
+
+    @testset "Attach events to episode with bad name" begin
+        events = [
+            Dict(
+                "timestamp" => DateTime(2024, 3, 20, 12, 0, 0),
+                "data" => Dict("observation" => 1),
+                "metadata" => Dict("test_key" => "test_value")
+            ),
+            Dict(
+                "timestamp" => DateTime(2024, 3, 20, 12, 0, 1),
+                "data" => Dict("observation" => 2),
+                "metadata" => Dict("another_key" => "another_value")
+            )
+        ]
+
+        attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events)
+        response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+            models_api, instance_id, episode_name, attach_events_request
+        )
+        @test info.status == 200
+        @test !isnothing(response)
+    end
+
+    @testset "Verify events are attached" begin
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, instance_id, episode_name)
+        @test info.status == 200
+        @test !isnothing(response)
+        @test length(response.events) == 2
+        @test response.events[1]["data"] == Dict("observation" => 1)
+        @test response.events[2]["data"] == Dict("observation" => 2)
+    end
+
+    @testset "Attach metadata to event with bad episode name" begin
+        # Attach metadata to the first event
+        metadata = Dict("added_key" => "added_value")
+        attach_metadata_request = TestUtils.RxInferClientOpenAPI.AttachMetadataToEventRequest(metadata = metadata)
+        response, info = TestUtils.RxInferClientOpenAPI.attach_metadata_to_event(
+            models_api, instance_id, episode_name, 1, attach_metadata_request
+        )
+        @test info.status == 200
+        @test !isnothing(response)
+
+        # Verify metadata is attached
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, instance_id, episode_name)
+        @test info.status == 200
+        @test haskey(response.events[1], "metadata")
+        @test response.events[1]["metadata"] == Dict("added_key" => "added_value")
+    end
+
+    @testset "Wipe episode with bad name" begin
+        response, info = TestUtils.RxInferClientOpenAPI.wipe_episode(models_api, instance_id, episode_name)
+        @test info.status == 200
+        @test response.message == "Episode wiped successfully"
+
+        # Verify episode is empty
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, instance_id, episode_name)
+        @test info.status == 200
+        @test length(response.events) == 0
+    end
+
+    @testset "Run inference on episode with bad name" begin
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(
+            episode_name = episode_name, data = Dict("observation" => 42)
+        )
+        response, info = TestUtils.RxInferClientOpenAPI.run_inference(models_api, instance_id, inference_request)
+        @test info.status == 200
+        @test !isnothing(response)
+
+        # Verify event was added
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, instance_id, episode_name)
+        @test info.status == 200
+        @test length(response.events) == 1
+        @test response.events[1]["data"] == Dict("observation" => 42)
+    end
+
+    @testset "Run learning on episode with bad name" begin
+        # First attach more events for learning
+        events = [Dict("data" => Dict("observation" => i)) for i in 1:5]
+        attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events)
+        response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+            models_api, instance_id, episode_name, attach_events_request
+        )
+        @test info.status == 200
+
+        # Run learning
+        learning_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = [episode_name])
+        response, info = TestUtils.RxInferClientOpenAPI.run_learning(models_api, instance_id, learning_request)
+        @test info.status == 200
+        @test !isnothing(response)
+    end
+
+    @testset "Delete episode with bad name" begin
+        response, info = TestUtils.RxInferClientOpenAPI.delete_episode(models_api, instance_id, episode_name)
+        @test info.status == 200
+        @test response.message == "Episode deleted successfully"
+
+        # Verify episode is deleted
+        response, info = TestUtils.RxInferClientOpenAPI.get_episode_info(models_api, instance_id, episode_name)
+        @test info.status == 404
+        @test response.error == "Not Found"
+
+        # Verify it's not in the list
+        response, info = TestUtils.RxInferClientOpenAPI.get_episodes(models_api, instance_id)
+        @test info.status == 200
+        @test !any(e -> e.episode_name == episode_name, response)
+    end
+
+    @testset "Cleanup: Delete model instance" begin
+        response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
+        @test info.status == 200
+        @test response.message == "Model instance deleted successfully"
+    end
+end

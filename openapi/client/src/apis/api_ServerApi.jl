@@ -29,7 +29,7 @@ Returns information about the server, such as the RxInferServer version, RxInfer
 
 Params:
 
-Return: ServerInfo, OpenAPI.Clients.ApiResponse
+Return: `ServerInfo`, `OpenAPI.Clients.ApiResponse`
 """
 function get_server_info(_api::ServerApi; _mediaType=nothing)
     _ctx = _oacinternal_get_server_info(_api; _mediaType=_mediaType)
@@ -58,7 +58,7 @@ Simple endpoint to check if the server is alive and running
 
 Params:
 
-Return: PingResponse, OpenAPI.Clients.ApiResponse
+Return: `PingResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function ping_server(_api::ServerApi; _mediaType=nothing)
     _ctx = _oacinternal_ping_server(_api; _mediaType=_mediaType)

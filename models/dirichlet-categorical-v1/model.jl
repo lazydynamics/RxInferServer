@@ -18,10 +18,14 @@ end
 function run_inference(state, parameters, data)
     @debug "Running inference in Dirichlet-Categorical-v1 model" state parameters data
     alpha_params = convert(Vector{Float64}, parameters["posterior_alpha"])
-    inference_results = infer(model = dirichlet_categorical(prior_alpha = Dirichlet(alpha_params)), data = (observations = UnfactorizedData([missing]),))
+    inference_results = infer(
+        model = dirichlet_categorical(prior_alpha = Dirichlet(alpha_params)),
+        data = (observations = UnfactorizedData([missing]),)
+    )
     state["number_of_infer_calls"] += 1
     result = Dict(
-        "predicted_probs" => probvec.(inference_results.predictions[:observations])[1], "number_of_infer_calls" => state["number_of_infer_calls"]
+        "predicted_probs" => probvec.(inference_results.predictions[:observations])[1],
+        "number_of_infer_calls" => state["number_of_infer_calls"]
     )
 
     return result, state
@@ -38,7 +42,9 @@ function run_learning(state, parameters, events)
     end
     if !isempty(y)
         alpha_params = convert(Vector{Float64}, parameters["posterior_alpha"])
-        inference_result = infer(model = dirichlet_categorical(prior_alpha = Dirichlet(alpha_params)), data = (observations = y,))
+        inference_result = infer(
+            model = dirichlet_categorical(prior_alpha = Dirichlet(alpha_params)), data = (observations = y,)
+        )
         parameters["posterior_alpha"] = params(inference_result.posteriors[:alpha])[1]
     end
 

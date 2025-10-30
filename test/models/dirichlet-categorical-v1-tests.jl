@@ -1,4 +1,6 @@
-@testitem "it should be possible to create a Dirichlet-Categorical model instance with correct arguments" setup = [TestUtils] begin
+@testitem "it should be possible to create a Dirichlet-Categorical model instance with correct arguments" setup = [
+    TestUtils
+] begin
     client = TestUtils.TestClient(roles = ["user"])
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
@@ -30,10 +32,10 @@ end
         return [Float64.(x[i] .== 1:n_categories) for i in 1:length(x)]
     end
 
-    @testset for n in (500, 1000), 
-                  true_probs in ([0.5, 0.3, 0.2], [0.2, 0.2, 0.6], [0.33, 0.34, 0.33]),
-                  prior_alpha in ([1.0, 1.0, 1.0], [2.0, 2.0, 2.0], [5.0, 3.0, 2.0])
-        
+    @testset for n in (500, 1000),
+        true_probs in ([0.5, 0.3, 0.2], [0.2, 0.2, 0.6], [0.33, 0.34, 0.33]),
+        prior_alpha in ([1.0, 1.0, 1.0], [2.0, 2.0, 2.0], [5.0, 3.0, 2.0])
+
         observations = generate_categorical_data(n, true_probs)
         n_categories = length(true_probs)
 
@@ -150,7 +152,7 @@ end
     @test info.status == 200
     @test !isnothing(learn_response)
 
-    expected_alphas_1 = [7.0, 3.0, 2.0, 2.0] 
+    expected_alphas_1 = [7.0, 3.0, 2.0, 2.0]
     @test learn_response.learned_parameters["posterior_alpha"] ≈ expected_alphas_1
 
     second_batch = [2, 2, 3, 2, 3, 3, 4, 4, 3, 2]
@@ -183,12 +185,10 @@ end
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
     @testset for (prior_alphas, description) in [
-        ([2.0, 2.0], "Two categories"),
-        ([1.0, 1.0, 1.0], "Uniform prior"),
-        ([5.0, 3.0, 2.0, 10.0], "Non-uniform prior")
+        ([2.0, 2.0], "Two categories"), ([1.0, 1.0, 1.0], "Uniform prior"), ([5.0, 3.0, 2.0, 10.0], "Non-uniform prior")
     ]
         n_categories = length(prior_alphas)
-        
+
         create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
             model_name = "DirichletCategorical-v1",
             description = description,
@@ -199,9 +199,7 @@ end
         @test info.status == 200
         instance_id = response.instance_id
 
-        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(
-            data = Dict("observation" => missing)
-        )
+        inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("observation" => missing))
         inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(
             models_api, instance_id, inference_request
         )

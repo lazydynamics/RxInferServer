@@ -15,3 +15,5 @@
 /openapi/server/Manifest.toml
 
 /custom_models/
+
+.DS_Store

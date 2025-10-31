@@ -85,7 +85,7 @@ end
 
 function initial_state(arguments)
     return Dict{String, Any}(
-        "functions" => arguments["functions"], 
+        "functions" => arguments["functions"],
         "number_of_iterations" => convert(Int, arguments["number_of_iterations"]),
         "compute_free_energy" => convert(Bool, arguments["compute_free_energy"])
     )

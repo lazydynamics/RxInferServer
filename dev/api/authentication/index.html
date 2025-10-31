@@ -12,9 +12,9 @@ client       = Client(url)
 api          = AuthenticationApi(client)
 response, _  = token_generate(api)
 
-response.token</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;ada060b4-16f9-4ce6-ba40-6787fc0ef87c&quot;</code></pre><div class="admonition is-success" id="Development-Mode-40adc4eca0639dff"><header class="admonition-header">Development Mode<a class="admonition-anchor" href="#Development-Mode-40adc4eca0639dff" title="Permalink"></a></header><div class="admonition-body"><p>During development, you can enable the development mode by setting the <a href="../../configuration/#RxInferServer.RXINFER_SERVER_ENABLE_DEV_TOKEN"><code>RXINFER_SERVER_ENABLE_DEV_TOKEN</code></a> environment variable to <code>true</code>.</p></div></div><h3 id="Using-the-Token"><a class="docs-heading-anchor" href="#Using-the-Token">Using the Token</a><a id="Using-the-Token-1"></a><a class="docs-heading-anchor-permalink" href="#Using-the-Token" title="Permalink"></a></h3><p>Once you have obtained a token, you need to include it in the <code>Authorization</code> header of your requests. The token should be prefixed with <code>Bearer</code> as shown below:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI.OpenAPI.Clients: set_header
+response.token</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;42025cb3-c9b7-4061-a76a-47b951b043d0&quot;</code></pre><div class="admonition is-success" id="Development-Mode-40adc4eca0639dff"><header class="admonition-header">Development Mode<a class="admonition-anchor" href="#Development-Mode-40adc4eca0639dff" title="Permalink"></a></header><div class="admonition-body"><p>During development, you can enable the development mode by setting the <a href="../../configuration/#RxInferServer.RXINFER_SERVER_ENABLE_DEV_TOKEN"><code>RXINFER_SERVER_ENABLE_DEV_TOKEN</code></a> environment variable to <code>true</code>.</p></div></div><h3 id="Using-the-Token"><a class="docs-heading-anchor" href="#Using-the-Token">Using the Token</a><a id="Using-the-Token-1"></a><a class="docs-heading-anchor-permalink" href="#Using-the-Token" title="Permalink"></a></h3><p>Once you have obtained a token, you need to include it in the <code>Authorization</code> header of your requests. The token should be prefixed with <code>Bearer</code> as shown below:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI.OpenAPI.Clients: set_header
 
-set_header(client, &quot;Authorization&quot;, &quot;Bearer $(response.token)&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;Bearer ada060b4-16f9-4ce6-ba40-6787fc0ef87c&quot;</code></pre><div class="admonition is-warning" id="Token-Security-576a1c2413be7971"><header class="admonition-header">Token Security<a class="admonition-anchor" href="#Token-Security-576a1c2413be7971" title="Permalink"></a></header><div class="admonition-body"><ul><li>Keep your tokens secure and private</li><li>Store tokens in a secure location</li><li>Never expose tokens in client-side code or version control</li><li>Implement proper token rotation and management in production</li><li>Remember that models are associated with the token used to create them</li></ul></div></div><h2 id="authentication-api-roles"><a class="docs-heading-anchor" href="#authentication-api-roles">Understanding Token Roles</a><a id="authentication-api-roles-1"></a><a class="docs-heading-anchor-permalink" href="#authentication-api-roles" title="Permalink"></a></h2><h3 id="Viewing-Token-Roles"><a class="docs-heading-anchor" href="#Viewing-Token-Roles">Viewing Token Roles</a><a id="Viewing-Token-Roles-1"></a><a class="docs-heading-anchor-permalink" href="#Viewing-Token-Roles" title="Permalink"></a></h3><p>Each token comes with a set of assigned roles that determine its access permissions. You can retrieve the roles associated with your token using the <code>token_roles</code> operation:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: token_roles
+set_header(client, &quot;Authorization&quot;, &quot;Bearer $(response.token)&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;Bearer 42025cb3-c9b7-4061-a76a-47b951b043d0&quot;</code></pre><div class="admonition is-warning" id="Token-Security-576a1c2413be7971"><header class="admonition-header">Token Security<a class="admonition-anchor" href="#Token-Security-576a1c2413be7971" title="Permalink"></a></header><div class="admonition-body"><ul><li>Keep your tokens secure and private</li><li>Store tokens in a secure location</li><li>Never expose tokens in client-side code or version control</li><li>Implement proper token rotation and management in production</li><li>Remember that models are associated with the token used to create them</li></ul></div></div><h2 id="authentication-api-roles"><a class="docs-heading-anchor" href="#authentication-api-roles">Understanding Token Roles</a><a id="authentication-api-roles-1"></a><a class="docs-heading-anchor-permalink" href="#authentication-api-roles" title="Permalink"></a></h2><h3 id="Viewing-Token-Roles"><a class="docs-heading-anchor" href="#Viewing-Token-Roles">Viewing Token Roles</a><a id="Viewing-Token-Roles-1"></a><a class="docs-heading-anchor-permalink" href="#Viewing-Token-Roles" title="Permalink"></a></h3><p>Each token comes with a set of assigned roles that determine its access permissions. You can retrieve the roles associated with your token using the <code>token_roles</code> operation:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: token_roles
 
 response, _ = token_roles(api)
 
@@ -24,7 +24,7 @@ response.roles</code></pre><pre class="documenter-example-output"><code class="n
 models_api = ModelsApi(client)
 available_models, _ = get_available_models(models_api)
 
-available_models</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">7-element Vector{RxInferClientOpenAPI.AvailableModel}:
+available_models</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{RxInferClientOpenAPI.AvailableModel}:
  {
   &quot;details&quot;: {
     &quot;name&quot;: &quot;Drone3D-v1&quot;,
@@ -196,11 +196,30 @@ available_models</code></pre><pre class="documenter-example-output"><code class=
     &quot;author&quot;: &quot;Lazy Dynamics&quot;,
     &quot;arguments&quot;: [
       {
+        &quot;name&quot;: &quot;functions&quot;,
+        &quot;default&quot;: [
+          &quot;linear&quot;,
+          &quot;quadratic&quot;,
+          &quot;pairwise&quot;,
+          &quot;triplewise&quot;
+        ],
+        &quot;required&quot;: true,
+        &quot;description&quot;: &quot;The functions to use for feature discovery.\nThis should be an array of strings.\nThe available options are: \n  - \&quot;linear\&quot;\n  - \&quot;quadratic\&quot;\n  - \&quot;pairwise\&quot;\n  - \&quot;triplewise\&quot;\n\nThe functions can be combined with modifiers, for example \&quot;triplewise:tanh\&quot; or \&quot;pairwise:sigmoid\&quot;.\nIf modifier is not provided, the function is applied as is.\n\nThe available modifiers are:\n  - \&quot;tanh\&quot;\n  - \&quot;abs\&quot;\n  - \&quot;sigmoid\&quot;\n  \n&quot;,
+        &quot;type&quot;: &quot;array&quot;
+      },
+      {
         &quot;name&quot;: &quot;number_of_iterations&quot;,
         &quot;default&quot;: 25,
         &quot;required&quot;: false,
         &quot;description&quot;: &quot;The number of variational inference iterations&quot;,
         &quot;type&quot;: &quot;int&quot;
+      },
+      {
+        &quot;name&quot;: &quot;compute_free_energy&quot;,
+        &quot;default&quot;: false,
+        &quot;required&quot;: false,
+        &quot;description&quot;: &quot;Whether to compute the free energy&quot;,
+        &quot;type&quot;: &quot;bool&quot;
       }
     ],
     &quot;parameters&quot;: [
@@ -292,6 +311,52 @@ available_models</code></pre><pre class="documenter-example-output"><code class=
       &quot;user&quot;
     ],
     &quot;description&quot;: &quot;A simple Beta-Bernoulli model&quot;
+  }
+}
+
+ {
+  &quot;details&quot;: {
+    &quot;name&quot;: &quot;DirichletCategorical-v1&quot;,
+    &quot;description&quot;: &quot;A simple Dirichlet-Categorical model&quot;,
+    &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+    &quot;roles&quot;: [
+      &quot;user&quot;
+    ]
+  },
+  &quot;config&quot;: {
+    &quot;name&quot;: &quot;DirichletCategorical-v1&quot;,
+    &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+    &quot;arguments&quot;: [
+      {
+        &quot;name&quot;: &quot;prior_alpha&quot;,
+        &quot;default&quot;: [
+          1.0,
+          1.0,
+          1.0
+        ],
+        &quot;required&quot;: false,
+        &quot;description&quot;: &quot;The initial alpha parameter of the prior Dirichlet distribution `alpha`&quot;,
+        &quot;type&quot;: &quot;array&quot;
+      }
+    ],
+    &quot;parameters&quot;: [
+      {
+        &quot;name&quot;: &quot;posterior_alpha&quot;,
+        &quot;description&quot;: &quot;The posterior parameter `alpha` of the Dirichlet distribution&quot;
+      }
+    ],
+    &quot;data&quot;: [
+      {
+        &quot;name&quot;: &quot;observations&quot;,
+        &quot;required&quot;: true,
+        &quot;description&quot;: &quot;The observations to make predictions on&quot;,
+        &quot;type&quot;: &quot;array&quot;
+      }
+    ],
+    &quot;roles&quot;: [
+      &quot;user&quot;
+    ],
+    &quot;description&quot;: &quot;A simple Dirichlet-Categorical model&quot;
   }
 }
 
@@ -490,4 +555,4 @@ mermaid.initialize({
     startOnLoad: true,
     theme: "neutral"
 });
-</script></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting-started/">« Getting started</a><a class="docs-footer-nextpage" href="../model-management/">Model management »</a><div class="flexbox-break"></div><p class="footer-message">Created and sponsored by <a href="https://lazydynamics.com/">LazyDynamics</a>, powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>. Licensed under <a href="http://github.com/lazydynamics/RxInferServer?tab=readme-ov-file#license">AGPL-3.0</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Wednesday 1 October 2025 11:34">Wednesday 1 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+</script></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting-started/">« Getting started</a><a class="docs-footer-nextpage" href="../model-management/">Model management »</a><div class="flexbox-break"></div><p class="footer-message">Created and sponsored by <a href="https://lazydynamics.com/">LazyDynamics</a>, powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>. Licensed under <a href="http://github.com/lazydynamics/RxInferServer?tab=readme-ov-file#license">AGPL-3.0</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.15.0 on <span class="colophon-date" title="Friday 31 October 2025 16:30">Friday 31 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

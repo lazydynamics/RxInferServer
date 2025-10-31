@@ -10,9 +10,62 @@
 
     @test info.status == 200
     @test !isnothing(response)
-    # Feature discovery model doesn't require any arguments, so it should succeed
 
     instance_id = response.instance_id
+
+    # Feature discovery model doesn't require any arguments, so it should succeed
+    # but we check that the default arguments are set correctly
+    response, info = TestUtils.RxInferClientOpenAPI.get_model_instance(models_api, instance_id)
+    @test info.status == 200
+    @test !isnothing(response)
+    @test response.arguments["functions"] == ["linear", "quadratic", "pairwise", "triplewise"]
+    @test response.arguments["number_of_iterations"] == 25
+    @test response.arguments["compute_free_energy"] == false
+
+    response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, instance_id)
+    @test info.status == 200
+    @test !isnothing(response)
+    @test response.state["functions"] == ["linear", "quadratic", "pairwise", "triplewise"]
+    @test response.state["number_of_iterations"] == 25
+    @test response.state["compute_free_energy"] == false
+
+    response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
+    @test info.status == 200
+    @test response.message == "Model instance deleted successfully"
+end
+
+@testitem "A model can be created with custom arguments" setup = [TestUtils] begin
+    client = TestUtils.TestClient(roles = ["user"])
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "FeatureDiscovery-v1",
+        description = "Testing feature discovery model",
+        arguments = Dict(
+            "functions" => ["linear", "quadratic"], "number_of_iterations" => 10, "compute_free_energy" => true
+        )
+    )
+
+    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
+
+    @test info.status == 200
+    @test !isnothing(response)
+
+    instance_id = response.instance_id
+
+    response, info = TestUtils.RxInferClientOpenAPI.get_model_instance(models_api, instance_id)
+    @test info.status == 200
+    @test !isnothing(response)
+    @test response.arguments["functions"] == ["linear", "quadratic"]
+    @test response.arguments["number_of_iterations"] == 10
+    @test response.arguments["compute_free_energy"] == true
+
+    response, info = TestUtils.RxInferClientOpenAPI.get_model_instance_state(models_api, instance_id)
+    @test info.status == 200
+    @test !isnothing(response)
+    @test response.state["functions"] == ["linear", "quadratic"]
+    @test response.state["number_of_iterations"] == 10
+    @test response.state["compute_free_energy"] == true
 
     response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
     @test info.status == 200
@@ -229,7 +282,7 @@ end
     end
 end
 
-@testitem "A model can learn coefficients for tripplewise hidden functions with tanh" setup = [
+@testitem "A model can learn coefficients for triplewise hidden functions with tanh" setup = [
     TestUtils, FeatureDiscoveryUtils
 ] begin
     using RxInfer, StableRNGs
@@ -241,7 +294,7 @@ end
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
         model_name = "FeatureDiscovery-v1",
         description = "Testing feature discovery model",
-        arguments = Dict("functions" => ["linear:sigmoid", "pairwise:abs", "tripplewise:tanh"])
+        arguments = Dict("functions" => ["linear:sigmoid", "pairwise:abs", "triplewise:tanh"])
     )
 
     rng = StableRNG(34)
@@ -324,4 +377,44 @@ end
             @test response.message == "Model instance deleted successfully"
         end
     end
+end
+
+@testitem "A model returns the free energy if compute_free_energy is true" setup = [TestUtils] begin
+    client = TestUtils.TestClient(roles = ["user"])
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "FeatureDiscovery-v1",
+        description = "Testing feature discovery model",
+        arguments = Dict("compute_free_energy" => true, "number_of_iterations" => 10)
+    )
+
+    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
+
+    @test info.status == 200
+    @test !isnothing(response)
+
+    instance_id = response.instance_id
+
+    events = [Dict("data" => Dict("x" => [i], "y" => i)) for i in 1:10]
+
+    attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events)
+    response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
+        models_api, instance_id, "default", attach_events_request
+    )
+
+    @test info.status == 200
+    @test !isnothing(response)
+
+    learn_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
+    response, info = TestUtils.RxInferClientOpenAPI.run_learning(models_api, instance_id, learn_request)
+
+    @test info.status == 200
+    @test !isnothing(response)
+
+    @test haskey(response.learned_parameters, "free_energy")
+    @test length(response.learned_parameters["free_energy"]) == 10
+    @test all(diff(response.learned_parameters["free_energy"]) .< 0)
+    @test response.learned_parameters["free_energy"][end] < response.learned_parameters["free_energy"][1]
+    @test all(isfinite, response.learned_parameters["free_energy"])
 end

@@ -13,9 +13,9 @@ arguments:
         - "linear"
         - "quadratic"
         - "pairwise"
-        - "tripplewise"
+        - "triplewise"
 
-      The functions can be combined with modifiers, for example "tripplewise:tanh" or "pairwise:sigmoid".
+      The functions can be combined with modifiers, for example "triplewise:tanh" or "pairwise:sigmoid".
       If modifier is not provided, the function is applied as is.
 
       The available modifiers are:
@@ -29,12 +29,17 @@ arguments:
       - "linear"
       - "quadratic"
       - "pairwise"
-      - "tripplewise"
+      - "triplewise"
   - name: number_of_iterations
     description: The number of variational inference iterations
     type: int
     required: false
     default: 25
+  - name: compute_free_energy
+    description: Whether to compute the free energy
+    type: bool
+    required: false
+    default: false
 
 parameters:
   - name: omega_mean

@@ -9,7 +9,7 @@ end
 function pairwise_functions(x_dim)
     return [(x) -> getindex(x, i - 1) * getindex(x, i) for i in 2:x_dim]
 end
-function tripplewise_functions(x_dim)
+function triplewise_functions(x_dim)
     return [(x) -> getindex(x, i - 2) * getindex(x, i - 1) * getindex(x, i) for i in 3:x_dim]
 end
 
@@ -17,7 +17,7 @@ const FUNCTIONS_DISPATCH_TABLE = Dict(
     "linear" => linear_functions,
     "quadratic" => quadratic_functions,
     "pairwise" => pairwise_functions,
-    "tripplewise" => tripplewise_functions
+    "triplewise" => triplewise_functions
 )
 
 const MODIFIERS_DISPATCH_TABLE = Dict("tanh" => tanh, "abs" => abs, "sigmoid" => (x) -> inv(one(x) + exp(-x)))
@@ -85,7 +85,9 @@ end
 
 function initial_state(arguments)
     return Dict{String, Any}(
-        "functions" => arguments["functions"], "number_of_iterations" => arguments["number_of_iterations"]
+        "functions" => arguments["functions"], 
+        "number_of_iterations" => convert(Int, arguments["number_of_iterations"]),
+        "compute_free_energy" => convert(Bool, arguments["compute_free_energy"])
     )
 end
 
@@ -168,7 +170,8 @@ function run_learning(state, parameters, events)
             returnvars = (ω = KeepLast(), s = KeepLast()),
             iterations = state["number_of_iterations"],
             constraints = MeanField(),
-            options = (limit_stack_depth = 300,)
+            options = (limit_stack_depth = 300,),
+            free_energy = state["compute_free_energy"]
         )
 
         parameters = Dict(
@@ -185,6 +188,10 @@ function run_learning(state, parameters, events)
         "noise_shape" => parameters["noise_shape"],
         "noise_scale" => parameters["noise_scale"]
     )
+
+    if state["compute_free_energy"]
+        result["free_energy"] = inference_results.free_energy
+    end
 
     return result, state, parameters
 end

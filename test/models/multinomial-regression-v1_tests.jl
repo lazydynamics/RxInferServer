@@ -26,10 +26,10 @@ end
     function logistic_stick_breaking(ψ::Vector{Float64})
         K = length(ψ) + 1
         π = zeros(K)
-        for k in 1:(K-1)
-            π[k] = inv(1 + exp(-ψ[k])) * (1 - sum(π[1:(k-1)]))
+        for k in 1:(K - 1)
+            π[k] = inv(1 + exp(-ψ[k])) * (1 - sum(π[1:(k - 1)]))
         end
-        π[K] = 1 - sum(π[1:(K-1)])
+        π[K] = 1 - sum(π[1:(K - 1)])
         return π
     end
 
@@ -43,45 +43,41 @@ end
         )
         return transformation_table[transformation_name]
     end
-    
+
     function generate_multinomial_regression_data(;
-        N = 3,
-        K = 3,
-        k = K - 1,  
-        n_samples = 100,
-        transformation = "identity",
-        rng = StableRNG(123)
+        N = 3, K = 3, k = K - 1, n_samples = 100, transformation = "identity", rng = StableRNG(123)
     )
         β_true = randn(rng, k)
-        
+
         X = [randn(rng, k, k) for _ in 1:n_samples]
-        
+
         ϕ = create_transformation(transformation)
-        
+
         observations = Vector{Vector{Int}}(undef, n_samples)
         probabilities = Vector{Vector{Float64}}(undef, n_samples)
-        
+
         for i in 1:n_samples
-        
             Ψ = ϕ(X[i]) * β_true
-            
+
             π = logistic_stick_breaking(Ψ)
             probabilities[i] = π
-            
+
             observations[i] = rand(rng, Multinomial(N, π))
         end
-        
+
         return X, observations, β_true, probabilities, k
     end
 
     export generate_multinomial_regression_data
 end
 
-@testitem "model should be able to learn from observations and make predictions" setup = [TestUtils, MultinomialRegressionUtils] begin
+@testitem "model should be able to learn from observations and make predictions" setup = [
+    TestUtils, MultinomialRegressionUtils
+] begin
     using RxInfer, StableRNGs, LinearAlgebra, Distributions
 
     @testset for N in (3, 5), K in (3, 4), n_samples in (50, 100), transformation in ("identity", "tanh")
-        k = K - 1  
+        k = K - 1
         X_data, obs_data, β_true, π_data, k_actual = MultinomialRegressionUtils.generate_multinomial_regression_data(
             N = N, K = K, n_samples = n_samples, transformation = transformation
         )
@@ -107,10 +103,7 @@ end
 
         instance_id = response.instance_id
 
-        events = [
-            Dict("data" => Dict("X" => vec(X_data[i]), "obs" => obs_data[i])) 
-            for i in 1:n_samples
-        ]
+        events = [Dict("data" => Dict("X" => vec(X_data[i]), "obs" => obs_data[i])) for i in 1:n_samples]
 
         attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events)
         attach_response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
@@ -127,7 +120,7 @@ end
 
         learn_request = TestUtils.RxInferClientOpenAPI.LearnRequest(episodes = ["default"])
         learn_response, info = TestUtils.RxInferClientOpenAPI.run_learning(models_api, instance_id, learn_request)
-        
+
         @test info.status == 200
         @test !isnothing(learn_response)
         @test haskey(learn_response.learned_parameters, "beta_mean")
@@ -143,8 +136,7 @@ end
         @test info.status == 200
         @test !isnothing(infer_response)
         @test haskey(infer_response.results, "probabilities")
-  
-        
+
         response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
         @test info.status == 200
     end
@@ -179,10 +171,7 @@ end
 
         instance_id = response.instance_id
 
-        events = [
-            Dict("data" => Dict("X" => vec(X_data[i]), "obs" => obs_data[i])) 
-            for i in 1:n_samples
-        ]
+        events = [Dict("data" => Dict("X" => vec(X_data[i]), "obs" => obs_data[i])) for i in 1:n_samples]
 
         attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events)
         attach_response, info = TestUtils.RxInferClientOpenAPI.attach_events_to_episode(
@@ -206,7 +195,7 @@ end
     client = TestUtils.TestClient(roles = ["user"])
     models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
 
-    k = 2  
+    k = 2
     create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
         model_name = "MultinomialRegression-v1",
         description = "Testing input validation",
@@ -217,7 +206,7 @@ end
     @test info.status == 200
     instance_id = response.instance_id
 
-    wrong_X = collect(1:5)  
+    wrong_X = collect(1:5)
     events = [Dict("data" => Dict("X" => wrong_X, "obs" => [1, 1, 1]))]
 
     attach_events_request = TestUtils.RxInferClientOpenAPI.AttachEventsToEpisodeRequest(events = events)
@@ -234,4 +223,3 @@ end
 
     TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
 end
-

@@ -1,0 +1,74 @@
+name: MultinomialRegression-v1
+description: A Bayesian multinomial regression model using Multinomial-Polya distribution with optional transformations
+author: Lazy Dynamics
+roles:
+  - user
+
+arguments:
+  - name: N
+    description: |
+      The number of trials for the multinomial distribution.
+      This is the total count across all categories in each observation.
+    type: int
+    required: true
+    default: 3
+  - name: k
+    description: |
+      The dimension of the natural parameter vector ψ, which equals K-1 
+      where K is the number of categories in the multinomial distribution.
+      This also determines the dimension of the coefficient vector β.
+      Must be provided and must match K-1 from the observed data.
+    type: int
+    required: true
+    default: 2
+  - name: transformation
+    description: |
+      Transformation function to apply to the input matrix before multiplication with β.
+      Available options:
+        - "identity": no transformation (ϕ(X) = X)
+        - "sin": sine transformation
+        - "cos": cosine transformation
+        - "tanh": hyperbolic tangent
+        - "sigmoid": logistic sigmoid function
+      
+      The model computes: Ψ = ϕ(X) * β
+      where X is k×k input matrix, ϕ is the transformation, and β is k-dimensional.
+    type: string
+    required: true
+    default: "identity"
+  - name: number_of_iterations
+    description: The number of variational inference iterations
+    type: int
+    required: false
+    default: 20
+
+parameters:
+  - name: beta_mean
+    description: |
+      The posterior mean of the regression coefficient vector β.
+      β is a k-dimensional vector that transforms the input matrix X via Ψ = ϕ(X) * β.
+      Updated during learning from observed data.
+  - name: beta_precision
+    description: |
+      The posterior precision matrix of the regression coefficient vector β.
+      Updated during learning from observed data.
+
+data:
+  - name: X
+    description: |
+      Input feature matrix.
+      For learning: an array of k×k matrices (one per observation).
+      For inference: a single k×k matrix.
+      Can be provided as:
+        - k×k matrix (Julia)
+        - Flattened array of k² elements (will be reshaped internally)
+    type: array
+    required: true
+  - name: obs
+    description: |
+      Observed count vectors from the multinomial distribution.
+      Each observation should be an array of K integers that sum to N.
+      Required for learning, omitted for inference (prediction).
+      Example for N=3, K=3: [1, 1, 1], [2, 0, 1], [0, 2, 1]
+    type: array
+    required: false

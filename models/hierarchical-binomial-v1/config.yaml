@@ -1,0 +1,36 @@
+name: HierarchicalBinomial-v1
+description: A model for multiple binomial distributions whose parameters are loosely coupled (share Gaussian prior)
+author: Lazy Dynamics
+roles:
+  - user
+
+arguments:
+  - name: number_of_iterations
+    description: The number of variational inference iterations
+    type: int
+    required: false
+    default: 25
+  - name: n_components
+    description: The number of components
+    type: int
+    required: true
+
+parameters:
+  - name: latent_mean
+    description: The posterior mean of the parameter `latent`, the shared Gaussian prior
+  - name: latent_precision
+    description: The posterior precision of the parameter `latent`, the shared Gaussian prior
+  - name: transformation_shapes
+    description: The posterior shapes of the precision on the transformation 
+  - name: transformation_rates
+    description: The posterior rates of the precision on the transformation 
+
+data:
+  - name: n_trials
+    description: The number of trials for each component
+    type: array
+    required: true
+  - name: y
+    description: The number of successes for each component
+    type: array
+    required: true

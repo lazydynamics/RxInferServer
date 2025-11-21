@@ -122,12 +122,8 @@ end
 
     test_n_trials = fill(10, 5)
 
-    inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(
-        data = Dict("n_trials" => test_n_trials)
-    )
-    inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(
-        models_api, instance_id, inference_request
-    )
+    inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(data = Dict("n_trials" => test_n_trials))
+    inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(models_api, instance_id, inference_request)
 
     @test info.status == 200
     @test !isnothing(inference_response)

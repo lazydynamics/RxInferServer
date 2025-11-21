@@ -102,3 +102,40 @@ end
     @test info.status == 200
     @test response.message == "Model instance deleted successfully"
 end
+
+@testitem "model should be able to infer given parameters" setup = [TestUtils] begin
+    client = TestUtils.TestClient(roles = ["user"])
+    models_api = TestUtils.RxInferClientOpenAPI.ModelsApi(client)
+
+    create_model_instance_request = TestUtils.RxInferClientOpenAPI.CreateModelInstanceRequest(
+        model_name = "HierarchicalBinomial-v1",
+        description = "Testing hierarchical binomial model inference",
+        arguments = Dict("n_components" => 5, "number_of_iterations" => 10)
+    )
+
+    response, info = TestUtils.RxInferClientOpenAPI.create_model_instance(models_api, create_model_instance_request)
+
+    @test info.status == 200
+    @test !isnothing(response)
+
+    instance_id = response.instance_id
+
+    test_n_trials = fill(10, 5)
+
+    inference_request = TestUtils.RxInferClientOpenAPI.InferRequest(
+        data = Dict("n_trials" => test_n_trials)
+    )
+    inference_response, info = TestUtils.RxInferClientOpenAPI.run_inference(
+        models_api, instance_id, inference_request
+    )
+
+    @test info.status == 200
+    @test !isnothing(inference_response)
+    @test haskey(inference_response.results, "y")
+
+    # TODO: Verify the predicted `y` values once the inference routine is implemented.
+
+    response, info = TestUtils.RxInferClientOpenAPI.delete_model_instance(models_api, instance_id)
+    @test info.status == 200
+    @test response.message == "Model instance deleted successfully"
+end

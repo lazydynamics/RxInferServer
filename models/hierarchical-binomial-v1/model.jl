@@ -17,6 +17,17 @@ using RxInfer
     end
 end
 
+@model function hierarchical_binomial_inference(y, ntrials, latent_prior, precision_priors, n_components)
+    latent ~ latent_prior
+    for i in 1:n_components
+        precision[i] ~ precision_priors[i]
+        component_latent[i] ~ Normal(mean = latent, precision = precision[i])
+        y[i] ~ BinomialPolya(
+            1, ntrials[i], component_latent[i]
+        ) where {dependencies = RequireMessageFunctionalDependencies(β = latent_prior)}
+    end
+end
+
 @constraints function hierarchical_binomial_constraints()
     q(latent, precision, component_latent) = q(latent, component_latent) * q(precision)
 end
@@ -46,8 +57,6 @@ function run_learning(state, parameters, events)
 
     y = stack([event["data"]["y"] for event in events])'
     n_trials = stack([event["data"]["n_trials"] for event in events])'
-
-    @show y, n_trials
 
     latent_prior = NormalMeanPrecision(parameters["latent_mean"], parameters["latent_precision"])
     precision_priors = [
@@ -79,6 +88,21 @@ function run_learning(state, parameters, events)
 end
 
 function run_inference(state, parameters, data)
-    @error "Running inference in HierarchicalBinomial-v1 model is not implemented"
-    return Dict(), state, parameters
+    latent_prior = NormalMeanPrecision(parameters["latent_mean"], parameters["latent_precision"])
+    precision_priors = [
+        GammaShapeRate(parameters["transformation_shapes"][i], parameters["transformation_rates"][i]) for
+        i in 1:state["n_components"]
+    ]
+    n_trials = data["n_trials"]
+    inference_results = infer(
+        model = hierarchical_binomial_inference(
+            latent_prior = latent_prior, precision_priors = precision_priors, n_components = state["n_components"]
+        ),
+        data = (y = [missing for _ in 1:state["n_components"]], ntrials = n_trials),
+        constraints = hierarchical_binomial_constraints(),
+        initialization = hierarchical_binomial_initialization(precision_priors),
+        iterations = state["number_of_iterations"]
+    )
+    @show last(inference_results.predictions[:y])
+    return Dict("y" => mean.(last(inference_results.predictions[:y]))), state, parameters
 end

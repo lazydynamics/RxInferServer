@@ -50,6 +50,10 @@ available_models, _ = get_available_models(api)
 @test !isnothing(available_models) #hide
 @test length(available_models) > 0 #hide
 
+# We select BetaBernoulli-v1 for the examples as it requires no arguments
+model_index = findfirst(m -> m.details.name == "BetaBernoulli-v1", available_models)
+model_index = isnothing(model_index) ? 1 : model_index #hide
+
 # only show the model details as the full configuration is quite large
 map(model -> model.details, available_models)
 ```
@@ -61,11 +65,11 @@ Note that the list of available models depends on the [roles](@ref authenticatio
 Each model type comes with detailed configuration and specifications. For example:
 
 ```@example models-api
-available_models[1].details
+available_models[model_index].details
 ```
 
 ```@example models-api
-available_models[1].config
+available_models[model_index].config
 ```
 
 Alternatively, you can inspect these using the [**get\_available\_model**](@ref) operation with the specific model name:
@@ -73,9 +77,9 @@ Alternatively, you can inspect these using the [**get\_available\_model**](@ref)
 ```@example models-api
 import RxInferClientOpenAPI: get_available_model
 
-some_model, _ = get_available_model(api, available_models[1].details.name)
-@test some_model.details.name == available_models[1].details.name #hide
-@test some_model.details.description == available_models[1].details.description #hide
+some_model, _ = get_available_model(api, available_models[model_index].details.name)
+@test some_model.details.name == available_models[model_index].details.name #hide
+@test some_model.details.description == available_models[model_index].details.description #hide
 @test !isnothing(some_model) #hide
 @test hasproperty(some_model, :details) #hide
 @test hasproperty(some_model, :config) #hide
@@ -102,7 +106,7 @@ Once you have selected the model you want to use, you can create a new instance 
 import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
 
 request = CreateModelInstanceRequest(
-    model_name = available_models[1].details.name,
+    model_name = available_models[model_index].details.name,
     description = """
     An arbitrary instance description, 
     which can be used to identify the instance later on

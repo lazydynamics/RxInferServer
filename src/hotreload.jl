@@ -121,18 +121,19 @@ function hot_reload_task_models(server::ServerState)
     end
 
     # Double check that the specified locations are valid
-    hot_reload_models_locations = String[]
-    for location in locations
-        if isdir(location)
-            for (root, _, files) in walkdir(location)
-                for file in files
-                    if isdir(joinpath(root, file))
-                        push!(hot_reload_models_locations, string(joinpath(root, file)))
-                    end
-                end
+    hot_reload_models_locations = []
+    for location in filter(isdir, locations)
+        for (root, _, files) in walkdir(location)
+            for file in files
+                model_location = joinpath(root, file)
+                push!(hot_reload_models_locations, model_location)
+                @warn "[HOT-RELOAD] Adding model location `$(model_location)` to the hot reload task" _id = :hot_reload
             end
         end
     end
+
+    @warn "[HOT-RELOAD] Model locations have been loaded, any new models will NOT be tracked, restart the server to track new models" _id =
+        :hot_reload
 
     return hot_reload_task(:models, server, hot_reload_models_locations, []; all = false) do
         Models.reload!(Models.get_models_dispatcher())

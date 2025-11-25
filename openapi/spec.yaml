@@ -386,9 +386,9 @@ paths:
     get:
       tags:
         - Models
-      summary: Get the parameters of a model instance
+      summary: Get the parameters of a model instance (current episode)
       operationId: getModelInstanceParameters
-      description: Retrieve the parameters of a specific model instance
+      description: Retrieve the parameters of a specific model instance. These parameters reflect the current episode's learned parameters.
       parameters:
         - name: instance_id
           in: path
@@ -1138,7 +1138,10 @@ components:
           default: ["default"]
           items:
             type: string
-            description: Name of the episode to learn from
+        relearn:
+          type: boolean
+          description: If true, reset episode parameters and process all events from scratch. If false, only process unprocessed events for incremental learning.
+          default: false
 
     LearnResponse:
       type: object
@@ -1166,6 +1169,7 @@ components:
         - episode_name
         - created_at
         - events
+        - parameters
       properties:
         instance_id:
           type: string
@@ -1184,11 +1188,16 @@ components:
           items:
             type: object
             additionalProperties: true
+        parameters:
+          type: object
+          description: Learned parameters of the episode
+          additionalProperties: true
       example:
         instance_id: "123e4567-e89b-12d3-a456-426614174000"
         episode_name: "default"
         created_at: "2024-03-20T12:00:00Z"
         events: []
+        parameters: {}
 
     AttachEventsToEpisodeRequest:
       type: object
@@ -1213,6 +1222,10 @@ components:
                 type: object
                 description: Arbitrary metadata to attach to the event, model-specific
                 additionalProperties: true
+              processed:
+                type: boolean
+                description: Whether this event has been used in a learning procedure
+                default: false
 
     AttachMetadataToEventRequest:
       type: object

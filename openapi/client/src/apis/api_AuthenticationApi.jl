@@ -29,7 +29,7 @@ Generates a new authentication token for accessing protected endpoints
 
 Params:
 
-Return: TokenGenerateResponse, OpenAPI.Clients.ApiResponse
+Return: `TokenGenerateResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function token_generate(_api::AuthenticationApi; _mediaType=nothing)
     _ctx = _oacinternal_token_generate(_api; _mediaType=_mediaType)
@@ -59,7 +59,7 @@ Retrieve the list of roles for a specific token
 
 Params:
 
-Return: TokenRolesResponse, OpenAPI.Clients.ApiResponse
+Return: `TokenRolesResponse`, `OpenAPI.Clients.ApiResponse`
 """
 function token_roles(_api::AuthenticationApi; _mediaType=nothing)
     _ctx = _oacinternal_token_roles(_api; _mediaType=_mediaType)

@@ -1,0 +1,22 @@
+name: DirichletCategorical-v1
+description: A simple Dirichlet-Categorical model
+author: Lazy Dynamics
+roles:
+  - user
+
+arguments:
+  - name: prior_alpha
+    description: The initial alpha parameter of the prior Dirichlet distribution `alpha`
+    type: array
+    required: false
+    default: [1.0, 1.0, 1.0]
+
+parameters:
+  - name: posterior_alpha
+    description: The posterior parameter `alpha` of the Dirichlet distribution
+
+data:
+  - name: observations
+    description: The observations to make predictions on
+    type: array
+    required: true

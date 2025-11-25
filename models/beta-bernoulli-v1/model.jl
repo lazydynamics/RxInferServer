@@ -34,8 +34,7 @@ end
 function run_learning(state, parameters, events)
     @debug "Running learning in Beta-Bernoulli-v1 model" state parameters events
 
-    # Reset the prior parameters to learn the new posterior from the entire events
-    prior_p = Beta(state["prior_a"], state["prior_b"])
+    prior_p = Beta(parameters["posterior_a"], parameters["posterior_b"])
     observations = [event["data"]["observation"] for event in events]
     results = infer(model = beta_bernoulli(prior_p = prior_p), data = (observations = observations,))
 

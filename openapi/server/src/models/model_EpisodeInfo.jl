@@ -9,27 +9,30 @@
         episode_name=nothing,
         created_at=nothing,
         events=nothing,
+        parameters=nothing,
     )
 
     - instance_id::String : ID of the model instance this episode belongs to
     - episode_name::String : Name of the episode
     - created_at::ZonedDateTime : Timestamp of when the episode was created
     - events::Vector{Dict{String, Any}} : List of events that have occurred in the episode
+    - parameters::Dict{String, Any} : Learned parameters of the episode
 """
 Base.@kwdef mutable struct EpisodeInfo <: OpenAPI.APIModel
     instance_id::Union{Nothing, String} = nothing
     episode_name::Union{Nothing, String} = nothing
     created_at::Union{Nothing, ZonedDateTime} = nothing
     events::Union{Nothing, Vector{Dict{String, Any}}} = nothing
+    parameters::Union{Nothing, Dict{String, Any}} = nothing
 
-    function EpisodeInfo(instance_id, episode_name, created_at, events, )
-        o = new(instance_id, episode_name, created_at, events, )
+    function EpisodeInfo(instance_id, episode_name, created_at, events, parameters, )
+        o = new(instance_id, episode_name, created_at, events, parameters, )
         OpenAPI.validate_properties(o)
         return o
     end
 end # type EpisodeInfo
 
-const _property_types_EpisodeInfo = Dict{Symbol,String}(Symbol("instance_id")=>"String", Symbol("episode_name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("events")=>"Vector{Dict{String, Any}}", )
+const _property_types_EpisodeInfo = Dict{Symbol,String}(Symbol("instance_id")=>"String", Symbol("episode_name")=>"String", Symbol("created_at")=>"ZonedDateTime", Symbol("events")=>"Vector{Dict{String, Any}}", Symbol("parameters")=>"Dict{String, Any}", )
 OpenAPI.property_type(::Type{ EpisodeInfo }, name::Symbol) = Union{Nothing,eval(Base.Meta.parse(_property_types_EpisodeInfo[name]))}
 
 function OpenAPI.check_required(o::EpisodeInfo)
@@ -37,6 +40,7 @@ function OpenAPI.check_required(o::EpisodeInfo)
     o.episode_name === nothing && (return false)
     o.created_at === nothing && (return false)
     o.events === nothing && (return false)
+    o.parameters === nothing && (return false)
     true
 end
 
@@ -45,6 +49,7 @@ function OpenAPI.validate_properties(o::EpisodeInfo)
     OpenAPI.validate_property(EpisodeInfo, Symbol("episode_name"), o.episode_name)
     OpenAPI.validate_property(EpisodeInfo, Symbol("created_at"), o.created_at)
     OpenAPI.validate_property(EpisodeInfo, Symbol("events"), o.events)
+    OpenAPI.validate_property(EpisodeInfo, Symbol("parameters"), o.parameters)
 end
 
 function OpenAPI.validate_property(::Type{ EpisodeInfo }, name::Symbol, val)
@@ -57,5 +62,6 @@ function OpenAPI.validate_property(::Type{ EpisodeInfo }, name::Symbol, val)
     if name === Symbol("created_at")
         OpenAPI.validate_param(name, "EpisodeInfo", :format, val, "date-time")
     end
+
 
 end

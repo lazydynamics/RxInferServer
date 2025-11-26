@@ -1,7 +1,7 @@
 name = "RxInferServer"
 uuid = "e92bdd6b-15d6-410c-ab97-e133e2594943"
-authors = ["Lazy Dynamics <info@lazydynamics.com> and contributors"]
 version = "0.1.4"
+authors = ["Lazy Dynamics <info@lazydynamics.com> and contributors"]
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -27,9 +27,11 @@ YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 [weakdeps]
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 
-[sources]
-RxInferClientOpenAPI = {path = "openapi/client"}
-RxInferServerOpenAPI = {path = "openapi/server"}
+[sources.RxInferClientOpenAPI]
+path = "openapi/client"
+
+[sources.RxInferServerOpenAPI]
+path = "openapi/server"
 
 [extensions]
 HotReloadExt = "Revise"
@@ -38,7 +40,7 @@ HotReloadExt = "Revise"
 Dates = "1.11.0"
 DotEnv = "1.0.0"
 HTTP = "1.10.15"
-JSON = "0.21.4"
+JSON = "0.21.4, 1"
 LinearAlgebra = "1.11.0"
 Logging = "1.11.0"
 LoggingExtras = "1.1.0"

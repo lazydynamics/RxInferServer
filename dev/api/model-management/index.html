@@ -14,8 +14,20 @@ api = ModelsApi(client)</code></pre><h2 id="Terminology"><a class="docs-heading-
 
 available_models, _ = get_available_models(api)
 
+# We select BetaBernoulli-v1 for the examples as it requires no arguments
+model_index = findfirst(m -&gt; m.details.name == &quot;BetaBernoulli-v1&quot;, available_models)
+
 # only show the model details as the full configuration is quite large
-map(model -&gt; model.details, available_models)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">7-element Vector{RxInferClientOpenAPI.AvailableModelDetails}:
+map(model -&gt; model.details, available_models)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">9-element Vector{RxInferClientOpenAPI.AvailableModelDetails}:
+ {
+  &quot;name&quot;: &quot;HierarchicalBinomial-v1&quot;,
+  &quot;description&quot;: &quot;A model for multiple binomial distributions whose parameters are loosely coupled (share Gaussian prior)&quot;,
+  &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+  &quot;roles&quot;: [
+    &quot;user&quot;
+  ]
+}
+
  {
   &quot;name&quot;: &quot;Drone3D-v1&quot;,
   &quot;description&quot;: &quot;A 3D drone model&quot;,
@@ -53,6 +65,15 @@ map(model -&gt; model.details, available_models)</code></pre><pre class="documen
 }
 
  {
+  &quot;name&quot;: &quot;DirichletCategorical-v1&quot;,
+  &quot;description&quot;: &quot;A simple Dirichlet-Categorical model&quot;,
+  &quot;author&quot;: &quot;Lazy Dynamics&quot;,
+  &quot;roles&quot;: [
+    &quot;user&quot;
+  ]
+}
+
+ {
   &quot;name&quot;: &quot;Autoregressive-v1&quot;,
   &quot;description&quot;: &quot;An autoregressive model&quot;,
   &quot;author&quot;: &quot;Lazy Dynamics&quot;,
@@ -78,40 +99,42 @@ map(model -&gt; model.details, available_models)</code></pre><pre class="documen
     &quot;user&quot;
   ]
 }
-</code></pre><p>Note that the list of available models depends on the <a href="../authentication/#authentication-api-roles">roles</a> assigned to the token used to make the request as well as server settings.</p><h2 id="Inspecting-Available-Model-Details-and-Configuration"><a class="docs-heading-anchor" href="#Inspecting-Available-Model-Details-and-Configuration">Inspecting Available Model Details and Configuration</a><a id="Inspecting-Available-Model-Details-and-Configuration-1"></a><a class="docs-heading-anchor-permalink" href="#Inspecting-Available-Model-Details-and-Configuration" title="Permalink"></a></h2><p>Each model type comes with detailed configuration and specifications. For example:</p><pre><code class="language-julia hljs">available_models[1].details</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
-  &quot;name&quot;: &quot;Drone3D-v1&quot;,
-  &quot;description&quot;: &quot;A 3D drone model&quot;,
+</code></pre><p>Note that the list of available models depends on the <a href="../authentication/#authentication-api-roles">roles</a> assigned to the token used to make the request as well as server settings.</p><h2 id="Inspecting-Available-Model-Details-and-Configuration"><a class="docs-heading-anchor" href="#Inspecting-Available-Model-Details-and-Configuration">Inspecting Available Model Details and Configuration</a><a id="Inspecting-Available-Model-Details-and-Configuration-1"></a><a class="docs-heading-anchor-permalink" href="#Inspecting-Available-Model-Details-and-Configuration" title="Permalink"></a></h2><p>Each model type comes with detailed configuration and specifications. For example:</p><pre><code class="language-julia hljs">available_models[model_index].details</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;name&quot;: &quot;BetaBernoulli-v1&quot;,
+  &quot;description&quot;: &quot;A simple Beta-Bernoulli model&quot;,
   &quot;author&quot;: &quot;Lazy Dynamics&quot;,
   &quot;roles&quot;: [
     &quot;user&quot;
   ]
 }
-</code></pre><pre><code class="language-julia hljs">available_models[1].config</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Any} with 6 entries:
-  &quot;name&quot;        =&gt; &quot;Drone3D-v1&quot;
+</code></pre><pre><code class="language-julia hljs">available_models[model_index].config</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Any} with 7 entries:
+  &quot;name&quot;        =&gt; &quot;BetaBernoulli-v1&quot;
   &quot;author&quot;      =&gt; &quot;Lazy Dynamics&quot;
-  &quot;arguments&quot;   =&gt; Any[Dict{String, Any}(&quot;name&quot;=&gt;&quot;dt&quot;, &quot;default&quot;=&gt;0.05, &quot;requir…
-  &quot;parameters&quot;  =&gt; nothing
+  &quot;arguments&quot;   =&gt; Any[Dict{String, Any}(&quot;name&quot;=&gt;&quot;prior_a&quot;, &quot;default&quot;=&gt;1, &quot;requ…
+  &quot;parameters&quot;  =&gt; Any[Dict{String, Any}(&quot;name&quot;=&gt;&quot;posterior_a&quot;, &quot;description&quot;=&gt;…
+  &quot;data&quot;        =&gt; Any[Dict{String, Any}(&quot;name&quot;=&gt;&quot;observation&quot;, &quot;required&quot;=&gt;tru…
   &quot;roles&quot;       =&gt; Any[&quot;user&quot;]
-  &quot;description&quot; =&gt; &quot;A 3D drone model&quot;</code></pre><p>Alternatively, you can inspect these using the <a href="../../openapi/Apis/ModelsApi/#**get_available_model**"><strong>get_available_model</strong></a> operation with the specific model name:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: get_available_model
+  &quot;description&quot; =&gt; &quot;A simple Beta-Bernoulli model&quot;</code></pre><p>Alternatively, you can inspect these using the <a href="../../openapi/Apis/ModelsApi/#**get_available_model**"><strong>get_available_model</strong></a> operation with the specific model name:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: get_available_model
 
-some_model, _ = get_available_model(api, available_models[1].details.name)</code></pre><p>The response provides two key pieces of information:</p><ol><li><code>details</code>: Light-weight model information</li><li><code>config</code>: Model-specific configuration</li></ol><pre><code class="language-julia hljs">some_model.details</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
-  &quot;name&quot;: &quot;Drone3D-v1&quot;,
-  &quot;description&quot;: &quot;A 3D drone model&quot;,
+some_model, _ = get_available_model(api, available_models[model_index].details.name)</code></pre><p>The response provides two key pieces of information:</p><ol><li><code>details</code>: Light-weight model information</li><li><code>config</code>: Model-specific configuration</li></ol><pre><code class="language-julia hljs">some_model.details</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
+  &quot;name&quot;: &quot;BetaBernoulli-v1&quot;,
+  &quot;description&quot;: &quot;A simple Beta-Bernoulli model&quot;,
   &quot;author&quot;: &quot;Lazy Dynamics&quot;,
   &quot;roles&quot;: [
     &quot;user&quot;
   ]
 }
-</code></pre><pre><code class="language-julia hljs">some_model.config</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Any} with 6 entries:
-  &quot;name&quot;        =&gt; &quot;Drone3D-v1&quot;
+</code></pre><pre><code class="language-julia hljs">some_model.config</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Any} with 7 entries:
+  &quot;name&quot;        =&gt; &quot;BetaBernoulli-v1&quot;
   &quot;author&quot;      =&gt; &quot;Lazy Dynamics&quot;
-  &quot;arguments&quot;   =&gt; Any[Dict{String, Any}(&quot;name&quot;=&gt;&quot;dt&quot;, &quot;default&quot;=&gt;0.05, &quot;requir…
-  &quot;parameters&quot;  =&gt; nothing
+  &quot;arguments&quot;   =&gt; Any[Dict{String, Any}(&quot;name&quot;=&gt;&quot;prior_a&quot;, &quot;default&quot;=&gt;1, &quot;requ…
+  &quot;parameters&quot;  =&gt; Any[Dict{String, Any}(&quot;name&quot;=&gt;&quot;posterior_a&quot;, &quot;description&quot;=&gt;…
+  &quot;data&quot;        =&gt; Any[Dict{String, Any}(&quot;name&quot;=&gt;&quot;observation&quot;, &quot;required&quot;=&gt;tru…
   &quot;roles&quot;       =&gt; Any[&quot;user&quot;]
-  &quot;description&quot; =&gt; &quot;A 3D drone model&quot;</code></pre><h2 id="model-management-api-create-model-instance"><a class="docs-heading-anchor" href="#model-management-api-create-model-instance">Creating a Model Instance</a><a id="model-management-api-create-model-instance-1"></a><a class="docs-heading-anchor-permalink" href="#model-management-api-create-model-instance" title="Permalink"></a></h2><p>Once you have selected the model you want to use, you can create a new instance of it with the <a href="../../openapi/Apis/ModelsApi/#**create_model_instance**"><strong>create_model_instance</strong></a> operation together with the <a href="../../openapi/Models/CreateModelInstanceRequest/#CreateModelInstanceRequest"><code>CreateModelInstanceRequest</code></a> type:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
+  &quot;description&quot; =&gt; &quot;A simple Beta-Bernoulli model&quot;</code></pre><h2 id="model-management-api-create-model-instance"><a class="docs-heading-anchor" href="#model-management-api-create-model-instance">Creating a Model Instance</a><a id="model-management-api-create-model-instance-1"></a><a class="docs-heading-anchor-permalink" href="#model-management-api-create-model-instance" title="Permalink"></a></h2><p>Once you have selected the model you want to use, you can create a new instance of it with the <a href="../../openapi/Apis/ModelsApi/#**create_model_instance**"><strong>create_model_instance</strong></a> operation together with the <a href="../../openapi/Models/CreateModelInstanceRequest/#CreateModelInstanceRequest"><code>CreateModelInstanceRequest</code></a> type:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: create_model_instance, CreateModelInstanceRequest
 
 request = CreateModelInstanceRequest(
-    model_name = available_models[1].details.name,
+    model_name = available_models[model_index].details.name,
     description = &quot;&quot;&quot;
     An arbitrary instance description,
     which can be used to identify the instance later on
@@ -121,7 +144,7 @@ request = CreateModelInstanceRequest(
 )
 
 response, _ = create_model_instance(api, request)
-instance_id = response.instance_id</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;9b6ccbb8-be9f-4e5c-a828-ce36e8b725fa&quot;</code></pre><p>If successful, the server returns a unique <code>instance_id</code> that you&#39;ll use to interact with this specific model instance. A server may return an error if the model is not found or if the instance already exists.</p><pre><code class="language-julia hljs">response, _ = create_model_instance(api, CreateModelInstanceRequest(
+instance_id = response.instance_id</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;833b6dba-267b-46d6-a11e-64c97f30211f&quot;</code></pre><p>If successful, the server returns a unique <code>instance_id</code> that you&#39;ll use to interact with this specific model instance. A server may return an error if the model is not found or if the instance already exists.</p><pre><code class="language-julia hljs">response, _ = create_model_instance(api, CreateModelInstanceRequest(
     model_name = &quot;non_existent_model&quot;
 ))
 response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
@@ -133,19 +156,13 @@ response</code></pre><pre class="documenter-example-output"><code class="nohighl
 created_models, _ = get_model_instances(api)
 created_models</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1-element Vector{RxInferClientOpenAPI.ModelInstance}:
  {
-  &quot;instance_id&quot;: &quot;9b6ccbb8-be9f-4e5c-a828-ce36e8b725fa&quot;,
-  &quot;model_name&quot;: &quot;Drone3D-v1&quot;,
-  &quot;created_at&quot;: &quot;2025-10-01T11:34:08.129+00:00&quot;,
+  &quot;instance_id&quot;: &quot;833b6dba-267b-46d6-a11e-64c97f30211f&quot;,
+  &quot;model_name&quot;: &quot;BetaBernoulli-v1&quot;,
+  &quot;created_at&quot;: &quot;2026-02-23T00:07:00.140+00:00&quot;,
   &quot;description&quot;: &quot;An arbitrary instance description, \nwhich can be used to identify the instance later on\n&quot;,
   &quot;arguments&quot;: {
-    &quot;force_limit&quot;: 15.0,
-    &quot;gravity&quot;: 9.81,
-    &quot;horizon&quot;: 40,
-    &quot;mass&quot;: 1.0,
-    &quot;dt&quot;: 0.05,
-    &quot;arm_length&quot;: 0.5,
-    &quot;inertia&quot;: 1.0,
-    &quot;radius&quot;: 0.2
+    &quot;prior_b&quot;: 1,
+    &quot;prior_a&quot;: 1
   },
   &quot;current_episode&quot;: &quot;default&quot;
 }
@@ -153,19 +170,13 @@ created_models</code></pre><pre class="documenter-example-output"><code class="n
 
 response, _ = get_model_instance(api, instance_id)
 response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
-  &quot;instance_id&quot;: &quot;9b6ccbb8-be9f-4e5c-a828-ce36e8b725fa&quot;,
-  &quot;model_name&quot;: &quot;Drone3D-v1&quot;,
-  &quot;created_at&quot;: &quot;2025-10-01T11:34:08.129+00:00&quot;,
+  &quot;instance_id&quot;: &quot;833b6dba-267b-46d6-a11e-64c97f30211f&quot;,
+  &quot;model_name&quot;: &quot;BetaBernoulli-v1&quot;,
+  &quot;created_at&quot;: &quot;2026-02-23T00:07:00.140+00:00&quot;,
   &quot;description&quot;: &quot;An arbitrary instance description, \nwhich can be used to identify the instance later on\n&quot;,
   &quot;arguments&quot;: {
-    &quot;force_limit&quot;: 15.0,
-    &quot;gravity&quot;: 9.81,
-    &quot;horizon&quot;: 40,
-    &quot;mass&quot;: 1.0,
-    &quot;dt&quot;: 0.05,
-    &quot;arm_length&quot;: 0.5,
-    &quot;inertia&quot;: 1.0,
-    &quot;radius&quot;: 0.2
+    &quot;prior_b&quot;: 1,
+    &quot;prior_a&quot;: 1
   },
   &quot;current_episode&quot;: &quot;default&quot;
 }
@@ -174,29 +185,27 @@ response</code></pre><pre class="documenter-example-output"><code class="nohighl
 response, _ = get_model_instance_state(api, instance_id)
 response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
   &quot;state&quot;: {
-    &quot;force_limit&quot;: 15.0,
-    &quot;gravity&quot;: 9.81,
-    &quot;horizon&quot;: 40,
-    &quot;mass&quot;: 1.0,
-    &quot;dt&quot;: 0.05,
-    &quot;radius&quot;: 0.2,
-    &quot;arm_length&quot;: 0.5,
-    &quot;inertia&quot;: 1.0
+    &quot;prior_b&quot;: 1,
+    &quot;prior_a&quot;: 1,
+    &quot;number_of_infer_calls&quot;: 0
   }
 }
 </code></pre><h2 id="model-management-api-get-model-instance-parameters"><a class="docs-heading-anchor" href="#model-management-api-get-model-instance-parameters">Checking the Parameters of a Specific Model Instance</a><a id="model-management-api-get-model-instance-parameters-1"></a><a class="docs-heading-anchor-permalink" href="#model-management-api-get-model-instance-parameters" title="Permalink"></a></h2><p>Monitor the current parameters of your model with the <strong>get_model_instance_parameters</strong> operation:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: get_model_instance_parameters
 
 response, _ = get_model_instance_parameters(api, instance_id)
 response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
-  &quot;parameters&quot;: {}
+  &quot;parameters&quot;: {
+    &quot;posterior_a&quot;: 1,
+    &quot;posterior_b&quot;: 1
+  }
 }
-</code></pre><div class="admonition is-info" id="State-of-a-Model-Instance-vs-Parameters-of-a-Model-Instance-23d1d95b6aa83df2"><header class="admonition-header">State of a Model Instance vs Parameters of a Model Instance<a class="admonition-anchor" href="#State-of-a-Model-Instance-vs-Parameters-of-a-Model-Instance-23d1d95b6aa83df2" title="Permalink"></a></header><div class="admonition-body"><p>Note that the state of a model instance is not the same as the parameters of the model. You can consider the state as an internal implementation detail of the model and is not exposed to the user. The parameters are, however, directly exposed through the <a href="../learning/#learning-api">Learning API</a> and are stored at the episode level. Each episode maintains its own parameters, and the model instance parameters reflect the current episode&#39;s parameters.</p></div></div><h2 id="Deleting-a-Model-Instance"><a class="docs-heading-anchor" href="#Deleting-a-Model-Instance">Deleting a Model Instance</a><a id="Deleting-a-Model-Instance-1"></a><a class="docs-heading-anchor-permalink" href="#Deleting-a-Model-Instance" title="Permalink"></a></h2><p>When you&#39;re done with a model instance, you can remove it completely with the <a href="../../openapi/Apis/ModelsApi/#**delete_model_instance**"><strong>delete_model_instance</strong></a> operation:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: delete_model_instance
+</code></pre><div class="admonition is-info" id="State-of-a-Model-Instance-vs-Parameters-of-a-Model-Instance-a6a4181fc4c4772a"><header class="admonition-header">State of a Model Instance vs Parameters of a Model Instance<a class="admonition-anchor" href="#State-of-a-Model-Instance-vs-Parameters-of-a-Model-Instance-a6a4181fc4c4772a" title="Permalink"></a></header><div class="admonition-body"><p>Note that the state of a model instance is not the same as the parameters of the model. You can consider the state as an internal implementation detail of the model and is not exposed to the user. The parameters are, however, directly exposed through the <a href="../learning/#learning-api">Learning API</a> and are stored at the episode level. Each episode maintains its own parameters, and the model instance parameters reflect the current episode&#39;s parameters.</p></div></div><h2 id="Deleting-a-Model-Instance"><a class="docs-heading-anchor" href="#Deleting-a-Model-Instance">Deleting a Model Instance</a><a id="Deleting-a-Model-Instance-1"></a><a class="docs-heading-anchor-permalink" href="#Deleting-a-Model-Instance" title="Permalink"></a></h2><p>When you&#39;re done with a model instance, you can remove it completely with the <a href="../../openapi/Apis/ModelsApi/#**delete_model_instance**"><strong>delete_model_instance</strong></a> operation:</p><pre><code class="language-julia hljs">import RxInferClientOpenAPI: delete_model_instance
 
 response, _ = delete_model_instance(api, instance_id)
 response</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">{
   &quot;message&quot;: &quot;Model instance deleted successfully&quot;
 }
-</code></pre><div class="admonition is-info" id="Cascade-Deletion-ec61dd55d195057"><header class="admonition-header">Cascade Deletion<a class="admonition-anchor" href="#Cascade-Deletion-ec61dd55d195057" title="Permalink"></a></header><div class="admonition-body"><ul><li>Deleting an instance automatically removes all its episodes, read more about episodes in the <a href="../learning/#learning-api">Learning parameters of a model</a> section</li><li>Deleting an instance does not delete other instances of the same model</li><li>This action cannot be undone</li><li>Make sure to save any important data before deletion</li></ul></div></div><p>Verify the model has been removed:</p><pre><code class="language-julia hljs"># Check model list
+</code></pre><div class="admonition is-info" id="Cascade-Deletion-52834826e7deaa9d"><header class="admonition-header">Cascade Deletion<a class="admonition-anchor" href="#Cascade-Deletion-52834826e7deaa9d" title="Permalink"></a></header><div class="admonition-body"><ul><li>Deleting an instance automatically removes all its episodes, read more about episodes in the <a href="../learning/#learning-api">Learning parameters of a model</a> section</li><li>Deleting an instance does not delete other instances of the same model</li><li>This action cannot be undone</li><li>Make sure to save any important data before deletion</li></ul></div></div><p>Verify the model has been removed:</p><pre><code class="language-julia hljs"># Check model list
 created_models, _ = get_model_instances(api)
 created_models</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">RxInferClientOpenAPI.ModelInstance[]</code></pre><pre><code class="language-julia hljs"># Check model list
 response, _ = get_model_instance(api, instance_id)
@@ -209,4 +218,4 @@ mermaid.initialize({
     startOnLoad: true,
     theme: "neutral"
 });
-</script></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../authentication/">« Authentication</a><a class="docs-footer-nextpage" href="../learning/">Learning parameters of a model »</a><div class="flexbox-break"></div><p class="footer-message">Created and sponsored by <a href="https://lazydynamics.com/">LazyDynamics</a>, powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>. Licensed under <a href="http://github.com/lazydynamics/RxInferServer?tab=readme-ov-file#license">AGPL-3.0</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Wednesday 1 October 2025 11:34">Wednesday 1 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+</script></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../authentication/">« Authentication</a><a class="docs-footer-nextpage" href="../learning/">Learning parameters of a model »</a><div class="flexbox-break"></div><p class="footer-message">Created and sponsored by <a href="https://lazydynamics.com/">LazyDynamics</a>, powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>. Licensed under <a href="http://github.com/lazydynamics/RxInferServer?tab=readme-ov-file#license">AGPL-3.0</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Monday 23 February 2026 00:07">Monday 23 February 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
